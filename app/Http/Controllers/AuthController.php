@@ -16,6 +16,7 @@ class AuthController extends Controller
     }
 
     // Process Login
+// Process Login
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
@@ -25,6 +26,12 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+
+            // --- FIX: Check Role and Redirect Accordingly ---
+            if (Auth::user()->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
             return redirect()->route('dashboard');
         }
 

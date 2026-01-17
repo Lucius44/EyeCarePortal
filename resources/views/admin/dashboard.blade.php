@@ -9,8 +9,11 @@
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-primary mb-2 text-start">
                     📅 Calendar
                 </a>
-                <a href="#" class="btn btn-outline-secondary mb-2 text-start disabled">
-                    👥 Users List (Next)
+                <a href="{{ route('admin.appointments') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
+                    ✅ Manage Appointments
+                </a>
+                <a href="#" class="btn btn-outline-secondary mb-2 text-start disabled border-0">
+                    👥 Users List
                 </a>
                 <form action="{{ route('logout') }}" method="POST" class="mt-auto">
                     @csrf
@@ -24,7 +27,7 @@
             
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div id="adminCalendar"></div>
+                    <div id="adminCalendar" data-events="{{ json_encode($events) }}"></div>
                 </div>
             </div>
         </div>
@@ -36,19 +39,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('adminCalendar');
         
-        // 1. Prepare the events from the Laravel variable
-        // We map your database fields to FullCalendar's expected fields (title, start, color)
-        var appointments = @json($appointments->map(function($appt) {
-            return [
-                'title' => $appt->user->first_name . ' - ' . $appt->service, // What shows on the calendar
-                'start' => $appt->appointment_date . 'T' . $appt->appointment_time, // When it is
-                'color' => $appt->status === 'confirmed' ? '#198754' : '#ffc107', // Green if confirmed, Yellow if pending
-                'extendedProps' => [
-                    'status' => $appt->status,
-                    'description' => $appt->description
-                ]
-            ];
-        }));
+        // FIX: Parse the data from the HTML attribute
+        // This is pure JavaScript, so your editor will be happy.
+        var eventsData = JSON.parse(calendarEl.getAttribute('data-events'));
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -58,12 +51,11 @@
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
             height: 'auto',
-            events: appointments, // <--- This feeds the data to the calendar!
+            events: eventsData, // Pass the clean data here
             
-            // When Admin clicks an appointment
+            // Event Click Action
             eventClick: function(info) {
                 alert('Appointment for: ' + info.event.title + '\nStatus: ' + info.event.extendedProps.status);
-                // We will add the Accept/Reject Modal here next!
             }
         });
         
