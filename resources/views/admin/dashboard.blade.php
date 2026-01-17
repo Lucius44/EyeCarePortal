@@ -12,7 +12,7 @@
                 <a href="{{ route('admin.appointments') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
                     ✅ Manage Appointments
                 </a>
-                <a href="#" class="btn btn-outline-secondary mb-2 text-start disabled border-0">
+                <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
                     👥 Users List
                 </a>
                 <form action="{{ route('logout') }}" method="POST" class="mt-auto">

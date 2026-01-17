@@ -12,7 +12,7 @@
                 <a href="{{ route('admin.appointments') }}" class="btn btn-primary mb-2 text-start">
                     ✅ Manage Appointments
                 </a>
-                <a href="#" class="btn btn-outline-secondary mb-2 text-start disabled border-0">
+                <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
                     👥 Users List
                 </a>
             </div>

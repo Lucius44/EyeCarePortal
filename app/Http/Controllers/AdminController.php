@@ -55,4 +55,44 @@ class AdminController extends Controller
 
         return back()->with('success', 'Appointment status updated to ' . ucfirst($request->status));
     }
+
+    // Show User List
+    public function users()
+    {
+        // Users who have uploaded an ID but are NOT verified yet
+        $pendingUsers = User::where('role', 'patient')
+                            ->whereNotNull('id_photo_path')
+                            ->where('is_verified', false)
+                            ->get();
+
+        // All other users (for reference)
+        $allUsers = User::where('role', 'patient')->get();
+
+        return view('admin.users', compact('pendingUsers', 'allUsers'));
+    }
+
+    // Approve or Reject User
+    public function verifyUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $action = $request->input('action'); // 'approve' or 'reject'
+
+        if ($action === 'approve') {
+            $user->update(['is_verified' => true]);
+            return back()->with('success', 'User verified successfully!');
+        } 
+        
+        if ($action === 'reject') {
+            // If rejected, we might want to delete the photo so they can upload a new one
+            // optional: Storage::delete('public/' . $user->id_photo_path);
+            
+            $user->update([
+                'id_photo_path' => null, // Reset so they can try again
+                'is_verified' => false
+            ]);
+            return back()->with('success', 'User verification rejected. They can upload a new ID.');
+        }
+
+        return back()->with('error', 'Invalid action.');
+    }
 }

@@ -19,4 +19,32 @@ class PatientController extends Controller
         $user = Auth::user(); // Get the currently logged-in user
         return view('patient.profile', compact('user'));
     }
+
+    // Show Settings Page
+    public function settings()
+    {
+        return view('patient.settings');
+    }
+
+    // Handle ID Upload
+    public function uploadId(Request $request)
+    {
+        $request->validate([
+            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+        ]);
+
+        /** @var \App\Models\User $user */ // <--- ADD THIS LINE
+        $user = Auth::user();
+
+        // 1. Store the file in the 'public' folder
+        // It will be saved in: storage/app/public/id_photos
+        $path = $request->file('id_photo')->store('id_photos', 'public');
+
+        // 2. Save the path to the database
+        $user->update([
+            'id_photo_path' => $path
+        ]);
+
+        return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
+    }
 }

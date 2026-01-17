@@ -7,7 +7,7 @@
             <a href="{{ route('dashboard') }}" class="list-group-item list-group-item-action active">Dashboard</a>
             <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">My Profile</a>
             <a href="#" class="list-group-item list-group-item-action disabled">My Appointments (Coming Soon)</a>
-            <a href="#" class="list-group-item list-group-item-action disabled">Account Settings (Coming Soon)</a>
+            <a href="{{ route('settings') }}" class="list-group-item list-group-item-action">Account Settings</a>
             
             <form action="{{ route('logout') }}" method="POST" class="d-inline">
                 @csrf

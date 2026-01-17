@@ -32,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     // Save Appointment
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+
+    // Settings & Upload
+    Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
+    Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
 });
 
 // -- Admin Routes (Protected) --
@@ -44,4 +48,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // Status Update Action
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
+
+    // User Management
+    Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
 });
