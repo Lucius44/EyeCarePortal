@@ -38,6 +38,10 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Manage Appointments Page
+    Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
     
-    // We will add Accept/Reject routes here later
+    // Status Update Action
+    Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
 });
