@@ -13,10 +13,25 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            
+            // Personal Details
+            $table->string('first_name');
+            $table->string('middle_name')->nullable(); // Optional
+            $table->string('last_name');
+            $table->date('birthday')->nullable();
+            $table->string('gender')->nullable();
+            
+            // Contact & Auth
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone_number')->nullable();
+            
+            // System Fields
+            $table->string('role')->default('patient'); // 'patient' or 'admin'
+            $table->string('id_photo_path')->nullable(); // Path to the uploaded ID
+            $table->boolean('is_verified')->default(false); // Default to Unverified
+            
             $table->rememberToken();
             $table->timestamps();
         });
