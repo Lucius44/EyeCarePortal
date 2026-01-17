@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\AppointmentController; // <--- ADD THIS LINE
 
 // -- Public Routes --
 Route::get('/', function () {
@@ -26,6 +27,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [PatientController::class, 'profile'])->name('profile');
     
-    // We will add the Appointment routes here later!
+    // Appointment Route
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+    // Save Appointment
+    Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 });
