@@ -10,7 +10,7 @@
                     <a href="{{ route('dashboard') }}" class="btn btn-light btn-sm">Back to Dashboard</a>
                 </div>
                 <div class="card-body">
-                    <div id="calendar"></div>
+                    <div id="calendar" data-verified="{{ Auth::user()->is_verified }}"></div>
                 </div>
             </div>
         </div>
@@ -78,10 +78,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. Get User Verification Status from Laravel
-        const isVerified = {{ Auth::user()->is_verified ? 'true' : 'false' }};
-        
         var calendarEl = document.getElementById('calendar');
+
+        // FIX: Read the status from the HTML attribute instead of using Blade here.
+        // This makes VS Code happy because it's 100% valid JavaScript.
+        const isVerified = calendarEl.getAttribute('data-verified') == '1'; // In database, true is often saved as '1'
+        
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             headerToolbar: {
@@ -92,30 +94,28 @@
             height: 'auto',
             selectable: true, 
 
-            // 2. Handle Date Click
+            // Handle Date Click
             dateClick: function(info) {
                 // Constraint Check: Is the user verified?
                 if (!isVerified) {
                     alert('Your account is not verified yet. Please upload your ID in settings to enable booking.');
-                    return; // Stop here
+                    return; 
                 }
 
                 // Constraint Check: Don't allow past dates
                 let clickedDate = new Date(info.dateStr);
                 let today = new Date();
-                today.setHours(0,0,0,0); // Remove time part for accurate comparison
+                today.setHours(0,0,0,0); 
 
                 if (clickedDate < today) {
                     alert('You cannot book an appointment in the past.');
                     return;
                 }
 
-                // 3. Open the Modal
-                // Fill the hidden input and the display text
+                // Open the Modal
                 document.getElementById('modalDateInput').value = info.dateStr;
                 document.getElementById('displayDate').innerText = info.dateStr;
                 
-                // Show Bootstrap Modal
                 var myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
                 myModal.show();
             }

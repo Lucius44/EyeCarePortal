@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController; // <--- ADD THIS LINE
+use App\Http\Controllers\AdminController;
 
 // -- Public Routes --
 Route::get('/', function () {
@@ -31,4 +32,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     // Save Appointment
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+});
+
+// -- Admin Routes (Protected) --
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    
+    // We will add Accept/Reject routes here later
 });
