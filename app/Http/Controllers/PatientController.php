@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Appointment;
 
 class PatientController extends Controller
 {
@@ -46,5 +47,25 @@ class PatientController extends Controller
         ]);
 
         return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
+    }
+
+    // Show Patient's Appointment List
+    public function myAppointments()
+    {
+        $user_id = Auth::id();
+
+        // 1. Upcoming (Pending or Confirmed)
+        $upcoming = Appointment::where('user_id', $user_id)
+                               ->whereIn('status', ['pending', 'confirmed'])
+                               ->orderBy('appointment_date')
+                               ->get();
+
+        // 2. History (Completed, Cancelled, No-Show)
+        $history = Appointment::where('user_id', $user_id)
+                              ->whereIn('status', ['completed', 'cancelled', 'no-show'])
+                              ->orderByDesc('appointment_date')
+                              ->get();
+
+        return view('patient.my_appointments', compact('upcoming', 'history'));
     }
 }

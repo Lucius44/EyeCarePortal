@@ -36,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
     // Settings & Upload
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
+
+    Route::get('/my-appointments', [PatientController::class, 'myAppointments'])->name('my.appointments');
 });
 
 // -- Admin Routes (Protected) --
