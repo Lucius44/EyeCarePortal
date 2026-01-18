@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Appointment;
 
 class PatientController extends Controller
@@ -67,5 +68,43 @@ class PatientController extends Controller
                               ->get();
 
         return view('patient.my_appointments', compact('upcoming', 'history'));
+    }
+
+    // Update Phone Number
+    public function updatePhone(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required|string|max:20',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->update(['phone_number' => $request->phone_number]);
+
+        return back()->with('success', 'Phone number updated successfully.');
+    }
+
+    // Change Password
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|confirmed|min:8|regex:/[A-Z]/|regex:/[0-9]/',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // 1. Check if current password is correct
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
+        }
+
+        // 2. Update the password
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return back()->with('success', 'Password changed successfully.');
     }
 }
