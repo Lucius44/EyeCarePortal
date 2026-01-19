@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    :root {
+        /* Light Bluish Gradient for Login */
+        --bg-gradient: linear-gradient(135deg, #e3f2fd 0%, #90caf9 100%);
+    }
+</style>
+
 <div class="row justify-content-center align-items-center" style="min-height: 70vh;">
     <div class="col-md-5 col-lg-4">
         <div class="card card-modern p-4">
@@ -39,7 +46,7 @@
                     </div>
 
                     <div class="text-center">
-                        <span class="text-muted small">New patient?</span> 
+                        <span class="text-muted small">Don't have an account?</span> 
                         <a href="{{ route('register') }}" class="text-decoration-none fw-semibold">Create Account</a>
                     </div>
                 </form>

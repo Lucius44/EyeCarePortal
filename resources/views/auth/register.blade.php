@@ -1,6 +1,37 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    :root {
+        /* 1. Light Greenish Gradient */
+        --bg-gradient: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%);
+        /* 2. Redefine Primary Color to Green */
+        --primary-color: #198754; 
+    }
+
+    /* 3. Force Bootstrap Primary elements to use our Green theme */
+    .text-primary { color: var(--primary-color) !important; }
+    .bg-primary { background-color: var(--primary-color) !important; }
+    
+    /* 4. Custom Button Override to keep the Layout's shape but change color */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2); /* Green shadow */
+    }
+    .btn-primary:hover {
+        background-color: #157347; /* Darker Green */
+        border-color: #146c43;
+        box-shadow: 0 6px 15px rgba(25, 135, 84, 0.3);
+    }
+    
+    /* 5. Update floating label focus color */
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
         <div class="card card-modern">
@@ -10,9 +41,9 @@
                     <h3 class="fw-bold text-primary mb-3">Patient Registration</h3>
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <span class="badge rounded-pill bg-primary" id="badgeStep1">1</span>
-                        <div class="progress" style="width: 50px; height: 4px;"><div class="progress-bar" id="bar1" style="width: 0%"></div></div>
+                        <div class="progress" style="width: 50px; height: 4px;"><div class="progress-bar bg-primary" id="bar1" style="width: 0%"></div></div>
                         <span class="badge rounded-pill bg-secondary" id="badgeStep2">2</span>
-                        <div class="progress" style="width: 50px; height: 4px;"><div class="progress-bar" id="bar2" style="width: 0%"></div></div>
+                        <div class="progress" style="width: 50px; height: 4px;"><div class="progress-bar bg-primary" id="bar2" style="width: 0%"></div></div>
                         <span class="badge rounded-pill bg-secondary" id="badgeStep3">3</span>
                     </div>
                 </div>
