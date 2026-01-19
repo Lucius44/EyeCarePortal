@@ -56,9 +56,13 @@
                                     @forelse($pending as $appt)
                                     <tr>
                                         <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
-                                        <td>{{ $appt->appointment_date }} <br> <small class="text-muted">{{ $appt->appointment_time }}</small></td>
+                                        <td>
+                                            {{ $appt->appointment_date->format('M d, Y') }} 
+                                            <br> 
+                                            <small class="text-muted">{{ $appt->appointment_time }}</small>
+                                        </td>
                                         <td>{{ $appt->service }}</td>
-                                        <td>{{Str::limit($appt->description, 30)}}</td>
+                                        <td>{{ Str::limit($appt->description, 30) }}</td>
                                         <td>
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
@@ -97,7 +101,11 @@
                                     @forelse($confirmed as $appt)
                                     <tr>
                                         <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
-                                        <td>{{ $appt->appointment_date }} <br> <small class="text-muted">{{ $appt->appointment_time }}</small></td>
+                                        <td>
+                                            {{ $appt->appointment_date->format('M d, Y') }} 
+                                            <br> 
+                                            <small class="text-muted">{{ $appt->appointment_time }}</small>
+                                        </td>
                                         <td>{{ $appt->service }}</td>
                                         <td>
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
@@ -136,11 +144,15 @@
                                     @foreach($history as $appt)
                                     <tr>
                                         <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
-                                        <td>{{ $appt->appointment_date }}</td>
+                                        <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
                                         <td>
-                                            @if($appt->status == 'completed') <span class="badge bg-success">Completed</span>
-                                            @elseif($appt->status == 'cancelled') <span class="badge bg-danger">Cancelled</span>
-                                            @elseif($appt->status == 'no-show') <span class="badge bg-warning text-dark">No-Show</span>
+                                            {{-- FIX: Compare the Enum VALUE, not the object --}}
+                                            @if($appt->status->value === 'completed') 
+                                                <span class="badge bg-success">Completed</span>
+                                            @elseif($appt->status->value === 'cancelled') 
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            @elseif($appt->status->value === 'no-show') 
+                                                <span class="badge bg-warning text-dark">No-Show</span>
                                             @endif
                                         </td>
                                     </tr>

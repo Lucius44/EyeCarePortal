@@ -56,13 +56,15 @@
                                         @foreach($upcoming as $appt)
                                         <tr>
                                             <td>
-                                                {{ \Carbon\Carbon::parse($appt->appointment_date)->format('M d, Y') }}
+                                                {{-- CLEANED: No need for Carbon::parse() anymore --}}
+                                                {{ $appt->appointment_date->format('M d, Y') }}
                                                 <br>
                                                 <small class="text-muted">{{ $appt->appointment_time }}</small>
                                             </td>
                                             <td>{{ $appt->service }}</td>
                                             <td>
-                                                @if($appt->status == 'confirmed')
+                                                {{-- FIX: Using ->value for comparison --}}
+                                                @if($appt->status->value === 'confirmed')
                                                     <span class="badge bg-success">Confirmed</span>
                                                 @else
                                                     <span class="badge bg-warning text-dark">Pending</span>
@@ -99,14 +101,15 @@
                                     <tbody>
                                         @foreach($history as $appt)
                                         <tr>
-                                            <td>{{ \Carbon\Carbon::parse($appt->appointment_date)->format('M d, Y') }}</td>
+                                            <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
                                             <td>{{ $appt->service }}</td>
                                             <td>
-                                                @if($appt->status == 'completed') 
+                                                {{-- FIX: Using ->value for comparison --}}
+                                                @if($appt->status->value === 'completed') 
                                                     <span class="badge bg-success">Completed</span>
-                                                @elseif($appt->status == 'cancelled') 
+                                                @elseif($appt->status->value === 'cancelled') 
                                                     <span class="badge bg-danger">Cancelled</span>
-                                                @elseif($appt->status == 'no-show') 
+                                                @elseif($appt->status->value === 'no-show') 
                                                     <span class="badge bg-secondary">No-Show</span>
                                                 @endif
                                             </td>
