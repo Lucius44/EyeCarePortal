@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\AppointmentStatus;
 
 class Appointment extends Model
 {
@@ -35,4 +36,12 @@ class Appointment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    protected function casts(): array // <--- Add this method
+{
+    return [
+        'appointment_date' => 'date',
+        'status' => AppointmentStatus::class,
+    ];
+}
 }

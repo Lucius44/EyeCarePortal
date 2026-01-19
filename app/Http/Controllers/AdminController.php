@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\User;
+use App\Enums\AppointmentStatus;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -18,7 +20,7 @@ class AdminController extends Controller
             return [
                 'title' => $appt->user->first_name . ' - ' . $appt->service,
                 'start' => $appt->appointment_date . 'T' . $appt->appointment_time,
-                'color' => $appt->status === 'confirmed' ? '#198754' : '#ffc107',
+                'color' => $appt->status->color(),
                 'extendedProps' => [
                     'status' => $appt->status,
                     'description' => $appt->description
@@ -48,7 +50,7 @@ class AdminController extends Controller
         
         // Validate that the status is a valid one
         $request->validate([
-            'status' => 'required|in:confirmed,cancelled,completed,no-show'
+            'status' => ['required', Rule::enum(AppointmentStatus::class)],
         ]);
 
         $appointment->update(['status' => $request->status]);

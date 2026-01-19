@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\UserRole;
 
 class AdminMiddleware
 {
@@ -16,12 +17,12 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user is logged in AND is an admin
-        if (Auth::check() && Auth::user()->role === 'admin') {
-            return $next($request); // Pass them through
+        // OLD: if (Auth::check() && Auth::user()->role === 'admin')
+        // NEW:
+        if (Auth::check() && Auth::user()->role === UserRole::Admin) {
+            return $next($request);
         }
 
-        // If not, send them back to the dashboard (or login) with an error
         return redirect('/dashboard')->with('error', 'You do not have admin access.');
     }
 }

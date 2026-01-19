@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Enums\UserRole;
 
 class AuthController extends Controller
 {
@@ -24,14 +25,15 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        // In authenticate() method:
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // --- FIX: Check Role and Redirect Accordingly ---
-            if (Auth::user()->role === 'admin') {
+            // OLD: if (Auth::user()->role === 'admin')
+            // NEW:
+            if (Auth::user()->role === UserRole::Admin) {
                 return redirect()->route('admin.dashboard');
             }
-
             return redirect()->route('dashboard');
         }
 
@@ -78,8 +80,8 @@ class AuthController extends Controller
             'gender' => $request->gender,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'patient', // Default role
-            'is_verified' => false, // Default unverified
+            'role' => UserRole::Patient, // <--- Use Enum here
+            'is_verified' => false,
         ]);
 
         // 3. Login automatically and redirect
