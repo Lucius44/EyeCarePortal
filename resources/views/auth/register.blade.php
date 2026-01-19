@@ -13,22 +13,38 @@
     .text-primary { color: var(--primary-color) !important; }
     .bg-primary { background-color: var(--primary-color) !important; }
     
-    /* 4. Custom Button Override to keep the Layout's shape but change color */
+    /* 4. Custom Button Override */
     .btn-primary {
         background-color: var(--primary-color);
         border-color: var(--primary-color);
-        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2); /* Green shadow */
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
     }
     .btn-primary:hover {
-        background-color: #157347; /* Darker Green */
+        background-color: #157347; 
         border-color: #146c43;
         box-shadow: 0 6px 15px rgba(25, 135, 84, 0.3);
     }
     
-    /* 5. Update floating label focus color */
-    .form-control:focus {
+    /* 5. Update floating label AND Select focus color */
+    .form-control:focus, .form-select:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
+    }
+
+    /* 6. Password Toggle Icon Style */
+    .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+        z-index: 10;
+        font-size: 1.2rem;
+        transition: color 0.2s;
+    }
+    .password-toggle:hover {
+        color: var(--primary-color);
     }
 </style>
 
@@ -126,12 +142,14 @@
                                 <div class="form-floating position-relative">
                                     <input type="password" name="password" class="form-control" id="password" placeholder="Pass" required>
                                     <label for="password">Password</label>
+                                    <i class="bi bi-eye password-toggle" id="togglePassword"></i>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-floating">
+                                <div class="form-floating position-relative">
                                     <input type="password" name="password_confirmation" class="form-control" id="conf" placeholder="Confirm" required>
                                     <label for="conf">Confirm Password</label>
+                                    <i class="bi bi-eye password-toggle" id="toggleConfirm"></i>
                                 </div>
                             </div>
                             <div class="col-12 form-text text-muted small">
@@ -163,14 +181,34 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Set Max Date (18 years ago)
+        // Date Logic
         const maxDate = new Date();
         maxDate.setFullYear(maxDate.getFullYear() - 18);
         document.getElementById('dobField').max = maxDate.toISOString().split('T')[0];
+
+        // Toggle Password Logic (Reusable function)
+        function setupToggle(toggleId, inputId) {
+            const toggle = document.getElementById(toggleId);
+            const input = document.getElementById(inputId);
+
+            toggle.addEventListener('click', function () {
+                // Toggle Type
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                
+                // Toggle Icon
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        // Initialize Toggles
+        setupToggle('togglePassword', 'password');
+        setupToggle('toggleConfirm', 'conf');
     });
 
+    // Multi-step Logic
     function updateIndicators(step) {
-        // Update Badges
         for(let i=1; i<=3; i++) {
             const badge = document.getElementById('badgeStep'+i);
             if(i <= step) {
@@ -181,7 +219,6 @@
                 badge.classList.add('bg-secondary');
             }
         }
-        // Update Bars
         if(step > 1) document.getElementById('bar1').style.width = '100%';
         else document.getElementById('bar1').style.width = '0%';
         
@@ -190,14 +227,10 @@
     }
 
     function nextStep(target) {
-        // (Validation logic remains same as your original script)
-        // Check validity...
         const currentInputs = document.getElementById('step'+(target-1)).querySelectorAll('input, select');
         for(let input of currentInputs) {
             if(!input.checkValidity()) { input.reportValidity(); return; }
         }
-        
-        // Switch Views
         document.querySelectorAll('.step').forEach(el => el.classList.add('d-none'));
         document.getElementById('step' + target).classList.remove('d-none');
         updateIndicators(target);
