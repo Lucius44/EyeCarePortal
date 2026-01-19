@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Enums\UserRole;
+use App\Http\Requests\RegisterUserRequest; // <--- Import the new Request
 
 class AuthController extends Controller
 {
@@ -17,7 +18,6 @@ class AuthController extends Controller
     }
 
     // Process Login
-// Process Login
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
@@ -25,15 +25,13 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // In authenticate() method:
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // OLD: if (Auth::user()->role === 'admin')
-            // NEW:
             if (Auth::user()->role === UserRole::Admin) {
                 return redirect()->route('admin.dashboard');
             }
+
             return redirect()->route('dashboard');
         }
 
@@ -49,29 +47,12 @@ class AuthController extends Controller
     }
 
     // Process Signup
-    public function store(Request $request)
+    public function store(RegisterUserRequest $request) // <--- Use the new Request class
     {
-        // 1. Validate the Data (Based on your requirements)
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'birthday' => 'required|date',
-            'gender' => 'required|string',
-            
-            // "Must be a @gmail.com address"
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', 'ends_with:gmail.com'],
-            
-            // "Min 8 chars, 1 uppercase, alphanumeric combo"
-            'password' => [
-                'required',
-                'confirmed',
-                'min:8',
-                'regex:/[A-Z]/',      // Must contain an uppercase letter
-                'regex:/[0-9]/',      // Must contain a number
-            ],
-        ]);
+        // Note: Validation is now handled automatically by RegisterUserRequest.
+        // We can access the validated data directly or use the request object.
 
-        // 2. Create the User
+        // Create the User
         $user = User::create([
             'first_name' => $request->first_name,
             'middle_name' => $request->middle_name, // Optional
@@ -80,11 +61,11 @@ class AuthController extends Controller
             'gender' => $request->gender,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => UserRole::Patient, // <--- Use Enum here
-            'is_verified' => false,
+            'role' => UserRole::Patient, // Using the Enum
+            'is_verified' => false, // Default unverified
         ]);
 
-        // 3. Login automatically and redirect
+        // Login automatically and redirect
         Auth::login($user);
 
         return redirect()->route('dashboard');
