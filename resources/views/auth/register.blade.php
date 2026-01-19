@@ -57,10 +57,15 @@
                     <h3 class="fw-bold text-primary mb-3">Patient Registration</h3>
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <span class="badge rounded-pill bg-primary" id="badgeStep1">1</span>
-                        <div class="progress" style="width: 50px; height: 4px;"><div class="progress-bar bg-primary" id="bar1" style="width: 0%"></div></div>
+                        <div class="progress" style="width: 40px; height: 4px;"><div class="progress-bar bg-primary" id="bar1" style="width: 0%"></div></div>
+                        
                         <span class="badge rounded-pill bg-secondary" id="badgeStep2">2</span>
-                        <div class="progress" style="width: 50px; height: 4px;"><div class="progress-bar bg-primary" id="bar2" style="width: 0%"></div></div>
+                        <div class="progress" style="width: 40px; height: 4px;"><div class="progress-bar bg-primary" id="bar2" style="width: 0%"></div></div>
+                        
                         <span class="badge rounded-pill bg-secondary" id="badgeStep3">3</span>
+                        <div class="progress" style="width: 40px; height: 4px;"><div class="progress-bar bg-primary" id="bar3" style="width: 0%"></div></div>
+                        
+                        <span class="badge rounded-pill bg-secondary" id="badgeStep4">4</span>
                     </div>
                 </div>
 
@@ -157,6 +162,19 @@
                             </div>
                         </div>
 
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary px-4" onclick="prevStep(2)">Back</button>
+                            <button type="button" class="btn btn-primary px-4" onclick="nextStep(4)">Next Step <i class="bi bi-arrow-right ms-2"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="step d-none" id="step4">
+                        <h5 class="mb-4 fw-semibold"><i class="bi bi-check-circle me-2"></i>Verification & Terms</h5>
+
+                        <div class="mb-4 d-flex justify-content-center">
+                            <div class="g-recaptcha" data-sitekey="6Ldfi08sAAAAAGc0iqVrllnpeXvNNDM07shQ8MDe"></div>
+                        </div>
+
                         <div class="form-check bg-light p-3 rounded border mb-4">
                             <input class="form-check-input ms-1" type="checkbox" id="terms" required>
                             <label class="form-check-label ms-2" for="terms">
@@ -165,7 +183,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-outline-secondary px-4" onclick="prevStep(2)">Back</button>
+                            <button type="button" class="btn btn-outline-secondary px-4" onclick="prevStep(3)">Back</button>
                             <button type="submit" class="btn btn-success px-5 fw-bold">Create Account</button>
                         </div>
                     </div>
@@ -179,6 +197,8 @@
     </div>
 </div>
 
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Date Logic
@@ -191,15 +211,17 @@
             const toggle = document.getElementById(toggleId);
             const input = document.getElementById(inputId);
 
-            toggle.addEventListener('click', function () {
-                // Toggle Type
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
-                
-                // Toggle Icon
-                this.classList.toggle('bi-eye');
-                this.classList.toggle('bi-eye-slash');
-            });
+            if(toggle && input) {
+                toggle.addEventListener('click', function () {
+                    // Toggle Type
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    
+                    // Toggle Icon
+                    this.classList.toggle('bi-eye');
+                    this.classList.toggle('bi-eye-slash');
+                });
+            }
         }
 
         // Initialize Toggles
@@ -209,7 +231,8 @@
 
     // Multi-step Logic
     function updateIndicators(step) {
-        for(let i=1; i<=3; i++) {
+        // Updated loop to 4 steps
+        for(let i=1; i<=4; i++) {
             const badge = document.getElementById('badgeStep'+i);
             if(i <= step) {
                 badge.classList.remove('bg-secondary');
@@ -219,18 +242,25 @@
                 badge.classList.add('bg-secondary');
             }
         }
+        
+        // Update bars
         if(step > 1) document.getElementById('bar1').style.width = '100%';
         else document.getElementById('bar1').style.width = '0%';
         
         if(step > 2) document.getElementById('bar2').style.width = '100%';
         else document.getElementById('bar2').style.width = '0%';
+
+        if(step > 3) document.getElementById('bar3').style.width = '100%';
+        else document.getElementById('bar3').style.width = '0%';
     }
 
     function nextStep(target) {
+        // Validate current step inputs
         const currentInputs = document.getElementById('step'+(target-1)).querySelectorAll('input, select');
         for(let input of currentInputs) {
             if(!input.checkValidity()) { input.reportValidity(); return; }
         }
+        
         document.querySelectorAll('.step').forEach(el => el.classList.add('d-none'));
         document.getElementById('step' + target).classList.remove('d-none');
         updateIndicators(target);
