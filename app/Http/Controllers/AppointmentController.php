@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
+use App\Enums\AppointmentStatus;
 use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
@@ -19,26 +20,22 @@ class AppointmentController extends Controller
     }
 
     // Save the Appointment
-    public function store(Request $request)
+    public function store(StoreAppointmentRequest $request)
     {
-        // 1. Validation
-        $request->validate([
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required',
-            'service' => 'required',
-        ]);
+        // Note: We don't need $request->validate(...) here anymore.
+        // If validation fails, Laravel automatically redirects back with errors.
 
-        // 2. Create the Appointment
+        // Create the Appointment
         Appointment::create([
-            'user_id' => Auth::id(), // Link to the logged-in user
+            'user_id' => Auth::id(),
             'service' => $request->service,
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
             'description' => $request->description,
-            'status' => 'pending'
+            'status' => AppointmentStatus::Pending // <--- Fixed: Using Enum here
         ]);
 
-        // 3. Redirect back with a success message
+        // Redirect back with a success message
         return redirect()->route('dashboard')->with('success', 'Appointment request submitted successfully!');
     }
 }

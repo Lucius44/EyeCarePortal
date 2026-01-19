@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus;
+use App\Enums\UserRole;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
@@ -35,10 +36,26 @@ class AdminController extends Controller
     // Show the Management Table
     public function appointments()
     {
-        $pending = Appointment::where('status', 'pending')->with('user')->orderBy('appointment_date')->get();
-        $confirmed = Appointment::where('status', 'confirmed')->with('user')->orderBy('appointment_date')->get();
+        // --- FIXED: Using Enums in queries ---
+        $pending = Appointment::where('status', AppointmentStatus::Pending)
+                              ->with('user')
+                              ->orderBy('appointment_date')
+                              ->get();
+
+        $confirmed = Appointment::where('status', AppointmentStatus::Confirmed)
+                                ->with('user')
+                                ->orderBy('appointment_date')
+                                ->get();
+                                
         // History includes completed, cancelled, and no-show
-        $history = Appointment::whereIn('status', ['completed', 'cancelled', 'no-show'])->with('user')->orderByDesc('appointment_date')->get();
+        $history = Appointment::whereIn('status', [
+                                    AppointmentStatus::Completed, 
+                                    AppointmentStatus::Cancelled, 
+                                    AppointmentStatus::NoShow
+                                ])
+                              ->with('user')
+                              ->orderByDesc('appointment_date')
+                              ->get();
 
         return view('admin.appointments', compact('pending', 'confirmed', 'history'));
     }
@@ -48,27 +65,29 @@ class AdminController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
         
-        // Validate that the status is a valid one
+        // Validate that the status is a valid one using the Enum Rule
         $request->validate([
             'status' => ['required', Rule::enum(AppointmentStatus::class)],
         ]);
 
         $appointment->update(['status' => $request->status]);
 
-        return back()->with('success', 'Appointment status updated to ' . ucfirst($request->status));
+        return back()->with('success', 'Appointment status updated successfully.');
     }
 
     // Show User List
     public function users()
     {
+        // --- FIXED: Using Enums in queries ---
+        
         // Users who have uploaded an ID but are NOT verified yet
-        $pendingUsers = User::where('role', 'patient')
+        $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
                             ->where('is_verified', false)
                             ->get();
 
         // All other users (for reference)
-        $allUsers = User::where('role', 'patient')->get();
+        $allUsers = User::where('role', UserRole::Patient)->get();
 
         return view('admin.users', compact('pendingUsers', 'allUsers'));
     }
