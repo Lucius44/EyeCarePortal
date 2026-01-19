@@ -7,27 +7,19 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
+use App\Http\Resources\CalendarEventResource; // <--- Import the new Resource
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        // 1. Get appointments
-        $rawAppointments = Appointment::with('user')->get();
+        // 1. Get appointments with user data
+        $appointments = Appointment::with('user')->get();
 
-        // 2. Format them for FullCalendar HERE (Server-side)
-        $events = $rawAppointments->map(function ($appt) {
-            return [
-                'title' => $appt->user->first_name . ' - ' . $appt->service,
-                'start' => $appt->appointment_date . 'T' . $appt->appointment_time,
-                'color' => $appt->status->color(),
-                'extendedProps' => [
-                    'status' => $appt->status,
-                    'description' => $appt->description
-                ]
-            ];
-        });
+        // 2. Transform them using our new Resource
+        // ->resolve() converts the resource object into a plain PHP array
+        $events = CalendarEventResource::collection($appointments)->resolve();
 
         // 3. Pass the formatted 'events' to the view
         return view('admin.dashboard', compact('events'));
@@ -36,7 +28,7 @@ class AdminController extends Controller
     // Show the Management Table
     public function appointments()
     {
-        // --- FIXED: Using Enums in queries ---
+        // Using Enums in queries
         $pending = Appointment::where('status', AppointmentStatus::Pending)
                               ->with('user')
                               ->orderBy('appointment_date')
@@ -78,8 +70,6 @@ class AdminController extends Controller
     // Show User List
     public function users()
     {
-        // --- FIXED: Using Enums in queries ---
-        
         // Users who have uploaded an ID but are NOT verified yet
         $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
