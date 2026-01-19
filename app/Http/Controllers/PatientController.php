@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Appointment;
+use App\Enums\AppointmentStatus; // <--- Import the Enum
 
 class PatientController extends Controller
 {
@@ -18,7 +19,7 @@ class PatientController extends Controller
     // 2. The Profile Page
     public function profile()
     {
-        $user = Auth::user(); // Get the currently logged-in user
+        $user = Auth::user(); 
         return view('patient.profile', compact('user'));
     }
 
@@ -32,17 +33,14 @@ class PatientController extends Controller
     public function uploadId(Request $request)
     {
         $request->validate([
-            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
         ]);
 
-        /** @var \App\Models\User $user */ // <--- ADD THIS LINE
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // 1. Store the file in the 'public' folder
-        // It will be saved in: storage/app/public/id_photos
         $path = $request->file('id_photo')->store('id_photos', 'public');
 
-        // 2. Save the path to the database
         $user->update([
             'id_photo_path' => $path
         ]);
@@ -56,14 +54,20 @@ class PatientController extends Controller
         $user_id = Auth::id();
 
         // 1. Upcoming (Pending or Confirmed)
+        // --- FIXED: Using Enums instead of strings ---
         $upcoming = Appointment::where('user_id', $user_id)
-                               ->whereIn('status', ['pending', 'confirmed'])
+                               ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
                                ->orderBy('appointment_date')
                                ->get();
 
         // 2. History (Completed, Cancelled, No-Show)
+        // --- FIXED: Using Enums ---
         $history = Appointment::where('user_id', $user_id)
-                              ->whereIn('status', ['completed', 'cancelled', 'no-show'])
+                              ->whereIn('status', [
+                                  AppointmentStatus::Completed, 
+                                  AppointmentStatus::Cancelled, 
+                                  AppointmentStatus::NoShow
+                              ])
                               ->orderByDesc('appointment_date')
                               ->get();
 
@@ -95,12 +99,10 @@ class PatientController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // 1. Check if current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
         }
 
-        // 2. Update the password
         $user->update([
             'password' => Hash::make($request->password)
         ]);
