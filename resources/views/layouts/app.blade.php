@@ -80,7 +80,7 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-                <i class="bi bi-eye-fill fs-4"></i> EyeCare Portal
+                <i class="bi bi-eye-fill fs-4"></i> ClearOptics
             </a>
         </div>
     </nav>

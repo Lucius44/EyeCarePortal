@@ -16,7 +16,7 @@
                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
                         <i class="bi bi-person-lock fs-3"></i>
                     </div>
-                    <h4 class="fw-bold">Welcome Back</h4>
+                    <h4 class="fw-bold text-primary">Login</h4>
                     <p class="text-muted small">Access your patient portal securely</p>
                 </div>
 
@@ -47,7 +47,7 @@
 
                     <div class="text-center">
                         <span class="text-muted small">Don't have an account?</span> 
-                        <a href="{{ route('register') }}" class="text-decoration-none fw-semibold">Create Account</a>
+                        <a href="{{ route('register') }}" class="text-decoration-none fw-semibold text-success">Create Account</a>
                     </div>
                 </form>
             </div>
