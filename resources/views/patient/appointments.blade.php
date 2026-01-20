@@ -21,20 +21,51 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-12">
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3 text-muted small">
-                        <span class="d-inline-block border me-1 rounded-circle" style="width: 15px; height: 15px; background: #fff;"></span> Available
-                        <span class="d-inline-block ms-3 me-1 rounded-circle" style="width: 15px; height: 15px; background: #d1e7dd;"></span> Today
-                        <span class="d-inline-block ms-3 me-1 rounded-circle" style="width: 15px; height: 15px; background: #f8f9fa;"></span> Unavailable
+            
+            {{-- Error/Success Alerts --}}
+            @if ($errors->any())
+                <div class="alert alert-danger rounded-4">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+                
+                {{-- BLOCKING OVERLAY: If user has an active appointment --}}
+                @if($hasActiveAppointment)
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 z-3 d-flex flex-column justify-content-center align-items-center text-center">
+                    <div class="bg-white p-5 rounded-4 shadow-lg border">
+                        <i class="bi bi-calendar-check text-success display-1 mb-3"></i>
+                        <h3 class="fw-bold">Appointment Pending or Confirmed</h3>
+                        <p class="text-muted">You already have an active appointment.<br>You cannot book another one until your current appointment is completed or cancelled.</p>
+                        <a href="{{ route('my.appointments') }}" class="btn btn-primary px-4 rounded-pill mt-2">View My Appointments</a>
                     </div>
-                    <div id="calendar" data-verified="{{ Auth::user()->is_verified }}"></div>
+                </div>
+                @endif
+
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3 text-muted small flex-wrap gap-3">
+                        <div><span class="d-inline-block border me-1 rounded-circle" style="width: 15px; height: 15px; background: #fff;"></span> Available</div>
+                        <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #d1e7dd;"></span> Today</div>
+                        <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #dc3545;"></span> Fully Booked (5/5)</div>
+                    </div>
+                    
+                    <div id="calendar" 
+                         data-verified="{{ Auth::user()->is_verified }}"
+                         data-daily-counts="{{ json_encode($dailyCounts) }}"
+                         data-taken-slots="{{ json_encode($takenSlots) }}"
+                    ></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+{{-- BOOKING MODAL --}}
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form action="{{ route('appointments.store') }}" method="POST">
@@ -51,6 +82,8 @@
                     <div class="mb-3">
                         <label class="fw-bold text-secondary small text-uppercase">Selected Date</label>
                         <div id="displayDate" class="fs-4 text-primary fw-bold"></div>
+                        {{-- Booking count feedback --}}
+                        <div id="slotsInfo" class="small text-muted mt-1"></div>
                     </div>
 
                     <div class="mb-3">
@@ -65,17 +98,18 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Preferred Time</label>
-                        <select name="appointment_time" class="form-select form-select-lg" required>
+                        <select name="appointment_time" id="timeSlotSelect" class="form-select form-select-lg" required>
                             <option value="">-- Select Time --</option>
-                            <option value="09:00 AM">09:00 AM</option>
-                            <option value="10:00 AM">10:00 AM</option>
-                            <option value="11:00 AM">11:00 AM</option>
-                            <option value="01:00 PM">01:00 PM</option>
-                            <option value="02:00 PM">02:00 PM</option>
-                            <option value="03:00 PM">03:00 PM</option>
-                            <option value="04:00 PM">04:00 PM</option>
-                            <option value="05:00 PM">05:00 PM</option>
+                            @php
+                                $times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
+                            @endphp
+                            @foreach($times as $time)
+                                <option value="{{ $time }}">{{ $time }}</option>
+                            @endforeach
                         </select>
+                        <div class="form-text text-danger" id="timeSlotWarning" style="display:none;">
+                            Some slots are disabled because they are already booked.
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -97,18 +131,48 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+        
+        // FIX: Read attributes safely from the HTML
+        // This is 100% valid JavaScript, so VS Code will be happy.
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
+        
+        // We use JSON.parse() to turn the string back into an Object/Array
+        const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
+        const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
-        // 1. DATE LOGIC
+        // 2. CONVERT COUNTS TO EVENTS
+        let countEvents = [];
+        for (const [date, count] of Object.entries(dailyCounts)) {
+            let color = '#198754'; // Green (default)
+            let title = count + ' Booked';
+            
+            if (count >= 3 && count < 5) color = '#ffc107'; // Yellow/Orange
+            if (count >= 5) {
+                color = '#dc3545'; // Red (Full)
+                title = 'FULL';
+            }
+
+            countEvents.push({
+                title: title,
+                start: date,
+                allDay: true,
+                backgroundColor: color,
+                borderColor: color,
+                textColor: count >= 3 && count < 5 ? '#000' : '#fff',
+                classNames: ['booking-badge'] 
+            });
+        }
+
+        // 3. DATE LIMITS
         let today = new Date();
         today.setHours(0,0,0,0);
-        
         let maxBookableDate = new Date(today);
         maxBookableDate.setDate(today.getDate() + 30);
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'bootstrap5',
+            events: countEvents, 
             
             headerToolbar: {
                 left: 'title',
@@ -116,65 +180,106 @@
                 right: 'today prev,next'
             },
             
-            height: 'auto',
-            selectable: true, 
-            
-            // 2. RESTRICT NAVIGATION (Day & Month Views)
-            // 'validRange' automatically disables and greys out dates outside this window
             validRange: {
                 start: today,
                 end: maxBookableDate
             },
 
-            // 3. DAY VIEW CONFIGURATION
-            // Limiting the time grid to match your business hours
-            slotMinTime: '09:00:00', // Start at 9 AM
-            slotMaxTime: '18:00:00', // End at 6 PM (covering the 5 PM slot)
-            allDaySlot: false,       // Remove the "All Day" row at the top
-            slotDuration: '01:00:00',// 1 hour slots
-            expandRows: true,        // Fill height
+            // Day View Config
+            slotMinTime: '09:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: false,
+            expandRows: true,
 
-            // Interaction logic
+            // Logic to style days
+            dayCellClassNames: function(arg) {
+                // If Full (5 bookings), grey it out
+                let dateStr = arg.date.toISOString().split('T')[0];
+                if (dailyCounts[dateStr] >= 5) {
+                    return ['date-full']; 
+                }
+                return [];
+            },
+
+            // CLICK INTERACTION
             dateClick: function(info) {
                 if (!isVerified) {
-                    alert('Your account is not verified yet. Please upload your ID in settings to enable booking.');
+                    alert('Your account is not verified yet. Please upload your ID in settings.');
                     return; 
                 }
 
-                // Note: validRange prevents clicking disabled dates automatically, 
-                // so we don't strictly need the manual checks anymore, but keeping them is safe.
-                const parts = info.dateStr.split('-');
-                // Handle both YYYY-MM-DD (Month View) and YYYY-MM-DDTHH:mm:ss (Day View)
                 let dateStr = info.dateStr;
-                if(dateStr.includes('T')) {
-                    dateStr = dateStr.split('T')[0];
-                }
-                
-                const splitDate = dateStr.split('-');
-                const clickedDate = new Date(splitDate[0], splitDate[1] - 1, splitDate[2]); 
-                clickedDate.setHours(0,0,0,0);
+                if(dateStr.includes('T')) dateStr = dateStr.split('T')[0]; 
 
-                // Open Modal
-                document.getElementById('modalDateInput').value = dateStr;
-                document.getElementById('displayDate').innerText = clickedDate.toLocaleDateString(undefined, { 
-                    weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
-                });
+                // LOGIC: TODAY
+                let clickedDate = new Date(dateStr);
+                clickedDate.setHours(0,0,0,0); 
                 
-                var myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-                myModal.show();
+                let isToday = clickedDate.getTime() === today.getTime();
+
+                if (isToday) {
+                    let takenToday = takenSlots[dateStr] || [];
+                    let message = takenToday.length > 0 
+                        ? "Occupied Slots today: \n" + takenToday.join(", ") 
+                        : "No appointments scheduled today yet.";
+                    
+                    alert("Same-day online booking is disabled.\n\n" + message + "\n\nPlease call us for urgent inquiries.");
+                    return;
+                }
+
+                // LOGIC: FULLY BOOKED (5/5)
+                if (dailyCounts[dateStr] >= 5) {
+                    alert('This date is fully booked (5/5 appointments). Please select another date.');
+                    return;
+                }
+
+                // LOGIC: OPEN MODAL
+                openBookingModal(dateStr, clickedDate);
             }
         });
 
         calendar.render();
 
+        // Helper to open modal and disable taken slots
+        function openBookingModal(dateStr, dateObj) {
+            document.getElementById('modalDateInput').value = dateStr;
+            document.getElementById('displayDate').innerText = dateObj.toLocaleDateString(undefined, { 
+                weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+
+            // Count display
+            let count = dailyCounts[dateStr] || 0;
+            document.getElementById('slotsInfo').innerText = count + " / 5 slots filled";
+
+            // DISABLE TAKEN SLOTS
+            let select = document.getElementById('timeSlotSelect');
+            let taken = takenSlots[dateStr] || [];
+            let options = select.options;
+            let hasDisabled = false;
+
+            for (let i = 0; i < options.length; i++) {
+                if (taken.includes(options[i].value)) {
+                    options[i].disabled = true;
+                    options[i].innerText = options[i].value + " (Booked)";
+                    hasDisabled = true;
+                } else {
+                    options[i].disabled = false;
+                    options[i].innerText = options[i].value;
+                }
+            }
+            
+            document.getElementById('timeSlotWarning').style.display = hasDisabled ? 'block' : 'none';
+            select.value = "";
+
+            var myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            myModal.show();
+        }
+
         // Button Event Listeners
         document.getElementById('btnDayView').addEventListener('click', function() {
             calendar.changeView('timeGridDay');
-            
-            // Swap Classes
             this.classList.remove('btn-outline-light');
             this.classList.add('btn-light', 'text-primary');
-            
             let monthBtn = document.getElementById('btnMonthView');
             monthBtn.classList.remove('btn-light', 'text-primary');
             monthBtn.classList.add('btn-outline-light', 'text-white');
@@ -182,11 +287,8 @@
 
         document.getElementById('btnMonthView').addEventListener('click', function() {
             calendar.changeView('dayGridMonth');
-            
-            // Swap Classes
             this.classList.remove('btn-outline-light', 'text-white');
             this.classList.add('btn-light', 'text-primary');
-            
             let dayBtn = document.getElementById('btnDayView');
             dayBtn.classList.remove('btn-light', 'text-primary');
             dayBtn.classList.add('btn-outline-light');
@@ -205,7 +307,6 @@
         margin-top: -1.5rem;
         overflow: hidden;
     }
-
     .hero-overlay {
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -213,49 +314,43 @@
     }
 
     /* Calendar Base Styles */
-    .fc-toolbar-title {
-        font-size: 1.75rem !important;
-        font-weight: 700;
-        color: #333;
-    }
-    .fc-button-primary {
-        background-color: #0d6efd !important;
-        border-color: #0d6efd !important;
-        text-transform: capitalize;
-        font-weight: 500;
-    }
-    .fc-theme-standard td, .fc-theme-standard th {
-        border-color: #eff2f7;
-    }
+    .fc-toolbar-title { font-size: 1.75rem !important; font-weight: 700; color: #333; }
+    .fc-button-primary { background-color: #0d6efd !important; border-color: #0d6efd !important; text-transform: capitalize; font-weight: 500; }
+    .fc-theme-standard td, .fc-theme-standard th { border-color: #eff2f7; }
 
-    /* 1. TODAY'S DATE (Green Theme) */
-    .fc-day-today {
-        background-color: #d1e7dd !important; 
-        color: #0f5132 !important;            
-        font-weight: bold;
-    }
+    /* TODAY'S DATE (Green Theme) */
+    .fc-day-today { background-color: #d1e7dd !important; color: #0f5132 !important; font-weight: bold; }
 
-    /* 2. DISABLED DATES (Greyed out) - Applied via validRange */
-    .fc-day-disabled {
+    /* DISABLED / FULL DATES */
+    .fc-day-disabled, .date-full {
         background-color: #f8f9fa !important;
-        opacity: 1 !important; /* Force opacity to allow background color */
-        cursor: default !important;
-        pointer-events: none;
+        opacity: 1 !important;
+        cursor: not-allowed !important; 
     }
-    /* Hide number on disabled dates */
-    .fc-day-disabled .fc-daygrid-day-number {
-        visibility: hidden;
+    /* Specifically for Full dates */
+    .date-full {
+        background-color: #ffeaea !important; /* Light red */
     }
+    
+    .fc-day-disabled .fc-daygrid-day-number { visibility: hidden; }
 
-    /* 3. HOVER EFFECT (Blue Theme) */
-    /* Only apply to days that are NOT disabled */
-    .fc-daygrid-day:not(.fc-day-disabled) {
+    /* HOVER EFFECT */
+    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full) {
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
-    
-    .fc-daygrid-day:not(.fc-day-disabled):hover {
-        background-color: #e7f1ff !important; /* Light Blue Hover */
+    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full):hover {
+        background-color: #e7f1ff !important;
+    }
+
+    /* Event Styling (Badges) */
+    .booking-badge {
+        font-size: 0.75rem;
+        border-radius: 4px;
+        padding: 1px 2px;
+        margin-top: 2px;
+        text-align: center;
+        border: none !important;
     }
 </style>
 @endsection
