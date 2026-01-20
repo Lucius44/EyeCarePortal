@@ -26,11 +26,10 @@
         box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
     }
 
-    /* --- FIXED: Password Toggle & Input Spacing --- */
+    /* Password Toggle & Input Spacing */
     .password-toggle {
         position: absolute;
         top: 50%;
-        /* We move the eye icon 3rem (approx 48px) from the right to leave space for the validation icon */
         right: 3rem; 
         transform: translateY(-50%);
         cursor: pointer;
@@ -43,7 +42,6 @@
         color: var(--primary-color);
     }
     
-    /* Ensure the text inside the password field doesn't hit the two icons */
     #password, #conf {
         padding-right: 4.5rem !important; 
     }
@@ -56,6 +54,10 @@
         color: var(--primary-color);
         font-weight: 700;
         margin-top: 1.5rem;
+    }
+    .modal-body p, .modal-body li {
+        text-align: justify;
+        font-size: 0.95rem;
     }
 
     /* Error Shake Animation */
@@ -250,14 +252,44 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-secondary">
-                <div class="small mb-3"><strong>Effective Date:</strong> April 1, 2025</div>
-                <p>Welcome to the <strong>Eye Care Portal</strong>...</p>
-                <p>By accessing and using our Portal, you agree to the following terms and conditions.</p>
-                <h6>1. User Accounts</h6>
-                <ul><li>1.1. Users are required to sign up...</li></ul>
-                </div>
+                <div class="small mb-3 text-muted"><strong>Last Updated:</strong> January 20, 2026</div>
+                
+                <p>Welcome to the <strong>Eye Care Portal</strong>. By creating an account and using our online appointment system, you agree to comply with and be bound by the following terms and conditions of use.</p>
+
+                <h6>1. User Accounts & Security</h6>
+                <ul>
+                    <li><strong>1.1. Registration:</strong> You agree to provide accurate, current, and complete information during the registration process.</li>
+                    <li><strong>1.2. Identity Verification:</strong> To prevent fraud and ensure the safety of our clinic, users are required to upload a valid Government ID before booking an appointment. We reserve the right to suspend accounts with suspicious or falsified documents.</li>
+                    <li><strong>1.3. Account Security:</strong> You are responsible for maintaining the confidentiality of your password. You agree to notify us immediately of any unauthorized use of your account.</li>
+                </ul>
+
+                <h6>2. Appointment Booking & Cancellations</h6>
+                <ul>
+                    <li><strong>2.1. Booking Limits:</strong> To ensure fair access for all patients, users are limited to one (1) active appointment at a time. The system also limits the total number of bookings per day for the clinic.</li>
+                    <li><strong>2.2. Cancellation Policy:</strong> If you cannot make it to your appointment, please cancel via the portal or call us at least 24 hours in advance. Repeated "no-shows" may result in the suspension of your online booking privileges.</li>
+                    <li><strong>2.3. Rescheduling:</strong> The clinic reserves the right to reschedule appointments due to doctor unavailability or emergencies. We will notify you via the contact details provided.</li>
+                </ul>
+
+                <h6>3. Medical Disclaimer</h6>
+                <ul>
+                    <li><strong>3.1. Not for Emergencies:</strong> This portal is for scheduling routine eye examinations and check-ups only. If you are experiencing a medical emergency (e.g., sudden vision loss, severe eye pain, chemical injury), please go to the nearest emergency room immediately.</li>
+                    <li><strong>3.2. No Medical Advice:</strong> The content on this portal is for informational purposes and does not substitute for professional medical advice, diagnosis, or treatment.</li>
+                </ul>
+
+                <h6>4. Privacy & Data Protection</h6>
+                <ul>
+                    <li><strong>4.1. Data Usage:</strong> Your personal and medical information is stored securely and used solely for the purpose of managing your appointments and clinical records in accordance with the Data Privacy Act.</li>
+                    <li><strong>4.2. ID Storage:</strong> Uploaded IDs are used strictly for identity verification and are accessible only by authorized administrative staff.</li>
+                </ul>
+
+                <h6>5. User Conduct</h6>
+                <p>You agree not to use the portal to harass staff, book fake appointments, or upload offensive content. Any violation of these terms will result in immediate account termination.</p>
+
+                <h6>6. Contact Us</h6>
+                <p class="mb-0">If you have any questions regarding these Terms, please contact our support team at <strong>support@eyecareportal.com</strong> or visit our clinic during business hours.</p>
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand & Agree</button>
             </div>
         </div>
     </div>
