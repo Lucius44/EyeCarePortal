@@ -25,53 +25,48 @@
 
         /* Modern Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.9) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
             backdrop-filter: blur(10px);
             box-shadow: 0 2px 15px rgba(0,0,0,0.04);
+            padding: 1rem 0;
         }
         .navbar-brand {
             font-weight: 700;
             color: var(--primary-color) !important;
             letter-spacing: -0.5px;
+            font-size: 1.5rem;
         }
 
-        /* Glassmorphism Card */
-        .card-modern {
-            border: none;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
+        /* Nav Buttons */
+        .nav-link {
+            font-weight: 500;
+            color: #555 !important;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: var(--primary-color) !important;
         }
         
-        /* Floating Labels Override */
-        .form-floating > .form-control:focus ~ label,
-        .form-floating > .form-control:not(:placeholder-shown) ~ label {
-            color: var(--primary-color);
-            font-weight: 600;
+        .btn-nav-primary {
+            background-color: var(--primary-color);
+            color: white !important;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            transition: all 0.3s;
         }
-        .form-control {
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            padding: 1rem 0.75rem;
-        }
-        .form-control:focus {
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
-            border-color: var(--primary-color);
+        .btn-nav-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
         }
 
-        /* Buttons */
-        .btn-primary {
-            border-radius: 10px;
-            padding: 12px 20px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
-            transition: all 0.2s;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3);
+        /* Footer */
+        footer {
+            background: #fff;
+            margin-top: auto;
+            padding: 2rem 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #777;
         }
     </style>
 </head>
@@ -80,14 +75,49 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-                <i class="bi bi-eye-fill fs-4"></i> ClearOptics
+                <i class="bi bi-eye-fill fs-3"></i> ClearOptics
             </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-3">
+                    @guest
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-nav-primary" href="{{ route('register') }}">Create Account</a>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-link nav-link" style="text-decoration: none;">Logout</button>
+                            </form>
+                        </li>
+                    @endguest
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <div class="container py-5 flex-grow-1">
+    <main>
         @yield('content')
-    </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            &copy; {{ date('Y') }} ClearOptics Eye Clinic. All rights reserved.
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
