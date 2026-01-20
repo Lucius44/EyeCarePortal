@@ -8,10 +8,10 @@
         <p class="lead mb-4 text-white-50">Select a date below to book your consultation.</p>
         
         <div class="d-flex justify-content-center gap-3">
-            <button id="btnDayView" class="btn btn-light px-4 fw-bold rounded-pill shadow-sm">
+            <button id="btnDayView" class="btn btn-outline-light px-4 fw-bold rounded-pill border-2">
                 <i class="bi bi-calendar-day me-2"></i>Day View
             </button>
-            <button id="btnMonthView" class="btn btn-outline-light px-4 fw-bold rounded-pill text-white border-2">
+            <button id="btnMonthView" class="btn btn-light px-4 fw-bold rounded-pill text-primary shadow-sm">
                 <i class="bi bi-calendar-month me-2"></i>Month View
             </button>
         </div>
@@ -24,8 +24,9 @@
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3 text-muted small">
-                        <span class="d-inline-block bg-white border me-1" style="width: 15px; height: 15px;"></span> Available
-                        <span class="d-inline-block ms-3 me-1" style="width: 15px; height: 15px; background: #e9ecef;"></span> Unavailable (Past or >30 days out)
+                        <span class="d-inline-block border me-1 rounded-circle" style="width: 15px; height: 15px; background: #fff;"></span> Available
+                        <span class="d-inline-block ms-3 me-1 rounded-circle" style="width: 15px; height: 15px; background: #d1e7dd;"></span> Today
+                        <span class="d-inline-block ms-3 me-1 rounded-circle" style="width: 15px; height: 15px; background: #f8f9fa;"></span> Unavailable
                     </div>
                     <div id="calendar" data-verified="{{ Auth::user()->is_verified }}"></div>
                 </div>
@@ -98,13 +99,10 @@
         var calendarEl = document.getElementById('calendar');
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
 
-        // 1. ROBUST DATE SETUP (Local Time)
-        // We use setHours(0,0,0,0) to compare dates without worrying about time
+        // 1. DATE LOGIC
         let today = new Date();
         today.setHours(0,0,0,0);
         
-        // Calculate the maximum allowed booking date (Today + 30 days)
-        // Logic: You can book FROM today UNTIL 30 days in the future.
         let maxBookableDate = new Date(today);
         maxBookableDate.setDate(today.getDate() + 30);
 
@@ -121,18 +119,20 @@
             height: 'auto',
             selectable: true, 
             
-            // 2. GREY OUT INVALID DATES
-            dayCellClassNames: function(arg) {
-                // Parse the cell date ensuring local time logic to prevent timezone shifts
-                let cellDate = new Date(arg.date);
-                cellDate.setHours(0,0,0,0);
-
-                // Disable if in the past OR more than 30 days in future
-                if (cellDate < today || cellDate > maxBookableDate) {
-                    return ['date-disabled'];
-                }
-                return [];
+            // 2. RESTRICT NAVIGATION (Day & Month Views)
+            // 'validRange' automatically disables and greys out dates outside this window
+            validRange: {
+                start: today,
+                end: maxBookableDate
             },
+
+            // 3. DAY VIEW CONFIGURATION
+            // Limiting the time grid to match your business hours
+            slotMinTime: '09:00:00', // Start at 9 AM
+            slotMaxTime: '18:00:00', // End at 6 PM (covering the 5 PM slot)
+            allDaySlot: false,       // Remove the "All Day" row at the top
+            slotDuration: '01:00:00',// 1 hour slots
+            expandRows: true,        // Fill height
 
             // Interaction logic
             dateClick: function(info) {
@@ -141,28 +141,21 @@
                     return; 
                 }
 
-                // TIMEZONE SAFE PARSING
-                // info.dateStr is "YYYY-MM-DD". splitting handles local construction better than new Date(string)
+                // Note: validRange prevents clicking disabled dates automatically, 
+                // so we don't strictly need the manual checks anymore, but keeping them is safe.
                 const parts = info.dateStr.split('-');
-                const clickedDate = new Date(parts[0], parts[1] - 1, parts[2]); // Year, Month (0-indexed), Day
+                // Handle both YYYY-MM-DD (Month View) and YYYY-MM-DDTHH:mm:ss (Day View)
+                let dateStr = info.dateStr;
+                if(dateStr.includes('T')) {
+                    dateStr = dateStr.split('T')[0];
+                }
+                
+                const splitDate = dateStr.split('-');
+                const clickedDate = new Date(splitDate[0], splitDate[1] - 1, splitDate[2]); 
                 clickedDate.setHours(0,0,0,0);
 
-                // Constraint Check: Past Dates
-                if (clickedDate < today) {
-                    // It's disabled visually, but if they somehow click it:
-                    return; 
-                }
-                
-                // Constraint Check: > 30 Days
-                if (clickedDate > maxBookableDate) {
-                    // It's disabled visually
-                    return;
-                }
-
-                // Proceed with Booking
-                document.getElementById('modalDateInput').value = info.dateStr;
-                
-                // Nice formatting
+                // Open Modal
+                document.getElementById('modalDateInput').value = dateStr;
                 document.getElementById('displayDate').innerText = clickedDate.toLocaleDateString(undefined, { 
                     weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
                 });
@@ -177,29 +170,32 @@
         // Button Event Listeners
         document.getElementById('btnDayView').addEventListener('click', function() {
             calendar.changeView('timeGridDay');
+            
+            // Swap Classes
             this.classList.remove('btn-outline-light');
-            this.classList.add('btn-light');
+            this.classList.add('btn-light', 'text-primary');
             
             let monthBtn = document.getElementById('btnMonthView');
-            monthBtn.classList.remove('btn-light');
-            monthBtn.classList.add('btn-outline-light');
-            monthBtn.classList.add('text-white');
+            monthBtn.classList.remove('btn-light', 'text-primary');
+            monthBtn.classList.add('btn-outline-light', 'text-white');
         });
 
         document.getElementById('btnMonthView').addEventListener('click', function() {
             calendar.changeView('dayGridMonth');
+            
+            // Swap Classes
             this.classList.remove('btn-outline-light', 'text-white');
-            this.classList.add('btn-light');
+            this.classList.add('btn-light', 'text-primary');
             
             let dayBtn = document.getElementById('btnDayView');
-            dayBtn.classList.remove('btn-light');
+            dayBtn.classList.remove('btn-light', 'text-primary');
             dayBtn.classList.add('btn-outline-light');
         });
     });
 </script>
 
 <style>
-    /* Hero Section Styling */
+    /* Hero Section */
     .appointment-hero {
         background-color: #0d6efd; 
         background-image: url('/images/sixeyes.png'); 
@@ -216,34 +212,50 @@
         background: linear-gradient(rgba(13, 110, 253, 0.8), rgba(0, 0, 0, 0.4));
     }
 
-    /* Calendar Visual Tweaks */
+    /* Calendar Base Styles */
     .fc-toolbar-title {
         font-size: 1.75rem !important;
         font-weight: 700;
         color: #333;
     }
-    
     .fc-button-primary {
         background-color: #0d6efd !important;
         border-color: #0d6efd !important;
         text-transform: capitalize;
         font-weight: 500;
     }
-
-    .fc-day-today {
-        background-color: #f0f7ff !important;
-    }
-    
     .fc-theme-standard td, .fc-theme-standard th {
         border-color: #eff2f7;
     }
 
-    /* DISABLED DATE STYLING */
-    .date-disabled {
-        background-color: #f8f9fa !important; /* Lighter grey */
-        color: #ced4da !important;            /* Very muted text */
-        cursor: not-allowed !important;
-        pointer-events: none;                 /* Prevent clicks */
+    /* 1. TODAY'S DATE (Green Theme) */
+    .fc-day-today {
+        background-color: #d1e7dd !important; 
+        color: #0f5132 !important;            
+        font-weight: bold;
+    }
+
+    /* 2. DISABLED DATES (Greyed out) - Applied via validRange */
+    .fc-day-disabled {
+        background-color: #f8f9fa !important;
+        opacity: 1 !important; /* Force opacity to allow background color */
+        cursor: default !important;
+        pointer-events: none;
+    }
+    /* Hide number on disabled dates */
+    .fc-day-disabled .fc-daygrid-day-number {
+        visibility: hidden;
+    }
+
+    /* 3. HOVER EFFECT (Blue Theme) */
+    /* Only apply to days that are NOT disabled */
+    .fc-daygrid-day:not(.fc-day-disabled) {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    
+    .fc-daygrid-day:not(.fc-day-disabled):hover {
+        background-color: #e7f1ff !important; /* Light Blue Hover */
     }
 </style>
 @endsection
