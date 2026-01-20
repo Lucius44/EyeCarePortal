@@ -126,7 +126,7 @@
     </div>
 </div>
 
-{{-- 2. NEW: TODAY'S SCHEDULE INFO MODAL --}}
+{{-- 2. TODAY'S SCHEDULE INFO MODAL --}}
 <div class="modal fade" id="todayModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -198,7 +198,9 @@
         let today = new Date();
         today.setHours(0,0,0,0);
         let maxBookableDate = new Date(today);
-        maxBookableDate.setDate(today.getDate() + 30);
+        
+        // FIX 1: Change to +31 to ensure 30 days are fully available (since end date is exclusive)
+        maxBookableDate.setDate(today.getDate() + 31);
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -247,14 +249,12 @@
                 
                 let isToday = clickedDate.getTime() === today.getTime();
 
-                // 3. UPDATED LOGIC FOR TODAY
                 if (isToday) {
                     let takenToday = takenSlots[dateStr] || [];
-                    openTodayModal(clickedDate, takenToday); // <--- Call new modal function
+                    openTodayModal(clickedDate, takenToday); 
                     return;
                 }
 
-                // FULLY BOOKED CHECK
                 if (dailyCounts[dateStr] >= 5) {
                     alert('This date is fully booked (5/5 appointments). Please select another date.');
                     return;
@@ -266,9 +266,8 @@
 
         calendar.render();
 
-        // 4. HELPER FUNCTION FOR TODAY'S MODAL
+        // HELPER FUNCTION FOR TODAY'S MODAL
         function openTodayModal(dateObj, takenArray) {
-            // Set Date Title (e.g., "Monday, January 20")
             document.getElementById('todayDateDisplay').innerText = dateObj.toLocaleDateString(undefined, { 
                 weekday: 'long', month: 'long', day: 'numeric' 
             });
@@ -276,16 +275,14 @@
             const listContainer = document.getElementById('todaySlotsList');
             const emptyMsg = document.getElementById('todayNoSlots');
             
-            listContainer.innerHTML = ''; // Clear previous
+            listContainer.innerHTML = ''; 
 
             if (takenArray.length === 0) {
                 emptyMsg.style.display = 'block';
             } else {
                 emptyMsg.style.display = 'none';
-                // Loop through taken times and create badges
                 takenArray.forEach(time => {
                     let badge = document.createElement('span');
-                    // Style: Grey, rounded pill, slightly transparent
                     badge.className = 'badge bg-secondary opacity-75 fs-6 fw-normal py-2 px-3 rounded-pill';
                     badge.innerText = time;
                     listContainer.appendChild(badge);
@@ -312,6 +309,9 @@
             let hasDisabled = false;
 
             for (let i = 0; i < options.length; i++) {
+                // FIX 2: Skip the first option (placeholder) so we don't overwrite its text
+                if (options[i].value === "") continue;
+
                 if (taken.includes(options[i].value)) {
                     options[i].disabled = true;
                     options[i].innerText = options[i].value + " (Booked)";
@@ -386,13 +386,19 @@
     
     .fc-day-disabled .fc-daygrid-day-number { visibility: hidden; }
 
-    /* HOVER EFFECT */
+    /* HOVER EFFECT - MONTH VIEW */
     .fc-daygrid-day:not(.fc-day-disabled):not(.date-full) {
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
     .fc-daygrid-day:not(.fc-day-disabled):not(.date-full):hover {
         background-color: #e7f1ff !important;
+    }
+
+    /* FIX 3: HOVER EFFECT - DAY VIEW (Time Slots) */
+    .fc-timegrid-slot-lane:hover {
+        background-color: #e7f1ff !important;
+        cursor: pointer;
     }
 
     /* Event Styling */
