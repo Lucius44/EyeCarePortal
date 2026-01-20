@@ -25,6 +25,11 @@
                     <div class="col-md-8">{{ $user->gender }}</div>
                 </div>
                 
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Phone Number:</div>
+                    <div class="col-md-8">{{ $user->phone_number ?? 'Not Set' }}</div>
+                </div>
+                
                 <hr>
                 
                 <div class="d-flex justify-content-between">

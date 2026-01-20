@@ -114,6 +114,14 @@
                             <a class="nav-link btn-nav-primary" href="{{ route('register') }}">Create Account</a>
                         </li>
                     @else
+                        @if(Auth::user()->role === \App\Enums\UserRole::Patient)
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-primary" href="{{ route('appointments.index') }}">
+                                    <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
@@ -161,7 +169,7 @@
         </div>
     </nav>
 
-    <main class="py-4">
+    <main class="{{ Request::is('/') ? '' : 'py-4' }}">
         @yield('content')
     </main>
 

@@ -115,7 +115,12 @@
     <div class="container text-center">
         <h1 class="hero-title">Welcome to Clear Optics</h1>
         <p class="hero-subtitle">Your vision, our care. Book an appointment online today!</p>
-        <a href="#" class="btn btn-primary btn-lg px-5 py-3 rounded-pill disabled">Book Now</a>
+        
+        @auth
+            <a href="{{ route('appointments.index') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">Book Now</a>
+        @else
+            <a href="{{ route('login') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">Book Now</a>
+        @endauth
     </div>
 </section>
 
@@ -150,7 +155,6 @@
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="section-title">Our Service</h2>
-            <p class="section-subtitle">What we can do</p>
         </div>
 
         <div class="row g-4">
@@ -288,8 +292,8 @@
     <div class="container">
         <div class="contact-bg">
             <div class="row g-0">
-                <div class="col-lg-6">
-                    <img src="{{ asset('images/contact-bg.jpg') }}" style="width:100%; height:100%; object-fit:cover; min-height:400px;" alt="Clinic">
+                <div class="col-lg-6" style="background-color: #f8f9fa;">
+                    <img src="{{ asset('images/contact-bg.jpg') }}" style="width:100%; height:100%; object-fit: contain; min-height:400px;" alt="Clinic">
                 </div>
                 <div class="col-lg-6 p-5 d-flex flex-column justify-content-center">
                     <h2 class="section-title mb-4">Contact Us</h2>
