@@ -65,7 +65,7 @@
     </div>
 </div>
 
-{{-- BOOKING MODAL --}}
+{{-- 1. BOOKING MODAL --}}
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form action="{{ route('appointments.store') }}" method="POST">
@@ -82,7 +82,6 @@
                     <div class="mb-3">
                         <label class="fw-bold text-secondary small text-uppercase">Selected Date</label>
                         <div id="displayDate" class="fs-4 text-primary fw-bold"></div>
-                        {{-- Booking count feedback --}}
                         <div id="slotsInfo" class="small text-muted mt-1"></div>
                     </div>
 
@@ -127,28 +126,60 @@
     </div>
 </div>
 
+{{-- 2. NEW: TODAY'S SCHEDULE INFO MODAL --}}
+<div class="modal fade" id="todayModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-info text-white"> 
+                <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>Today's Schedule</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                
+                <h4 class="fw-bold text-secondary mb-3" id="todayDateDisplay"></h4>
+                
+                <p class="text-muted mb-4">
+                    We do not accept same-day appointments online.<br>
+                    Please call us at <strong>(123) 456-7890</strong> for urgent inquiries.
+                </p>
+
+                <div class="card bg-light border-0 p-3 rounded-4">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-3">Booked Slots Today</h6>
+                    
+                    <div id="todaySlotsList" class="d-flex flex-wrap justify-content-center gap-2"></div>
+                    
+                    <div id="todayNoSlots" class="text-success fw-bold small" style="display:none;">
+                        <i class="bi bi-check-circle me-1"></i> No appointments scheduled yet.
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-info text-white px-5 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         
-        // FIX: Read attributes safely from the HTML
-        // This is 100% valid JavaScript, so VS Code will be happy.
+        // Read attributes safely
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
-        
-        // We use JSON.parse() to turn the string back into an Object/Array
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
-        // 2. CONVERT COUNTS TO EVENTS
+        // CONVERT COUNTS TO EVENTS
         let countEvents = [];
         for (const [date, count] of Object.entries(dailyCounts)) {
-            let color = '#198754'; // Green (default)
+            let color = '#198754'; 
             let title = count + ' Booked';
             
-            if (count >= 3 && count < 5) color = '#ffc107'; // Yellow/Orange
+            if (count >= 3 && count < 5) color = '#ffc107'; 
             if (count >= 5) {
-                color = '#dc3545'; // Red (Full)
+                color = '#dc3545';
                 title = 'FULL';
             }
 
@@ -163,7 +194,7 @@
             });
         }
 
-        // 3. DATE LIMITS
+        // DATE LIMITS
         let today = new Date();
         today.setHours(0,0,0,0);
         let maxBookableDate = new Date(today);
@@ -185,15 +216,15 @@
                 end: maxBookableDate
             },
 
-            // Day View Config
+            // DAY VIEW CONFIG
+            slotDuration: '01:00:00', 
             slotMinTime: '09:00:00',
             slotMaxTime: '18:00:00',
             allDaySlot: false,
             expandRows: true,
 
-            // Logic to style days
+            // Style Logic
             dayCellClassNames: function(arg) {
-                // If Full (5 bookings), grey it out
                 let dateStr = arg.date.toISOString().split('T')[0];
                 if (dailyCounts[dateStr] >= 5) {
                     return ['date-full']; 
@@ -211,47 +242,70 @@
                 let dateStr = info.dateStr;
                 if(dateStr.includes('T')) dateStr = dateStr.split('T')[0]; 
 
-                // LOGIC: TODAY
                 let clickedDate = new Date(dateStr);
                 clickedDate.setHours(0,0,0,0); 
                 
                 let isToday = clickedDate.getTime() === today.getTime();
 
+                // 3. UPDATED LOGIC FOR TODAY
                 if (isToday) {
                     let takenToday = takenSlots[dateStr] || [];
-                    let message = takenToday.length > 0 
-                        ? "Occupied Slots today: \n" + takenToday.join(", ") 
-                        : "No appointments scheduled today yet.";
-                    
-                    alert("Same-day online booking is disabled.\n\n" + message + "\n\nPlease call us for urgent inquiries.");
+                    openTodayModal(clickedDate, takenToday); // <--- Call new modal function
                     return;
                 }
 
-                // LOGIC: FULLY BOOKED (5/5)
+                // FULLY BOOKED CHECK
                 if (dailyCounts[dateStr] >= 5) {
                     alert('This date is fully booked (5/5 appointments). Please select another date.');
                     return;
                 }
 
-                // LOGIC: OPEN MODAL
                 openBookingModal(dateStr, clickedDate);
             }
         });
 
         calendar.render();
 
-        // Helper to open modal and disable taken slots
+        // 4. HELPER FUNCTION FOR TODAY'S MODAL
+        function openTodayModal(dateObj, takenArray) {
+            // Set Date Title (e.g., "Monday, January 20")
+            document.getElementById('todayDateDisplay').innerText = dateObj.toLocaleDateString(undefined, { 
+                weekday: 'long', month: 'long', day: 'numeric' 
+            });
+
+            const listContainer = document.getElementById('todaySlotsList');
+            const emptyMsg = document.getElementById('todayNoSlots');
+            
+            listContainer.innerHTML = ''; // Clear previous
+
+            if (takenArray.length === 0) {
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+                // Loop through taken times and create badges
+                takenArray.forEach(time => {
+                    let badge = document.createElement('span');
+                    // Style: Grey, rounded pill, slightly transparent
+                    badge.className = 'badge bg-secondary opacity-75 fs-6 fw-normal py-2 px-3 rounded-pill';
+                    badge.innerText = time;
+                    listContainer.appendChild(badge);
+                });
+            }
+
+            var myModal = new bootstrap.Modal(document.getElementById('todayModal'));
+            myModal.show();
+        }
+
+        // Helper to open booking modal
         function openBookingModal(dateStr, dateObj) {
             document.getElementById('modalDateInput').value = dateStr;
             document.getElementById('displayDate').innerText = dateObj.toLocaleDateString(undefined, { 
                 weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
             });
 
-            // Count display
             let count = dailyCounts[dateStr] || 0;
             document.getElementById('slotsInfo').innerText = count + " / 5 slots filled";
 
-            // DISABLE TAKEN SLOTS
             let select = document.getElementById('timeSlotSelect');
             let taken = takenSlots[dateStr] || [];
             let options = select.options;
@@ -275,7 +329,6 @@
             myModal.show();
         }
 
-        // Button Event Listeners
         document.getElementById('btnDayView').addEventListener('click', function() {
             calendar.changeView('timeGridDay');
             this.classList.remove('btn-outline-light');
@@ -318,7 +371,7 @@
     .fc-button-primary { background-color: #0d6efd !important; border-color: #0d6efd !important; text-transform: capitalize; font-weight: 500; }
     .fc-theme-standard td, .fc-theme-standard th { border-color: #eff2f7; }
 
-    /* TODAY'S DATE (Green Theme) */
+    /* TODAY'S DATE */
     .fc-day-today { background-color: #d1e7dd !important; color: #0f5132 !important; font-weight: bold; }
 
     /* DISABLED / FULL DATES */
@@ -327,7 +380,6 @@
         opacity: 1 !important;
         cursor: not-allowed !important; 
     }
-    /* Specifically for Full dates */
     .date-full {
         background-color: #ffeaea !important; /* Light red */
     }
@@ -343,7 +395,7 @@
         background-color: #e7f1ff !important;
     }
 
-    /* Event Styling (Badges) */
+    /* Event Styling */
     .booking-badge {
         font-size: 0.75rem;
         border-radius: 4px;
