@@ -46,6 +46,17 @@
     .password-toggle:hover {
         color: var(--primary-color);
     }
+
+    /* 7. Modal Tweaks */
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
+    .modal-body h6 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-top: 1.5rem;
+    }
 </style>
 
 <div class="row justify-content-center">
@@ -178,7 +189,11 @@
                         <div class="form-check bg-light p-3 rounded border mb-4">
                             <input class="form-check-input ms-1" type="checkbox" id="terms" required>
                             <label class="form-check-label ms-2" for="terms">
-                                I agree to the <strong>Terms of Service</strong> & Privacy Policy.
+                                I agree to the 
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="fw-bold text-primary text-decoration-none">
+                                    Terms of Service
+                                </a> 
+                                & Privacy Policy.
                             </label>
                         </div>
 
@@ -193,6 +208,75 @@
         </div>
         <div class="text-center mt-4">
             <span class="text-muted">Already registered?</span> <a href="{{ route('login') }}" class="text-decoration-none fw-semibold">Login here</a>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="termsModalLabel">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-secondary">
+                <div class="small mb-3">
+                    <strong>Effective Date:</strong> April 1, 2025
+                </div>
+                <p>
+                    Welcome to the <strong>Eye Care Portal</strong>, a web application designed for scheduling and managing optometric appointments for Clear Optics in Barangay San Cristobal, Calamba, Laguna. By accessing and using our Portal, you agree to the following terms and conditions. If you do not agree, please refrain from using the Portal.
+                </p>
+
+                <h6>1. User Accounts</h6>
+                <ul class="list-unstyled">
+                    <li>1.1. Users are required to sign up and provide accurate personal information during the registration process.</li>
+                    <li>1.2. The Portal reserves the right to suspend or terminate any account if fraudulent or inaccurate information is detected.</li>
+                </ul>
+
+                <h6>2. Identity Verification</h6>
+                <ul class="list-unstyled">
+                    <li>2.1. Users must upload a valid document, ID, or card to verify their identity before being able to book appointments.</li>
+                    <li>2.2. Uploaded documents will be reviewed by the admin to ensure authenticity. Users will receive notification upon approval or rejection of their verification request.</li>
+                    <li>2.3. Only verified accounts can schedule and manage appointments through the Portal.</li>
+                </ul>
+
+                <h6>3. Data Privacy and Security</h6>
+                <ul class="list-unstyled">
+                    <li>3.1. The Portal collects, stores, and processes personal and sensitive information in compliance with the Philippine Data Privacy Act of 2012 and other applicable laws.</li>
+                    <li>3.2. The Portal implements standard security measures to protect user data. However, users acknowledge that no system is entirely secure, and they use the Portal at their own risk.</li>
+                    <li>3.3. By using the Portal, users consent to the collection and processing of their personal data for purposes directly related to the services provided.</li>
+                </ul>
+
+                <h6>4. User Responsibilities</h6>
+                <ul class="list-unstyled">
+                    <li>4.1. Users must ensure that the information and documents they upload are accurate, valid, and lawful.</li>
+                    <li>4.2. Users are solely responsible for maintaining the confidentiality of their login credentials.</li>
+                </ul>
+
+                <h6>5. Limitation of Liability</h6>
+                <ul class="list-unstyled">
+                    <li>5.1. The Portal shall not be held liable for any delays, errors, or unauthorized access to user accounts caused by external factors beyond our control.</li>
+                    <li>5.2. Users agree to hold the Portal harmless from any liability arising from the misuse of personal or sensitive information caused by their own negligence.</li>
+                </ul>
+
+                <h6>6. Appointment Policies</h6>
+                <ul class="list-unstyled">
+                    <li>6.1. Verified users may schedule appointments subject to availability.</li>
+                </ul>
+
+                <h6>7. Modifications</h6>
+                <ul class="list-unstyled">
+                    <li>7.1. The Portal reserves the right to modify these Terms and Conditions at any time. Users will be notified of significant changes via email.</li>
+                </ul>
+
+                <h6>8. Governing Law</h6>
+                <p>
+                    These Terms and Conditions are governed by the laws of the Republic of the Philippines. Any disputes arising from the use of the Portal shall be resolved under Philippine jurisdiction.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+            </div>
         </div>
     </div>
 </div>
