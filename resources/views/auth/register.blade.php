@@ -26,10 +26,12 @@
         box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
     }
 
+    /* --- FIXED: Password Toggle & Input Spacing --- */
     .password-toggle {
         position: absolute;
         top: 50%;
-        right: 20px;
+        /* We move the eye icon 3rem (approx 48px) from the right to leave space for the validation icon */
+        right: 3rem; 
         transform: translateY(-50%);
         cursor: pointer;
         color: #6c757d;
@@ -39,6 +41,11 @@
     }
     .password-toggle:hover {
         color: var(--primary-color);
+    }
+    
+    /* Ensure the text inside the password field doesn't hit the two icons */
+    #password, #conf {
+        padding-right: 4.5rem !important; 
     }
 
     .modal-header {
