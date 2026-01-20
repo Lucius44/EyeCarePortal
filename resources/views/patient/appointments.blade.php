@@ -2,7 +2,8 @@
 
 @section('content')
 <div class="appointment-hero text-white mb-5 position-relative shadow-sm">
-    <div class="hero-overlay"></div> <div class="container position-relative z-2 py-5 text-center">
+    <div class="hero-overlay"></div> 
+    <div class="container position-relative z-2 py-5 text-center">
         <h1 class="display-5 fw-bold mb-3">Schedule your Appointment</h1>
         <p class="lead mb-4 text-white-50">Select a date below to book your consultation.</p>
         
@@ -22,6 +23,10 @@
         <div class="col-md-12">
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                 <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3 text-muted small">
+                        <span class="d-inline-block bg-white border me-1" style="width: 15px; height: 15px;"></span> Available
+                        <span class="d-inline-block ms-3 me-1" style="width: 15px; height: 15px; background: #e9ecef;"></span> Unavailable (Past or >30 days out)
+                    </div>
                     <div id="calendar" data-verified="{{ Auth::user()->is_verified }}"></div>
                 </div>
             </div>
@@ -68,6 +73,7 @@
                             <option value="02:00 PM">02:00 PM</option>
                             <option value="03:00 PM">03:00 PM</option>
                             <option value="04:00 PM">04:00 PM</option>
+                            <option value="05:00 PM">05:00 PM</option>
                         </select>
                     </div>
 
@@ -92,20 +98,42 @@
         var calendarEl = document.getElementById('calendar');
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
 
+        // 1. ROBUST DATE SETUP (Local Time)
+        // We use setHours(0,0,0,0) to compare dates without worrying about time
+        let today = new Date();
+        today.setHours(0,0,0,0);
+        
+        // Calculate the maximum allowed booking date (Today + 30 days)
+        // Logic: You can book FROM today UNTIL 30 days in the future.
+        let maxBookableDate = new Date(today);
+        maxBookableDate.setDate(today.getDate() + 30);
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'bootstrap5',
             
-            // 3. UPDATED TOOLBAR CONFIGURATION
             headerToolbar: {
-                left: 'title',          // Date/Title on the left
-                center: '',             // Nothing in center
-                right: 'today prev,next' // Today, then < > on the right
+                left: 'title',
+                center: '',
+                right: 'today prev,next'
             },
             
             height: 'auto',
             selectable: true, 
             
+            // 2. GREY OUT INVALID DATES
+            dayCellClassNames: function(arg) {
+                // Parse the cell date ensuring local time logic to prevent timezone shifts
+                let cellDate = new Date(arg.date);
+                cellDate.setHours(0,0,0,0);
+
+                // Disable if in the past OR more than 30 days in future
+                if (cellDate < today || cellDate > maxBookableDate) {
+                    return ['date-disabled'];
+                }
+                return [];
+            },
+
             // Interaction logic
             dateClick: function(info) {
                 if (!isVerified) {
@@ -113,20 +141,29 @@
                     return; 
                 }
 
-                let clickedDate = new Date(info.dateStr);
-                let today = new Date();
-                today.setHours(0,0,0,0); 
+                // TIMEZONE SAFE PARSING
+                // info.dateStr is "YYYY-MM-DD". splitting handles local construction better than new Date(string)
+                const parts = info.dateStr.split('-');
+                const clickedDate = new Date(parts[0], parts[1] - 1, parts[2]); // Year, Month (0-indexed), Day
+                clickedDate.setHours(0,0,0,0);
 
+                // Constraint Check: Past Dates
                 if (clickedDate < today) {
-                    alert('You cannot book an appointment in the past.');
+                    // It's disabled visually, but if they somehow click it:
+                    return; 
+                }
+                
+                // Constraint Check: > 30 Days
+                if (clickedDate > maxBookableDate) {
+                    // It's disabled visually
                     return;
                 }
 
+                // Proceed with Booking
                 document.getElementById('modalDateInput').value = info.dateStr;
                 
-                // Format date nicely for display (e.g., Fri, Jan 20, 2026)
-                let dateObj = new Date(info.dateStr);
-                document.getElementById('displayDate').innerText = dateObj.toLocaleDateString(undefined, { 
+                // Nice formatting
+                document.getElementById('displayDate').innerText = clickedDate.toLocaleDateString(undefined, { 
                     weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
                 });
                 
@@ -137,12 +174,9 @@
 
         calendar.render();
 
-        // 4. BUTTON EVENT LISTENERS
-        // These connect your custom Hero buttons to the calendar API
+        // Button Event Listeners
         document.getElementById('btnDayView').addEventListener('click', function() {
-            calendar.changeView('timeGridDay'); // Switch to Day View
-            
-            // Toggle active styles
+            calendar.changeView('timeGridDay');
             this.classList.remove('btn-outline-light');
             this.classList.add('btn-light');
             
@@ -153,9 +187,7 @@
         });
 
         document.getElementById('btnMonthView').addEventListener('click', function() {
-            calendar.changeView('dayGridMonth'); // Switch to Month View
-
-            // Toggle active styles
+            calendar.changeView('dayGridMonth');
             this.classList.remove('btn-outline-light', 'text-white');
             this.classList.add('btn-light');
             
@@ -169,18 +201,12 @@
 <style>
     /* Hero Section Styling */
     .appointment-hero {
-        /* Placeholder Color - Blue */
         background-color: #0d6efd; 
-        
-        /* TODO: Replace the URL below with your actual image path.
-           Example: url('/images/appointment-hero.jpg');
-        */
         background-image: url('/images/sixeyes.png'); 
-        
         background-size: cover;
         background-position: center;
         border-radius: 1rem;
-        margin-top: -1.5rem; /* Slight negative margin to pull closer to nav if desired */
+        margin-top: -1.5rem;
         overflow: hidden;
     }
 
@@ -208,9 +234,16 @@
         background-color: #f0f7ff !important;
     }
     
-    /* Remove default calendar border for cleaner look */
     .fc-theme-standard td, .fc-theme-standard th {
         border-color: #eff2f7;
+    }
+
+    /* DISABLED DATE STYLING */
+    .date-disabled {
+        background-color: #f8f9fa !important; /* Lighter grey */
+        color: #ced4da !important;            /* Very muted text */
+        cursor: not-allowed !important;
+        pointer-events: none;                 /* Prevent clicks */
     }
 </style>
 @endsection
