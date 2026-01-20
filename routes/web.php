@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
-use App\Http\Controllers\AppointmentController; // <--- ADD THIS LINE
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
 
 // -- Public Routes --
@@ -19,6 +19,9 @@ Route::post('/login', [AuthController::class, 'authenticate'])->name('login.post
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'store'])->name('register.post');
 
+// --- NEW: AJAX Email Check ---
+Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.email');
+
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -30,7 +33,6 @@ Route::middleware(['auth'])->group(function () {
     
     // Appointment Route
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
-    // Save Appointment
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 
     // Settings & Upload
@@ -46,14 +48,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-
-    // Manage Appointments Page
     Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
-    
-    // Status Update Action
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
-
-    // User Management
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
 });

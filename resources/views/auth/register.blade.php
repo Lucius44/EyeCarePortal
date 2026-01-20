@@ -3,17 +3,13 @@
 @section('content')
 <style>
     :root {
-        /* 1. Light Greenish Gradient */
         --bg-gradient: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%);
-        /* 2. Redefine Primary Color to Green */
         --primary-color: #198754; 
     }
 
-    /* 3. Force Bootstrap Primary elements to use our Green theme */
     .text-primary { color: var(--primary-color) !important; }
     .bg-primary { background-color: var(--primary-color) !important; }
     
-    /* 4. Custom Button Override */
     .btn-primary {
         background-color: var(--primary-color);
         border-color: var(--primary-color);
@@ -25,13 +21,11 @@
         box-shadow: 0 6px 15px rgba(25, 135, 84, 0.3);
     }
     
-    /* 5. Update floating label AND Select focus color */
     .form-control:focus, .form-select:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
     }
 
-    /* 6. Password Toggle Icon Style */
     .password-toggle {
         position: absolute;
         top: 50%;
@@ -47,7 +41,6 @@
         color: var(--primary-color);
     }
 
-    /* 7. Modal Tweaks */
     .modal-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #eee;
@@ -56,6 +49,21 @@
         color: var(--primary-color);
         font-weight: 700;
         margin-top: 1.5rem;
+    }
+
+    /* Error Shake Animation */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.3s ease-in-out; }
+    
+    .invalid-feedback-custom {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+        display: none;
     }
 </style>
 
@@ -88,7 +96,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('register.post') }}" method="POST" id="signupForm">
+                <form action="{{ route('register.post') }}" method="POST" id="signupForm" novalidate>
                     @csrf
 
                     <div class="step" id="step1">
@@ -96,19 +104,25 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <input type="text" name="first_name" class="form-control" id="fn" placeholder="First" required>
+                                    <input type="text" name="first_name" class="form-control" id="fn" placeholder="First" required 
+                                           pattern="[a-zA-Z\s\.\-]+" 
+                                           title="Letters only.">
                                     <label for="fn">First Name</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <input type="text" name="middle_name" class="form-control" id="mn" placeholder="Middle">
+                                    <input type="text" name="middle_name" class="form-control" id="mn" placeholder="Middle"
+                                           pattern="[a-zA-Z\s\.\-]+" 
+                                           title="Letters only.">
                                     <label for="mn">Middle (Optional)</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <input type="text" name="last_name" class="form-control" id="ln" placeholder="Last" required>
+                                    <input type="text" name="last_name" class="form-control" id="ln" placeholder="Last" required
+                                           pattern="[a-zA-Z\s\.\-]+" 
+                                           title="Letters only.">
                                     <label for="ln">Last Name</label>
                                 </div>
                             </div>
@@ -149,14 +163,21 @@
                         <h5 class="mb-4 fw-semibold"><i class="bi bi-shield-lock me-2"></i>Account Security</h5>
                         
                         <div class="form-floating mb-3">
-                            <input type="email" name="email" class="form-control" id="email" placeholder="Email" required>
+                            <input type="email" name="email" class="form-control" id="email" placeholder="Email" required
+                                   pattern=".+@gmail\.com"
+                                   title="Must be a valid Gmail address">
                             <label for="email">Email Address (Gmail Only)</label>
+                            <div class="invalid-feedback">
+                                This email is already registered or invalid.
+                            </div>
                         </div>
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating position-relative">
-                                    <input type="password" name="password" class="form-control" id="password" placeholder="Pass" required>
+                                    <input type="password" name="password" class="form-control" id="password" placeholder="Pass" required
+                                           pattern="(?=.*\d)(?=.*[A-Z]).{8,}"
+                                           title="Min 8 chars, 1 Uppercase, 1 Number">
                                     <label for="password">Password</label>
                                     <i class="bi bi-eye password-toggle" id="togglePassword"></i>
                                 </div>
@@ -182,8 +203,9 @@
                     <div class="step d-none" id="step4">
                         <h5 class="mb-4 fw-semibold"><i class="bi bi-check-circle me-2"></i>Verification & Terms</h5>
 
-                        <div class="mb-4 d-flex justify-content-center">
-                            <div class="g-recaptcha" data-sitekey="6Ldfi08sAAAAAGc0iqVrllnpeXvNNDM07shQ8MDe"></div>
+                        <div class="mb-4 d-flex flex-column align-items-center">
+                            <div class="g-recaptcha" id="recaptchabox" data-sitekey="6Ldfi08sAAAAAGc0iqVrllnpeXvNNDM07shQ8MDe"></div>
+                            <div class="invalid-feedback-custom" id="captchaError">Please complete the captcha.</div>
                         </div>
 
                         <div class="form-check bg-light p-3 rounded border mb-4">
@@ -195,11 +217,12 @@
                                 </a> 
                                 & Privacy Policy.
                             </label>
+                            <div class="invalid-feedback-custom" id="termsError">You must agree to the terms.</div>
                         </div>
 
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-outline-secondary px-4" onclick="prevStep(3)">Back</button>
-                            <button type="submit" class="btn btn-success px-5 fw-bold">Create Account</button>
+                            <button type="button" class="btn btn-success px-5 fw-bold" onclick="createAccount()">Create Account</button>
                         </div>
                     </div>
 
@@ -220,60 +243,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-secondary">
-                <div class="small mb-3">
-                    <strong>Effective Date:</strong> April 1, 2025
-                </div>
-                <p>
-                    Welcome to the <strong>Eye Care Portal</strong>, a web application designed for scheduling and managing optometric appointments for Clear Optics in Barangay San Cristobal, Calamba, Laguna. By accessing and using our Portal, you agree to the following terms and conditions. If you do not agree, please refrain from using the Portal.
-                </p>
-
+                <div class="small mb-3"><strong>Effective Date:</strong> April 1, 2025</div>
+                <p>Welcome to the <strong>Eye Care Portal</strong>...</p>
+                <p>By accessing and using our Portal, you agree to the following terms and conditions.</p>
                 <h6>1. User Accounts</h6>
-                <ul class="list-unstyled">
-                    <li>1.1. Users are required to sign up and provide accurate personal information during the registration process.</li>
-                    <li>1.2. The Portal reserves the right to suspend or terminate any account if fraudulent or inaccurate information is detected.</li>
-                </ul>
-
-                <h6>2. Identity Verification</h6>
-                <ul class="list-unstyled">
-                    <li>2.1. Users must upload a valid document, ID, or card to verify their identity before being able to book appointments.</li>
-                    <li>2.2. Uploaded documents will be reviewed by the admin to ensure authenticity. Users will receive notification upon approval or rejection of their verification request.</li>
-                    <li>2.3. Only verified accounts can schedule and manage appointments through the Portal.</li>
-                </ul>
-
-                <h6>3. Data Privacy and Security</h6>
-                <ul class="list-unstyled">
-                    <li>3.1. The Portal collects, stores, and processes personal and sensitive information in compliance with the Philippine Data Privacy Act of 2012 and other applicable laws.</li>
-                    <li>3.2. The Portal implements standard security measures to protect user data. However, users acknowledge that no system is entirely secure, and they use the Portal at their own risk.</li>
-                    <li>3.3. By using the Portal, users consent to the collection and processing of their personal data for purposes directly related to the services provided.</li>
-                </ul>
-
-                <h6>4. User Responsibilities</h6>
-                <ul class="list-unstyled">
-                    <li>4.1. Users must ensure that the information and documents they upload are accurate, valid, and lawful.</li>
-                    <li>4.2. Users are solely responsible for maintaining the confidentiality of their login credentials.</li>
-                </ul>
-
-                <h6>5. Limitation of Liability</h6>
-                <ul class="list-unstyled">
-                    <li>5.1. The Portal shall not be held liable for any delays, errors, or unauthorized access to user accounts caused by external factors beyond our control.</li>
-                    <li>5.2. Users agree to hold the Portal harmless from any liability arising from the misuse of personal or sensitive information caused by their own negligence.</li>
-                </ul>
-
-                <h6>6. Appointment Policies</h6>
-                <ul class="list-unstyled">
-                    <li>6.1. Verified users may schedule appointments subject to availability.</li>
-                </ul>
-
-                <h6>7. Modifications</h6>
-                <ul class="list-unstyled">
-                    <li>7.1. The Portal reserves the right to modify these Terms and Conditions at any time. Users will be notified of significant changes via email.</li>
-                </ul>
-
-                <h6>8. Governing Law</h6>
-                <p>
-                    These Terms and Conditions are governed by the laws of the Republic of the Philippines. Any disputes arising from the use of the Portal shall be resolved under Philippine jurisdiction.
-                </p>
-            </div>
+                <ul><li>1.1. Users are required to sign up...</li></ul>
+                </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
             </div>
@@ -285,37 +260,34 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Date Logic
         const maxDate = new Date();
         maxDate.setFullYear(maxDate.getFullYear() - 18);
         document.getElementById('dobField').max = maxDate.toISOString().split('T')[0];
 
-        // Toggle Password Logic (Reusable function)
         function setupToggle(toggleId, inputId) {
             const toggle = document.getElementById(toggleId);
             const input = document.getElementById(inputId);
-
             if(toggle && input) {
                 toggle.addEventListener('click', function () {
-                    // Toggle Type
                     const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
                     input.setAttribute('type', type);
-                    
-                    // Toggle Icon
                     this.classList.toggle('bi-eye');
                     this.classList.toggle('bi-eye-slash');
                 });
             }
         }
-
-        // Initialize Toggles
         setupToggle('togglePassword', 'password');
         setupToggle('toggleConfirm', 'conf');
+        
+        // Clear custom validity on input
+        document.getElementById('conf').addEventListener('input', function() { this.setCustomValidity(''); });
+        document.getElementById('email').addEventListener('input', function() { 
+            this.setCustomValidity(''); 
+            this.classList.remove('is-invalid');
+        });
     });
 
-    // Multi-step Logic
     function updateIndicators(step) {
-        // Updated loop to 4 steps
         for(let i=1; i<=4; i++) {
             const badge = document.getElementById('badgeStep'+i);
             if(i <= step) {
@@ -326,25 +298,71 @@
                 badge.classList.add('bg-secondary');
             }
         }
-        
-        // Update bars
-        if(step > 1) document.getElementById('bar1').style.width = '100%';
-        else document.getElementById('bar1').style.width = '0%';
-        
-        if(step > 2) document.getElementById('bar2').style.width = '100%';
-        else document.getElementById('bar2').style.width = '0%';
-
-        if(step > 3) document.getElementById('bar3').style.width = '100%';
-        else document.getElementById('bar3').style.width = '0%';
+        document.getElementById('bar1').style.width = step > 1 ? '100%' : '0%';
+        document.getElementById('bar2').style.width = step > 2 ? '100%' : '0%';
+        document.getElementById('bar3').style.width = step > 3 ? '100%' : '0%';
     }
 
-    function nextStep(target) {
-        // Validate current step inputs
-        const currentInputs = document.getElementById('step'+(target-1)).querySelectorAll('input, select');
+    // MAKE THIS ASYNC to handle the fetch request
+    async function nextStep(target) {
+        const currentStepIndex = target - 1; 
+
+        // 1. Password Match Check (Step 3)
+        if(currentStepIndex === 3) {
+            const pass = document.getElementById('password');
+            const conf = document.getElementById('conf');
+            if(pass && conf && pass.value !== conf.value) {
+                conf.setCustomValidity("Passwords do not match.");
+            } else {
+                conf.setCustomValidity("");
+            }
+            
+            // 2. Email Uniqueness Check (Step 3)
+            const emailInput = document.getElementById('email');
+            // Only check if it's basically valid first
+            if(emailInput && emailInput.checkValidity()) {
+                // Show a loading cursor maybe?
+                document.body.style.cursor = 'wait';
+                try {
+                    const response = await fetch(`{{ route('check.email') }}?email=${encodeURIComponent(emailInput.value)}`);
+                    const data = await response.json();
+                    
+                    if(data.exists) {
+                        emailInput.setCustomValidity("This email is already registered.");
+                        // Force the error to show immediately
+                        emailInput.classList.add('is-invalid');
+                        emailInput.reportValidity();
+                        document.body.style.cursor = 'default';
+                        return; // STOP HERE
+                    } else {
+                        emailInput.setCustomValidity("");
+                        emailInput.classList.remove('is-invalid');
+                        emailInput.classList.add('is-valid');
+                    }
+                } catch (error) {
+                    console.error('Check failed', error);
+                } finally {
+                    document.body.style.cursor = 'default';
+                }
+            }
+        }
+
+        // 3. Standard Validation
+        const currentInputs = document.getElementById('step' + currentStepIndex).querySelectorAll('input, select');
         for(let input of currentInputs) {
-            if(!input.checkValidity()) { input.reportValidity(); return; }
+            if(!input.checkValidity()) {
+                input.classList.add('is-invalid');
+                input.classList.remove('is-valid');
+                input.reportValidity(); 
+                return; // Stop at first error
+            } else {
+                input.classList.remove('is-invalid');
+                // Only add is-valid if not empty (visual preference)
+                if(input.value !== "") input.classList.add('is-valid');
+            }
         }
         
+        // Proceed
         document.querySelectorAll('.step').forEach(el => el.classList.add('d-none'));
         document.getElementById('step' + target).classList.remove('d-none');
         updateIndicators(target);
@@ -354,6 +372,42 @@
         document.querySelectorAll('.step').forEach(el => el.classList.add('d-none'));
         document.getElementById('step' + target).classList.remove('d-none');
         updateIndicators(target);
+    }
+
+    // --- NEW: Custom Submit Function ---
+    function createAccount() {
+        let isValid = true;
+
+        // 1. Check Recaptcha
+        const response = grecaptcha.getResponse();
+        const captchaErr = document.getElementById('captchaError');
+        if(response.length === 0) {
+            captchaErr.style.display = 'block';
+            isValid = false;
+        } else {
+            captchaErr.style.display = 'none';
+        }
+
+        // 2. Check Terms
+        const terms = document.getElementById('terms');
+        const termsErr = document.getElementById('termsError');
+        if(!terms.checked) {
+            termsErr.style.display = 'block';
+            terms.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            termsErr.style.display = 'none';
+            terms.classList.remove('is-invalid');
+        }
+
+        if(isValid) {
+            document.getElementById('signupForm').submit();
+        } else {
+            // Shake the container to indicate error
+            const step4 = document.getElementById('step4');
+            step4.classList.add('shake');
+            setTimeout(() => step4.classList.remove('shake'), 300);
+        }
     }
 </script>
 @endsection

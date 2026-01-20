@@ -7,17 +7,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Enums\UserRole;
-use App\Http\Requests\RegisterUserRequest; // <--- Import the new Request
+use App\Http\Requests\RegisterUserRequest;
 
 class AuthController extends Controller
 {
-    // Show the Login Form
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    // Process Login
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
@@ -40,38 +38,41 @@ class AuthController extends Controller
         ]);
     }
 
-    // Show the Signup Form
     public function showRegister()
     {
         return view('auth.register');
     }
 
-    // Process Signup
-    public function store(RegisterUserRequest $request) // <--- Use the new Request class
+    public function store(RegisterUserRequest $request)
     {
-        // Note: Validation is now handled automatically by RegisterUserRequest.
-        // We can access the validated data directly or use the request object.
-
-        // Create the User
         $user = User::create([
             'first_name' => $request->first_name,
-            'middle_name' => $request->middle_name, // Optional
+            'middle_name' => $request->middle_name,
             'last_name' => $request->last_name,
             'birthday' => $request->birthday,
             'gender' => $request->gender,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => UserRole::Patient, // Using the Enum
-            'is_verified' => false, // Default unverified
+            'role' => UserRole::Patient,
+            'is_verified' => false,
         ]);
 
-        // Login automatically and redirect
         Auth::login($user);
 
         return redirect()->route('dashboard');
     }
 
-    // Logout
+    // --- NEW: API Method for Frontend Check ---
+    public function checkEmail(Request $request)
+    {
+        $email = $request->query('email');
+        if (!$email) return response()->json(['exists' => false]);
+
+        $exists = User::where('email', $email)->exists();
+        
+        return response()->json(['exists' => $exists]);
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
