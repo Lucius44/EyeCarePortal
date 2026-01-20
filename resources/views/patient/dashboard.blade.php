@@ -1,60 +1,57 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="row">
-    <div class="col-md-3 mb-4">
-        <div class="list-group">
-            <a href="{{ route('dashboard') }}" class="list-group-item list-group-item-action active">Dashboard</a>
-            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">My Profile</a>
-            <a href="{{ route('my.appointments') }}" class="list-group-item list-group-item-action">My Appointments</a>
-            <a href="{{ route('settings') }}" class="list-group-item list-group-item-action">Account Settings</a>
-            
-            <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="list-group-item list-group-item-action text-danger">Logout</button>
-            </form>
+<div class="container">
+    <div class="card p-5 shadow-sm border-0" style="border-radius: 20px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-dark">Welcome back, {{ Auth::user()->first_name }}!</h2>
+                <p class="text-muted">Here is an overview of your account.</p>
+            </div>
+            @if(Auth::user()->is_verified)
+                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bi bi-patch-check-fill me-1"></i> Verified Account</span>
+            @else
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-exclamation-triangle-fill me-1"></i> Unverified</span>
+            @endif
         </div>
-    </div>
-
-    <div class="col-md-9">
-        <div class="card p-4 shadow-sm">
-            <h2 class="mb-4">Welcome, {{ Auth::user()->first_name }}!</h2>
-            
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="card bg-primary text-white h-100">
-                        <div class="card-body text-center">
-                            <h3>📅 Book Appointment</h3>
-                            <p>Schedule your next eye checkup.</p>
-                            <a href="{{ route('appointments.index') }}" class="btn btn-light">Book Now</a>
-                        </div>
-                    </div>
+        
+        @if(!Auth::user()->is_verified)
+            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Action Required:</strong> Please upload your ID in <a href="{{ route('settings') }}" class="alert-link">Settings</a> to verify your account and enable booking features.
                 </div>
-                <div class="col-md-6">
-                    <div class="card bg-success text-white h-100">
-                        <div class="card-body text-center">
-                            <h3>📂 My Records</h3>
-                            <p>View past prescriptions and history.</p>
-                            <button class="btn btn-light">View History</button>
+            </div>
+        @endif
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card bg-primary text-white h-100 border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-calendar-plus display-4 opacity-75"></i>
                         </div>
+                        <h3 class="fw-bold">Book Appointment</h3>
+                        <p class="opacity-75 mb-4">Schedule your next comprehensive eye checkup or consultation with ease.</p>
+                        <a href="{{ route('appointments.index') }}" class="btn btn-light text-primary fw-bold stretched-link">Book Now</a>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-4 p-3 bg-light rounded border">
-                <h5>Account Status: 
-                    @if(Auth::user()->is_verified)
-                        <span class="badge bg-success">Verified</span>
-                    @else
-                        <span class="badge bg-warning text-dark">Unverified</span>
-                    @endif
-                </h5>
-                @if(!Auth::user()->is_verified)
-                    <p class="text-muted small mb-0">Please upload your ID in Settings to verify your account and enable booking.</p>
-                @endif
+            <div class="col-md-6">
+                <div class="card bg-success text-white h-100 border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-folder2-open display-4 opacity-75"></i>
+                        </div>
+                        <h3 class="fw-bold">My History</h3>
+                        <p class="opacity-75 mb-4">View your past appointment history, statuses, and doctor's notes.</p>
+                        <a href="{{ route('my.appointments') }}" class="btn btn-light text-success fw-bold stretched-link">View History</a>
+                    </div>
+                </div>
             </div>
-
         </div>
+
     </div>
 </div>
 @endsection

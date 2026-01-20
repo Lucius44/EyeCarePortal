@@ -28,7 +28,7 @@
             background: rgba(255, 255, 255, 0.95) !important;
             backdrop-filter: blur(10px);
             box-shadow: 0 2px 15px rgba(0,0,0,0.04);
-            padding: 1rem 0;
+            padding: 0.8rem 0;
         }
         .navbar-brand {
             font-weight: 700;
@@ -57,6 +57,28 @@
         .btn-nav-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+            color: white !important;
+        }
+
+        /* Dropdown Tweaks */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: 500;
+        }
+        .dropdown-item:hover {
+            background-color: #f0f7ff;
+            color: var(--primary-color);
+        }
+        .dropdown-item.text-danger:hover {
+            background-color: #fff5f5;
+            color: #dc3545;
         }
 
         /* Footer */
@@ -92,16 +114,46 @@
                             <a class="nav-link btn-nav-primary" href="{{ route('register') }}">Create Account</a>
                         </li>
                     @else
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
-                                Dashboard
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                    {{ substr(Auth::user()->first_name, 0, 1) }}
+                                </div>
+                                <span>{{ Auth::user()->first_name }}</span>
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-link nav-link" style="text-decoration: none;">Logout</button>
-                            </form>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
+                                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                                    </a>
+                                </li>
+                                @if(Auth::user()->role === \App\Enums\UserRole::Patient)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('profile') }}">
+                                            <i class="bi bi-person me-2"></i> My Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('my.appointments') }}">
+                                            <i class="bi bi-calendar-check me-2"></i> My Appointments
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('settings') }}">
+                                            <i class="bi bi-gear me-2"></i> Account Settings
+                                        </a>
+                                    </li>
+                                @endif
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
                     @endguest
                 </ul>
@@ -109,7 +161,7 @@
         </div>
     </nav>
 
-    <main>
+    <main class="py-4">
         @yield('content')
     </main>
 

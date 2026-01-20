@@ -1,126 +1,117 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="row">
-    <div class="col-md-3 mb-4">
-        <div class="list-group">
-            <a href="{{ route('dashboard') }}" class="list-group-item list-group-item-action">Dashboard</a>
-            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">My Profile</a>
-            <a href="{{ route('appointments.index') }}" class="list-group-item list-group-item-action">Book Appointment</a>
-            <a href="{{ route('my.appointments') }}" class="list-group-item list-group-item-action active">My Appointments</a>
-            <a href="{{ route('settings') }}" class="list-group-item list-group-item-action">Account Settings</a>
-            
-            <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="list-group-item list-group-item-action text-danger">Logout</button>
-            </form>
-        </div>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">My Appointments</h2>
+        <a href="{{ route('appointments.index') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> New Appointment
+        </a>
     </div>
 
-    <div class="col-md-9">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">My Appointments</h4>
-            </div>
-            <div class="card-body">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <ul class="nav nav-tabs nav-fill" id="apptTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active py-3 fw-bold" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">
+                        <i class="bi bi-calendar-event me-2"></i> Upcoming
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link py-3 fw-bold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button">
+                        <i class="bi bi-clock-history me-2"></i> History
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-4" id="apptTabContent">
                 
-                <ul class="nav nav-tabs mb-3" id="apptTab" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">Upcoming</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button">History</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content" id="apptTabContent">
-                    
-                    <div class="tab-pane fade show active" id="upcoming">
-                        @if($upcoming->isEmpty())
-                            <div class="text-center py-4">
-                                <p class="text-muted">You have no upcoming appointments.</p>
-                                <a href="{{ route('appointments.index') }}" class="btn btn-primary btn-sm">Book Now</a>
+                <div class="tab-pane fade show active" id="upcoming">
+                    @if($upcoming->isEmpty())
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
                             </div>
-                        @else
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Date & Time</th>
-                                            <th>Service</th>
-                                            <th>Status</th>
-                                            <th>Notes</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($upcoming as $appt)
-                                        <tr>
-                                            <td>
-                                                {{-- CLEANED: No need for Carbon::parse() anymore --}}
-                                                {{ $appt->appointment_date->format('M d, Y') }}
-                                                <br>
-                                                <small class="text-muted">{{ $appt->appointment_time }}</small>
-                                            </td>
-                                            <td>{{ $appt->service }}</td>
-                                            <td>
-                                                {{-- FIX: Using ->value for comparison --}}
-                                                @if($appt->status->value === 'confirmed')
-                                                    <span class="badge bg-success">Confirmed</span>
-                                                @else
-                                                    <span class="badge bg-warning text-dark">Pending</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($appt->description)
-                                                    <small class="text-muted">{{ Str::limit($appt->description, 30) }}</small>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-                    </div>
+                            <h5 class="text-muted">No upcoming appointments</h5>
+                            <p class="text-muted small">You're all caught up! Need to see a doctor?</p>
+                            <a href="{{ route('appointments.index') }}" class="btn btn-outline-primary mt-2">Book Now</a>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 25%;">Date & Time</th>
+                                        <th style="width: 25%;">Service</th>
+                                        <th style="width: 15%;">Status</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($upcoming as $appt)
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ $appt->appointment_date->format('M d, Y') }}</div>
+                                            <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ $appt->appointment_time }}</div>
+                                        </td>
+                                        <td>{{ $appt->service }}</td>
+                                        <td>
+                                            @if($appt->status->value === 'confirmed')
+                                                <span class="badge bg-success rounded-pill px-3">Confirmed</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($appt->description)
+                                                <small class="text-muted fst-italic">{{ Str::limit($appt->description, 50) }}</small>
+                                            @else
+                                                <span class="text-muted small">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
 
-                    <div class="tab-pane fade" id="history">
-                        @if($history->isEmpty())
-                            <p class="text-muted text-center py-4">No appointment history found.</p>
-                        @else
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Service</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($history as $appt)
-                                        <tr>
-                                            <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
-                                            <td>{{ $appt->service }}</td>
-                                            <td>
-                                                {{-- FIX: Using ->value for comparison --}}
-                                                @if($appt->status->value === 'completed') 
-                                                    <span class="badge bg-success">Completed</span>
-                                                @elseif($appt->status->value === 'cancelled') 
-                                                    <span class="badge bg-danger">Cancelled</span>
-                                                @elseif($appt->status->value === 'no-show') 
-                                                    <span class="badge bg-secondary">No-Show</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-                    </div>
-
+                <div class="tab-pane fade" id="history">
+                    @if($history->isEmpty())
+                        <div class="text-center py-5">
+                            <p class="text-muted">No appointment history found.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Service</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($history as $appt)
+                                    <tr>
+                                        <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
+                                        <td>{{ $appt->service }}</td>
+                                        <td>
+                                            @if($appt->status->value === 'completed') 
+                                                <span class="badge bg-primary rounded-pill px-3">Completed</span>
+                                            @elseif($appt->status->value === 'cancelled') 
+                                                <span class="badge bg-danger rounded-pill px-3">Cancelled</span>
+                                            @elseif($appt->status->value === 'no-show') 
+                                                <span class="badge bg-secondary rounded-pill px-3">No-Show</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
 
             </div>
