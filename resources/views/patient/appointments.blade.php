@@ -35,8 +35,6 @@
 
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
                 
-                {{-- REMOVED BLOCKING OVERLAY HERE --}}
-
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3 text-muted small flex-wrap gap-3">
                         <div><span class="d-inline-block border me-1 rounded-circle" style="width: 15px; height: 15px; background: #fff;"></span> Available</div>
@@ -44,7 +42,6 @@
                         <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #dc3545;"></span> Fully Booked (5/5)</div>
                     </div>
                     
-                    {{-- Added data-has-active attribute here --}}
                     <div id="calendar" 
                          data-verified="{{ Auth::user()->is_verified }}"
                          data-has-active="{{ $hasActiveAppointment ? '1' : '0' }}"
@@ -153,7 +150,7 @@
     </div>
 </div>
 
-{{-- 3. NEW: ACTIVE APPOINTMENT RESTRICTION MODAL --}}
+{{-- 3. ACTIVE APPOINTMENT RESTRICTION MODAL --}}
 <div class="modal fade" id="activeAppointmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -171,6 +168,29 @@
     </div>
 </div>
 
+{{-- 4. NEW: UNVERIFIED ACCOUNT MODAL --}}
+<div class="modal fade" id="unverifiedModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body p-5 text-center">
+                <i class="bi bi-shield-lock text-danger display-1 mb-3"></i>
+                <h3 class="fw-bold">Verification Required</h3>
+                <p class="text-muted mb-4">
+                    To ensure safety and security, you must verify your account before booking an appointment.
+                    <br>Please upload a valid ID in your settings.
+                </p>
+                
+                <div class="d-grid gap-2 col-10 mx-auto">
+                    <a href="{{ route('settings') }}" class="btn btn-danger rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-upload me-2"></i>Upload ID Now
+                    </a>
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -178,7 +198,7 @@
         
         // Read attributes safely
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
-        const hasActiveAppointment = calendarEl.getAttribute('data-has-active') == '1'; // NEW Check
+        const hasActiveAppointment = calendarEl.getAttribute('data-has-active') == '1'; 
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
@@ -252,9 +272,10 @@
                     return;
                 }
 
-                // 2. Check Verification
+                // 2. Check Verification (UPDATED to use Modal)
                 if (!isVerified) {
-                    alert('Your account is not verified yet. Please upload your ID in settings.');
+                    var myModal = new bootstrap.Modal(document.getElementById('unverifiedModal'));
+                    myModal.show();
                     return; 
                 }
 
