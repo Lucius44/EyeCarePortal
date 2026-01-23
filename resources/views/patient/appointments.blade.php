@@ -168,7 +168,7 @@
     </div>
 </div>
 
-{{-- 4. NEW: UNVERIFIED ACCOUNT MODAL --}}
+{{-- 4. UNVERIFIED ACCOUNT MODAL --}}
 <div class="modal fade" id="unverifiedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -191,6 +191,26 @@
     </div>
 </div>
 
+{{-- 5. NEW: FULLY BOOKED MODAL --}}
+<div class="modal fade" id="fullyBookedModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body p-5 text-center">
+                <i class="bi bi-calendar-x text-danger display-1 mb-3"></i>
+                <h3 class="fw-bold">Fully Booked</h3>
+                <p class="text-muted mb-4">
+                    This date has reached its maximum capacity (5/5 appointments).
+                    <br>Please select a different date for your consultation.
+                </p>
+                
+                <div class="d-grid gap-2 col-8 mx-auto">
+                    <button type="button" class="btn btn-primary rounded-pill fw-bold" data-bs-dismiss="modal">Select Another Date</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -201,6 +221,14 @@
         const hasActiveAppointment = calendarEl.getAttribute('data-has-active') == '1'; 
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
+
+        // HELPER: Get Local Date String (YYYY-MM-DD) to fix timezone issues
+        function getLocalYMD(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
 
         // CONVERT COUNTS TO EVENTS
         let countEvents = [];
@@ -254,9 +282,13 @@
             allDaySlot: false,
             expandRows: true,
 
-            // Style Logic
+            // Style Logic (FIXED: Uses Local Date)
             dayCellClassNames: function(arg) {
-                let dateStr = arg.date.toISOString().split('T')[0];
+                // OLD BROKEN CODE: let dateStr = arg.date.toISOString().split('T')[0];
+                
+                // NEW FIXED CODE:
+                let dateStr = getLocalYMD(arg.date);
+                
                 if (dailyCounts[dateStr] >= 5) {
                     return ['date-full']; 
                 }
@@ -272,7 +304,7 @@
                     return;
                 }
 
-                // 2. Check Verification (UPDATED to use Modal)
+                // 2. Check Verification
                 if (!isVerified) {
                     var myModal = new bootstrap.Modal(document.getElementById('unverifiedModal'));
                     myModal.show();
@@ -294,9 +326,10 @@
                     return;
                 }
 
-                // 4. Check Full Booking
+                // 4. Check Full Booking (UPDATED: Uses Modal instead of Alert)
                 if (dailyCounts[dateStr] >= 5) {
-                    alert('This date is fully booked (5/5 appointments). Please select another date.');
+                    var myModal = new bootstrap.Modal(document.getElementById('fullyBookedModal'));
+                    myModal.show();
                     return;
                 }
 
