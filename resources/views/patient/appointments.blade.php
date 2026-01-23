@@ -35,17 +35,7 @@
 
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
                 
-                {{-- BLOCKING OVERLAY: If user has an active appointment --}}
-                @if($hasActiveAppointment)
-                <div class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 z-3 d-flex flex-column justify-content-center align-items-center text-center">
-                    <div class="bg-white p-5 rounded-4 shadow-lg border">
-                        <i class="bi bi-calendar-check text-success display-1 mb-3"></i>
-                        <h3 class="fw-bold">Appointment Pending or Confirmed</h3>
-                        <p class="text-muted">You already have an active appointment.<br>You cannot book another one until your current appointment is completed or cancelled.</p>
-                        <a href="{{ route('my.appointments') }}" class="btn btn-primary px-4 rounded-pill mt-2">View My Appointments</a>
-                    </div>
-                </div>
-                @endif
+                {{-- REMOVED BLOCKING OVERLAY HERE --}}
 
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3 text-muted small flex-wrap gap-3">
@@ -54,8 +44,10 @@
                         <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #dc3545;"></span> Fully Booked (5/5)</div>
                     </div>
                     
+                    {{-- Added data-has-active attribute here --}}
                     <div id="calendar" 
                          data-verified="{{ Auth::user()->is_verified }}"
+                         data-has-active="{{ $hasActiveAppointment ? '1' : '0' }}"
                          data-daily-counts="{{ json_encode($dailyCounts) }}"
                          data-taken-slots="{{ json_encode($takenSlots) }}"
                     ></div>
@@ -161,6 +153,24 @@
     </div>
 </div>
 
+{{-- 3. NEW: ACTIVE APPOINTMENT RESTRICTION MODAL --}}
+<div class="modal fade" id="activeAppointmentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body p-5 text-center">
+                <i class="bi bi-calendar-check text-warning display-1 mb-3"></i>
+                <h3 class="fw-bold">Active Appointment Found</h3>
+                <p class="text-muted mb-4">You already have a pending or confirmed appointment.<br>You cannot book another one until your current appointment is completed.</p>
+                
+                <div class="d-grid gap-2 col-10 mx-auto">
+                    <a href="{{ route('my.appointments') }}" class="btn btn-primary rounded-pill fw-bold">View My Appointments</a>
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close & View Calendar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -168,6 +178,7 @@
         
         // Read attributes safely
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
+        const hasActiveAppointment = calendarEl.getAttribute('data-has-active') == '1'; // NEW Check
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
@@ -198,8 +209,6 @@
         let today = new Date();
         today.setHours(0,0,0,0);
         let maxBookableDate = new Date(today);
-        
-        // FIX 1: Change to +31 to ensure 30 days are fully available (since end date is exclusive)
         maxBookableDate.setDate(today.getDate() + 31);
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -236,6 +245,14 @@
 
             // CLICK INTERACTION
             dateClick: function(info) {
+                // 1. Check Active Appointment FIRST
+                if (hasActiveAppointment) {
+                    var myModal = new bootstrap.Modal(document.getElementById('activeAppointmentModal'));
+                    myModal.show();
+                    return;
+                }
+
+                // 2. Check Verification
                 if (!isVerified) {
                     alert('Your account is not verified yet. Please upload your ID in settings.');
                     return; 
@@ -249,12 +266,14 @@
                 
                 let isToday = clickedDate.getTime() === today.getTime();
 
+                // 3. Check if Today (Info Modal)
                 if (isToday) {
                     let takenToday = takenSlots[dateStr] || [];
                     openTodayModal(clickedDate, takenToday); 
                     return;
                 }
 
+                // 4. Check Full Booking
                 if (dailyCounts[dateStr] >= 5) {
                     alert('This date is fully booked (5/5 appointments). Please select another date.');
                     return;
@@ -309,7 +328,6 @@
             let hasDisabled = false;
 
             for (let i = 0; i < options.length; i++) {
-                // FIX 2: Skip the first option (placeholder) so we don't overwrite its text
                 if (options[i].value === "") continue;
 
                 if (taken.includes(options[i].value)) {
@@ -395,7 +413,7 @@
         background-color: #e7f1ff !important;
     }
 
-    /* FIX 3: HOVER EFFECT - DAY VIEW (Time Slots) */
+    /* HOVER EFFECT - DAY VIEW (Time Slots) */
     .fc-timegrid-slot-lane:hover {
         background-color: #e7f1ff !important;
         cursor: pointer;
