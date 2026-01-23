@@ -117,7 +117,8 @@
                             </li>
                         @endif
                     @else
-                        @if(Auth::user()->role === \App\Enums\UserRole::Patient)
+                        {{-- HIDE "Book Appointment" if we are already on the appointment page --}}
+                        @if(Auth::user()->role === \App\Enums\UserRole::Patient && !request()->routeIs('appointments.index'))
                             <li class="nav-item">
                                 <a class="nav-link fw-bold text-primary" href="{{ route('appointments.index') }}">
                                     <i class="bi bi-calendar-plus me-1"></i> Book Appointment

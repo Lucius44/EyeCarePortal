@@ -6,7 +6,7 @@
         <div class="col-lg-8">
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h2 class="fw-bold mb-0">Account Settings</h2>
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+                {{-- Button Removed --}}
             </div>
 
             @if(session('success'))
