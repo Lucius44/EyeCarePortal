@@ -107,12 +107,15 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center gap-3">
                     @guest
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn-nav-primary" href="{{ route('register') }}">Create Account</a>
-                        </li>
+                        {{-- HIDE these buttons if we are on Login or Register page --}}
+                        @if(!request()->routeIs('login') && !request()->routeIs('register'))
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('login') }}">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn-nav-primary" href="{{ route('register') }}">Create Account</a>
+                            </li>
+                        @endif
                     @else
                         @if(Auth::user()->role === \App\Enums\UserRole::Patient)
                             <li class="nav-item">
