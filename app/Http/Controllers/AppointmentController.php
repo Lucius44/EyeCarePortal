@@ -17,8 +17,6 @@ class AppointmentController extends Controller
         $userId = Auth::id();
 
         // 1. Check if user already has an active appointment
-        // CHANGED: We now fetch the *object* (first()) instead of just exists()
-        // so we can use its ID and Date in the Cancel Modal.
         $activeAppointment = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
@@ -52,7 +50,7 @@ class AppointmentController extends Controller
         
         return view('patient.appointments', compact(
             'services', 
-            'activeAppointment', // Passing the full object or null
+            'activeAppointment', 
             'dailyCounts', 
             'takenSlots'
         ));
@@ -101,10 +99,11 @@ class AppointmentController extends Controller
             'status' => AppointmentStatus::Pending
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Appointment request submitted successfully!');
+        // CHANGED: Redirect to the Appointments page instead of Dashboard
+        return redirect()->route('appointments.index')->with('success', 'Appointment request submitted successfully!');
     }
 
-    // NEW: Cancel Appointment
+    // NEW: Smart Cancel Logic
     public function cancel($id)
     {
         $appointment = Appointment::findOrFail($id);
@@ -114,15 +113,20 @@ class AppointmentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Security: Only allow cancelling if it is Pending or Confirmed
-        if (!in_array($appointment->status, [AppointmentStatus::Pending, AppointmentStatus::Confirmed])) {
-            return back()->with('error', 'This appointment cannot be cancelled.');
+        // 1. If Pending -> Hard Delete (Remove clutter)
+        if ($appointment->status === AppointmentStatus::Pending) {
+            $appointment->delete();
+            return back()->with('success', 'Appointment request removed successfully.');
         }
 
-        $appointment->update([
-            'status' => AppointmentStatus::Cancelled
-        ]);
+        // 2. If Confirmed -> Soft Cancel (Keep history)
+        if ($appointment->status === AppointmentStatus::Confirmed) {
+            $appointment->update([
+                'status' => AppointmentStatus::Cancelled
+            ]);
+            return back()->with('success', 'Appointment cancelled successfully.');
+        }
 
-        return back()->with('success', 'Appointment cancelled successfully.');
+        return back()->with('error', 'This appointment cannot be cancelled.');
     }
 }

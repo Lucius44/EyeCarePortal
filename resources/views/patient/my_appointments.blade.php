@@ -4,8 +4,22 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold mb-0">My Appointments</h2>
-        {{-- Button Removed --}}
     </div>
+
+    {{-- Success/Error Alerts --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 mb-4" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
@@ -24,6 +38,7 @@
 
             <div class="tab-content p-4" id="apptTabContent">
                 
+                {{-- UPCOMING TAB --}}
                 <div class="tab-pane fade show active" id="upcoming">
                     @if($upcoming->isEmpty())
                         <div class="text-center py-5">
@@ -40,9 +55,11 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width: 25%;">Date & Time</th>
-                                        <th style="width: 25%;">Service</th>
+                                        <th style="width: 20%;">Service</th>
                                         <th style="width: 15%;">Status</th>
-                                        <th>Notes</th>
+                                        <th style="width: 25%;">Notes</th>
+                                        {{-- ADDED: Actions Column --}}
+                                        <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -62,10 +79,19 @@
                                         </td>
                                         <td>
                                             @if($appt->description)
-                                                <small class="text-muted fst-italic">{{ Str::limit($appt->description, 50) }}</small>
+                                                <small class="text-muted fst-italic">{{ Str::limit($appt->description, 30) }}</small>
                                             @else
                                                 <span class="text-muted small">-</span>
                                             @endif
+                                        </td>
+                                        {{-- ADDED: Cancel Button --}}
+                                        <td class="text-end">
+                                            <form action="{{ route('appointments.cancel', $appt->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -75,6 +101,7 @@
                     @endif
                 </div>
 
+                {{-- HISTORY TAB --}}
                 <div class="tab-pane fade" id="history">
                     @if($history->isEmpty())
                         <div class="text-center py-5">
