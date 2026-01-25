@@ -13,6 +13,7 @@ class PatientController extends Controller
     // 1. The Main Dashboard (With Status Logic)
     public function dashboard()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // Fetch Active Appointment for the Dashboard Card
@@ -38,6 +39,7 @@ class PatientController extends Controller
     // 3. Update Profile (NEW)
     public function updateProfile(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         $request->validate([

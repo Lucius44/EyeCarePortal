@@ -20,7 +20,7 @@
                 </div>
             @endif
 
-            {{-- 1. IDENTITY VERIFICATION CARD (Visual Stepper) --}}
+            {{-- 1. IDENTITY VERIFICATION CARD --}}
             <div class="card shadow-sm mb-5 border-0 rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-person-badge me-2"></i> Identity Verification</h5>
@@ -35,7 +35,10 @@
                                 if(Auth::user()->id_photo_path) $progress = 50;
                                 if(Auth::user()->is_verified) $progress = 100;
                             @endphp
-                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progress }}%;"></div>
+                            
+                            {{-- FIX: Using Laravel's @style directive to generate the attribute dynamically. 
+                                 This prevents VS Code from flagging invalid CSS syntax. --}}
+                            <div class="progress-bar bg-success" role="progressbar" @style(['width' => $progress . '%'])></div>
                         </div>
                         <div class="position-absolute top-0 start-0 translate-middle btn btn-sm btn-success rounded-pill" style="width: 2rem; height:2rem;">1</div>
                         <div class="position-absolute top-0 start-50 translate-middle btn btn-sm {{ Auth::user()->id_photo_path ? 'btn-success' : 'btn-secondary' }} rounded-pill" style="width: 2rem; height:2rem;">2</div>
