@@ -7,28 +7,24 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
-use App\Http\Resources\CalendarEventResource; // <--- Import the new Resource
+use App\Http\Resources\CalendarEventResource;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        // 1. Get appointments with user data
+        // Filter out rejected/cancelled from the calendar to keep it clean? 
+        // Or keep them? Let's keep them but maybe the frontend filters them.
+        // For now, fetching all non-cancelled/rejected makes sense for a "Schedule", 
+        // but seeing history is good too. Let's grab all.
         $appointments = Appointment::with('user')->get();
-
-        // 2. Transform them using our new Resource
-        // ->resolve() converts the resource object into a plain PHP array
         $events = CalendarEventResource::collection($appointments)->resolve();
-
-        // 3. Pass the formatted 'events' to the view
         return view('admin.dashboard', compact('events'));
     }
 
-    // Show the Management Table
     public function appointments()
     {
-        // Using Enums in queries
         $pending = Appointment::where('status', AppointmentStatus::Pending)
                               ->with('user')
                               ->orderBy('appointment_date')
@@ -39,10 +35,11 @@ class AdminController extends Controller
                                 ->orderBy('appointment_date')
                                 ->get();
                                 
-        // History includes completed, cancelled, and no-show
+        // History now includes Rejected
         $history = Appointment::whereIn('status', [
                                     AppointmentStatus::Completed, 
                                     AppointmentStatus::Cancelled, 
+                                    AppointmentStatus::Rejected, // <--- NEW
                                     AppointmentStatus::NoShow
                                 ])
                               ->with('user')
@@ -52,41 +49,44 @@ class AdminController extends Controller
         return view('admin.appointments', compact('pending', 'confirmed', 'history'));
     }
 
-    // Handle Status Changes (Accept, Reject, Complete, Cancel)
     public function updateStatus(Request $request, $id)
     {
         $appointment = Appointment::findOrFail($id);
         
-        // Validate that the status is a valid one using the Enum Rule
         $request->validate([
             'status' => ['required', Rule::enum(AppointmentStatus::class)],
+            // If status is rejected, reason is required
+            'cancellation_reason' => 'nullable|string|max:500', 
         ]);
 
-        $appointment->update(['status' => $request->status]);
+        $data = ['status' => $request->status];
+
+        // If rejecting, save the reason
+        if ($request->status === AppointmentStatus::Rejected->value) {
+            $data['cancellation_reason'] = $request->input('cancellation_reason', 'No reason provided.');
+        }
+
+        $appointment->update($data);
 
         return back()->with('success', 'Appointment status updated successfully.');
     }
 
-    // Show User List
     public function users()
     {
-        // Users who have uploaded an ID but are NOT verified yet
         $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
                             ->where('is_verified', false)
                             ->get();
 
-        // All other users (for reference)
         $allUsers = User::where('role', UserRole::Patient)->get();
 
         return view('admin.users', compact('pendingUsers', 'allUsers'));
     }
 
-    // Approve or Reject User
     public function verifyUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $action = $request->input('action'); // 'approve' or 'reject'
+        $action = $request->input('action'); 
 
         if ($action === 'approve') {
             $user->update(['is_verified' => true]);
@@ -94,11 +94,8 @@ class AdminController extends Controller
         } 
         
         if ($action === 'reject') {
-            // If rejected, we might want to delete the photo so they can upload a new one
-            // optional: Storage::delete('public/' . $user->id_photo_path);
-            
             $user->update([
-                'id_photo_path' => null, // Reset so they can try again
+                'id_photo_path' => null, 
                 'is_verified' => false
             ]);
             return back()->with('success', 'User verification rejected. They can upload a new ID.');

@@ -17,9 +17,9 @@ class Appointment extends Model
         'appointment_time',
         'description',
         'status',
+        'cancellation_reason', // <--- ADD THIS
     ];
 
-    // Helper to get available services
     public static function getServices()
     {
         return [
@@ -31,17 +31,16 @@ class Appointment extends Model
         ];
     }
 
-    // Relationship: An appointment belongs to a User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    protected function casts(): array // <--- Add this method
-{
-    return [
-        'appointment_date' => 'date',
-        'status' => AppointmentStatus::class,
-    ];
-}
+    protected function casts(): array 
+    {
+        return [
+            'appointment_date' => 'date',
+            'status' => AppointmentStatus::class,
+        ];
+    }
 }

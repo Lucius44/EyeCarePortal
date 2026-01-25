@@ -23,6 +23,13 @@
         <div class="col-md-12">
             
             {{-- Error/Success Alerts --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="alert alert-danger rounded-4">
                     <ul class="mb-0">
@@ -44,7 +51,6 @@
                     
                     <div id="calendar" 
                          data-verified="{{ Auth::user()->is_verified }}"
-                         {{-- UPDATED: Passing Active Appointment ID logic --}}
                          data-has-active="{{ $activeAppointment ? '1' : '0' }}"
                          data-daily-counts="{{ json_encode($dailyCounts) }}"
                          data-taken-slots="{{ json_encode($takenSlots) }}"
@@ -166,25 +172,41 @@
                         <span class="fs-5 text-dark fw-bold">
                             {{ $activeAppointment->appointment_date->format('F d, Y') }} at {{ $activeAppointment->appointment_time }}
                         </span>
-                        <br><br>
+                        <br>
                         You cannot book a new appointment until this one is completed or cancelled.
                     </p>
                     
                     <div class="d-grid gap-2 col-10 mx-auto">
                         <a href="{{ route('my.appointments') }}" class="btn btn-primary rounded-pill fw-bold">View My Appointments</a>
                         
-                        {{-- NEW: Cancel Button directly in the modal --}}
-                        <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-danger rounded-pill fw-bold w-100">
+                        {{-- DYNAMIC CANCEL BUTTON LOGIC --}}
+                        @if($activeAppointment->status->value === 'pending')
+                            {{-- Simple Cancel for Pending --}}
+                            <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-danger rounded-pill fw-bold w-100" onclick="return confirm('Cancel this pending request?');">
+                                    Cancel Request
+                                </button>
+                            </form>
+                        @else
+                            {{-- Confirmed Cancel (Trigger Collapse for Reason) --}}
+                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="collapse" data-bs-target="#cancelReasonCollapse">
                                 Cancel Existing Appointment
                             </button>
-                        </form>
+                            
+                            <div class="collapse mt-3" id="cancelReasonCollapse">
+                                <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST" class="text-start p-3 bg-light rounded-3">
+                                    @csrf
+                                    <label class="small fw-bold mb-1">Reason for cancellation:</label>
+                                    <textarea name="cancellation_reason" class="form-control mb-2" rows="2" required placeholder="Why are you cancelling?"></textarea>
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">Confirm Cancellation</button>
+                                </form>
+                            </div>
+                        @endif
 
-                        <button type="button" class="btn btn-light rounded-pill mt-2" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-light rounded-pill mt-2" data-bs-dismiss="modal">Close & View Calendar</button>
                     </div>
                 @else
-                    {{-- Fallback just in case (should not trigger if logic works) --}}
                     <p class="text-muted mb-4">You already have a pending or confirmed appointment.</p>
                     <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
                 @endif

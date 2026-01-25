@@ -42,13 +42,13 @@
                 <div class="tab-pane fade show active" id="pending">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <table class="table table-hover">
+                            <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Patient</th>
                                         <th>Date & Time</th>
                                         <th>Service</th>
-                                        <th>Description</th>
+                                        <th>Notes</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -62,20 +62,58 @@
                                             <small class="text-muted">{{ $appt->appointment_time }}</small>
                                         </td>
                                         <td>{{ $appt->service }}</td>
-                                        <td>{{ Str::limit($appt->description, 30) }}</td>
+                                        <td>{{ Str::limit($appt->description, 30) ?: '-' }}</td>
                                         <td>
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="confirmed">
                                                 <button class="btn btn-success btn-sm">Accept</button>
                                             </form>
-                                            <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <input type="hidden" name="status" value="cancelled">
-                                                <button class="btn btn-danger btn-sm">Reject</button>
-                                            </form>
+                                            
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal-{{ $appt->id }}">
+                                                Reject
+                                            </button>
                                         </td>
                                     </tr>
+
+                                    <div class="modal fade" id="rejectModal-{{ $appt->id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="status" value="rejected">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">Reject Appointment</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Why are you rejecting this appointment?</p>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Reason</label>
+                                                            <select class="form-select" name="reason_select" onchange="toggleOther(this, '{{ $appt->id }}')" required>
+                                                                <option value="">-- Select Reason --</option>
+                                                                <option value="Doctor Unavailable">Doctor Unavailable</option>
+                                                                <option value="Double Booked">Double Booked</option>
+                                                                <option value="Service Not Available">Service Not Available</option>
+                                                                <option value="Incomplete Information">Incomplete Information</option>
+                                                                <option value="Other">Other</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="mb-3 d-none" id="otherReasonDiv-{{ $appt->id }}">
+                                                            <label class="form-label">Specific Reason</label>
+                                                            <textarea name="cancellation_reason" id="textArea-{{ $appt->id }}" class="form-control" rows="3"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                     @empty
                                     <tr><td colspan="5" class="text-center text-muted">No pending requests.</td></tr>
                                     @endforelse
@@ -88,7 +126,7 @@
                 <div class="tab-pane fade" id="ongoing">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <table class="table table-hover">
+                            <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Patient</th>
@@ -138,6 +176,7 @@
                                         <th>Patient</th>
                                         <th>Date</th>
                                         <th>Status</th>
+                                        <th>Reason/Notes</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -146,14 +185,18 @@
                                         <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
                                         <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
                                         <td>
-                                            {{-- FIX: Compare the Enum VALUE, not the object --}}
                                             @if($appt->status->value === 'completed') 
                                                 <span class="badge bg-success">Completed</span>
                                             @elseif($appt->status->value === 'cancelled') 
-                                                <span class="badge bg-danger">Cancelled</span>
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                            @elseif($appt->status->value === 'rejected') 
+                                                <span class="badge bg-danger">Rejected</span>
                                             @elseif($appt->status->value === 'no-show') 
                                                 <span class="badge bg-warning text-dark">No-Show</span>
                                             @endif
+                                        </td>
+                                        <td class="small text-muted">
+                                            {{ $appt->cancellation_reason ?? '-' }}
                                         </td>
                                     </tr>
                                     @endforeach
@@ -167,4 +210,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    function toggleOther(select, id) {
+        const otherDiv = document.getElementById('otherReasonDiv-' + id);
+        const textArea = document.getElementById('textArea-' + id);
+        
+        if (select.value === 'Other') {
+            otherDiv.classList.remove('d-none');
+            textArea.required = true;
+            textArea.value = ''; // clear it
+        } else {
+            otherDiv.classList.add('d-none');
+            textArea.required = false;
+            // Set the textarea value to the selected dropdown value so it submits correctly
+            textArea.value = select.value;
+        }
+    }
+</script>
 @endsection
