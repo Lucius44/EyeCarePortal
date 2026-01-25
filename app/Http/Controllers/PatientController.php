@@ -10,10 +10,22 @@ use App\Enums\AppointmentStatus;
 
 class PatientController extends Controller
 {
-    // 1. The Main Dashboard
+    // 1. The Main Dashboard (With Status Logic)
     public function dashboard()
     {
-        return view('patient.dashboard');
+        $user = Auth::user();
+
+        // Fetch Active Appointment for the Dashboard Card
+        $activeAppointment = Appointment::where('user_id', $user->id)
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->first();
+
+        // Fetch Stats
+        $completedVisits = Appointment::where('user_id', $user->id)
+            ->where('status', AppointmentStatus::Completed)
+            ->count();
+
+        return view('patient.dashboard', compact('activeAppointment', 'completedVisits'));
     }
 
     // 2. The Profile Page
@@ -23,13 +35,37 @@ class PatientController extends Controller
         return view('patient.profile', compact('user'));
     }
 
-    // Show Settings Page
+    // 3. Update Profile (NEW)
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'birthday' => 'required|date|before:today',
+            'gender' => 'required|in:Male,Female,Other',
+        ]);
+
+        $user->update($request->only([
+            'first_name', 
+            'last_name', 
+            'middle_name', 
+            'birthday', 
+            'gender'
+        ]));
+
+        return back()->with('success', 'Profile details updated successfully.');
+    }
+
+    // 4. Show Settings Page
     public function settings()
     {
         return view('patient.settings');
     }
 
-    // Handle ID Upload
+    // 5. Handle ID Upload
     public function uploadId(Request $request)
     {
         $request->validate([
@@ -48,25 +84,22 @@ class PatientController extends Controller
         return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
     }
 
-    // Show Patient's Appointment List
+    // 6. Show Patient's Appointment List
     public function myAppointments()
     {
         $user_id = Auth::id();
 
-        // 1. Upcoming (Pending or Confirmed)
         $upcoming = Appointment::where('user_id', $user_id)
                                ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
                                ->orderBy('appointment_date')
                                ->get();
 
-        // 2. History (Completed, Cancelled, No-Show, REJECTED)
-        // --- FIXED: Added Rejected to the list ---
         $history = Appointment::where('user_id', $user_id)
                               ->whereIn('status', [
                                   AppointmentStatus::Completed, 
                                   AppointmentStatus::Cancelled, 
                                   AppointmentStatus::NoShow,
-                                  AppointmentStatus::Rejected // <--- ADDED THIS
+                                  AppointmentStatus::Rejected
                               ])
                               ->orderByDesc('appointment_date')
                               ->get();
@@ -74,7 +107,7 @@ class PatientController extends Controller
         return view('patient.my_appointments', compact('upcoming', 'history'));
     }
 
-    // Update Phone Number
+    // 7. Update Phone Number
     public function updatePhone(Request $request)
     {
         $request->validate([
@@ -88,7 +121,7 @@ class PatientController extends Controller
         return back()->with('success', 'Phone number updated successfully.');
     }
 
-    // Change Password
+    // 8. Change Password
     public function updatePassword(Request $request)
     {
         $request->validate([

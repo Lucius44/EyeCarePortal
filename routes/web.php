@@ -29,13 +29,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
+    
+    // Profile Routes (View & Update)
     Route::get('/profile', [PatientController::class, 'profile'])->name('profile');
+    Route::put('/profile', [PatientController::class, 'updateProfile'])->name('profile.update'); // <--- NEW
     
     // Appointment Routes
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
-    
-    // NEW: Cancel Appointment Route
     Route::post('/appointments/{id}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
     // Settings & Upload
