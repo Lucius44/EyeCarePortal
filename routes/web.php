@@ -30,9 +30,9 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
     
-    // Profile Routes (View & Update)
+    // Profile Routes
     Route::get('/profile', [PatientController::class, 'profile'])->name('profile');
-    Route::put('/profile', [PatientController::class, 'updateProfile'])->name('profile.update'); // <--- NEW
+    // REMOVED: Route::put('/profile', ...) to prevent identity changes.
     
     // Appointment Routes
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');

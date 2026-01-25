@@ -36,30 +36,8 @@ class PatientController extends Controller
         return view('patient.profile', compact('user'));
     }
 
-    // 3. Update Profile (NEW)
-    public function updateProfile(Request $request)
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'birthday' => 'required|date|before:today',
-            'gender' => 'required|in:Male,Female,Other',
-        ]);
-
-        $user->update($request->only([
-            'first_name', 
-            'last_name', 
-            'middle_name', 
-            'birthday', 
-            'gender'
-        ]));
-
-        return back()->with('success', 'Profile details updated successfully.');
-    }
+    // REMOVED: updateProfile method. 
+    // Identity details (Name, DOB, Gender) are now immutable to preserve verification integrity.
 
     // 4. Show Settings Page
     public function settings()

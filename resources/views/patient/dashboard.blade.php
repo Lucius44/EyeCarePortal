@@ -10,6 +10,8 @@
                 <div class="card-body p-5 position-relative">
                     <div class="position-relative z-2">
                         @php
+                            // Since we set timezone to Asia/Manila in config/app.php,
+                            // date('H') now respects Philippine time.
                             $hour = date('H');
                             $greeting = $hour < 12 ? 'Good Morning' : ($hour < 18 ? 'Good Afternoon' : 'Good Evening');
                         @endphp
@@ -135,7 +137,7 @@
                                 </div>
                                 <div>
                                     <h6 class="fw-bold text-dark mb-1">My Profile</h6>
-                                    <small class="text-muted">Update your details</small>
+                                    <small class="text-muted">Check your details</small>
                                 </div>
                             </div>
                         </div>
@@ -155,7 +157,8 @@
                     <div class="d-flex align-items-center mb-3">
                         @if(Auth::user()->is_verified)
                             <div class="position-relative">
-                                <img src="{{ Auth::user()->id_photo_path ? asset('storage/'.Auth::user()->id_photo_path) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->first_name).'&background=0D6EFD&color=fff' }}" 
+                                {{-- CHANGED: Always use UI Avatars/Initials instead of ID photo --}}
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->first_name . ' ' . Auth::user()->last_name) }}&background=0D6EFD&color=fff" 
                                      class="rounded-circle object-fit-cover" 
                                      width="60" height="60" alt="Profile">
                                 <span class="position-absolute bottom-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle">

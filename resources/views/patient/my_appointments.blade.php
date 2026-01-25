@@ -134,38 +134,47 @@
                 </div>
 
                 <div class="tab-pane fade" id="history">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Service</th>
-                                    <th>Status</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($history as $appt)
-                                <tr>
-                                    <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
-                                    <td>{{ $appt->service }}</td>
-                                    <td>
-                                        @if($appt->status->value === 'completed') 
-                                            <span class="badge bg-primary rounded-pill px-3">Completed</span>
-                                        @elseif($appt->status->value === 'cancelled') 
-                                            <span class="badge bg-secondary rounded-pill px-3">Cancelled</span>
-                                        @elseif($appt->status->value === 'rejected') 
-                                            <span class="badge bg-danger rounded-pill px-3">Rejected</span>
-                                        @elseif($appt->status->value === 'no-show') 
-                                            <span class="badge bg-warning text-dark rounded-pill px-3">No-Show</span>
-                                        @endif
-                                    </td>
-                                    <td class="small text-muted">{{ $appt->cancellation_reason ?? '-' }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    @if($history->isEmpty())
+                        {{-- ADDED: Empty State for History --}}
+                        <div class="text-center py-5">
+                            <div class="mb-3"><i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i></div>
+                            <h5 class="text-muted">No appointment history available</h5>
+                            <p class="text-muted small">Completed and cancelled appointments will appear here.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Service</th>
+                                        <th>Status</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($history as $appt)
+                                    <tr>
+                                        <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
+                                        <td>{{ $appt->service }}</td>
+                                        <td>
+                                            @if($appt->status->value === 'completed') 
+                                                <span class="badge bg-primary rounded-pill px-3">Completed</span>
+                                            @elseif($appt->status->value === 'cancelled') 
+                                                <span class="badge bg-secondary rounded-pill px-3">Cancelled</span>
+                                            @elseif($appt->status->value === 'rejected') 
+                                                <span class="badge bg-danger rounded-pill px-3">Rejected</span>
+                                            @elseif($appt->status->value === 'no-show') 
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">No-Show</span>
+                                            @endif
+                                        </td>
+                                        <td class="small text-muted">{{ $appt->cancellation_reason ?? '-' }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
 
             </div>

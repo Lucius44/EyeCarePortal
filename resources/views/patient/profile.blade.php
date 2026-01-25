@@ -3,13 +3,6 @@
 @section('content')
 <div class="container py-4">
     
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="row justify-content-center">
         <div class="col-lg-10">
             
@@ -44,9 +37,10 @@
                                 </span>
                             </div>
 
-                            <button class="btn btn-outline-primary rounded-pill w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                                <i class="bi bi-pencil-square me-2"></i>Edit Details
-                            </button>
+                            {{-- REMOVED: Edit Button --}}
+                            <div class="alert alert-light text-muted small border-0 bg-transparent">
+                                <i class="bi bi-info-circle me-1"></i> Identity details are locked for verification purposes.
+                            </div>
                         </div>
 
                         {{-- Right Column: Details --}}
@@ -98,54 +92,6 @@
             </div>
 
         </div>
-    </div>
-</div>
-
-{{-- EDIT PROFILE MODAL --}}
-<div class="modal fade" id="editProfileModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <form action="{{ route('profile.update') }}" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold">Edit Profile</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">First Name</label>
-                            <input type="text" name="first_name" class="form-control" value="{{ $user->first_name }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Last Name</label>
-                            <input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}" required>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold small">Middle Name (Optional)</label>
-                            <input type="text" name="middle_name" class="form-control" value="{{ $user->middle_name }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Date of Birth</label>
-                            <input type="date" name="birthday" class="form-control" value="{{ $user->birthday }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Gender</label>
-                            <select name="gender" class="form-select" required>
-                                <option value="Male" {{ $user->gender == 'Male' ? 'selected' : '' }}>Male</option>
-                                <option value="Female" {{ $user->gender == 'Female' ? 'selected' : '' }}>Female</option>
-                                <option value="Other" {{ $user->gender == 'Other' ? 'selected' : '' }}>Other</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">Save Changes</button>
-                </div>
-            </div>
-        </form>
     </div>
 </div>
 @endsection
