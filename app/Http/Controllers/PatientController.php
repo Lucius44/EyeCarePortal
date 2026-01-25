@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Appointment;
-use App\Enums\AppointmentStatus; // <--- Import the Enum
+use App\Enums\AppointmentStatus; 
 
 class PatientController extends Controller
 {
@@ -54,19 +54,19 @@ class PatientController extends Controller
         $user_id = Auth::id();
 
         // 1. Upcoming (Pending or Confirmed)
-        // --- FIXED: Using Enums instead of strings ---
         $upcoming = Appointment::where('user_id', $user_id)
                                ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
                                ->orderBy('appointment_date')
                                ->get();
 
-        // 2. History (Completed, Cancelled, No-Show)
-        // --- FIXED: Using Enums ---
+        // 2. History (Completed, Cancelled, No-Show, REJECTED)
+        // --- FIXED: Added Rejected to the list ---
         $history = Appointment::where('user_id', $user_id)
                               ->whereIn('status', [
                                   AppointmentStatus::Completed, 
                                   AppointmentStatus::Cancelled, 
-                                  AppointmentStatus::NoShow
+                                  AppointmentStatus::NoShow,
+                                  AppointmentStatus::Rejected // <--- ADDED THIS
                               ])
                               ->orderByDesc('appointment_date')
                               ->get();

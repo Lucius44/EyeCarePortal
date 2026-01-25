@@ -181,13 +181,10 @@
                         
                         {{-- DYNAMIC CANCEL BUTTON LOGIC --}}
                         @if($activeAppointment->status->value === 'pending')
-                            {{-- Simple Cancel for Pending --}}
-                            <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-danger rounded-pill fw-bold w-100" onclick="return confirm('Cancel this pending request?');">
-                                    Cancel Request
-                                </button>
-                            </form>
+                            {{-- TRIGGER THE NEW BEAUTIFUL MODAL --}}
+                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="modal" data-bs-target="#pendingCancelModal">
+                                Cancel Request
+                            </button>
                         @else
                             {{-- Confirmed Cancel (Trigger Collapse for Reason) --}}
                             <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="collapse" data-bs-target="#cancelReasonCollapse">
@@ -257,6 +254,29 @@
         </div>
     </div>
 </div>
+
+{{-- 6. NEW: BEAUTIFUL PENDING CANCEL CONFIRMATION MODAL --}}
+@if($activeAppointment && $activeAppointment->status->value === 'pending')
+<div class="modal fade" id="pendingCancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-body p-4 text-center">
+                <h5 class="fw-bold mb-3">Cancel Request?</h5>
+                <p class="text-muted mb-4">Are you sure you want to remove this appointment request?</p>
+                <div class="d-flex justify-content-center gap-2">
+                    {{-- Button to go back to the Active Appointment Modal --}}
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#activeAppointmentModal">Keep It</button>
+                    
+                    <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">Yes, Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
