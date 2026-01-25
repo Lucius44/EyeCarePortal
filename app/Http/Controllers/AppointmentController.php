@@ -16,23 +16,20 @@ class AppointmentController extends Controller
     {
         $userId = Auth::id();
 
-        // 1. Check if user already has an active appointment (Pending or Confirmed)
-        // We will pass this to the view to disable the "Book" button if true.
-        $hasActiveAppointment = Appointment::where('user_id', $userId)
+        // 1. Check if user already has an active appointment
+        // CHANGED: We now fetch the *object* (first()) instead of just exists()
+        // so we can use its ID and Date in the Cancel Modal.
+        $activeAppointment = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
-            ->exists();
+            ->first();
 
         // 2. Fetch all future appointments to calculate "Counts" and "Taken Slots"
-        // We only care about Pending/Confirmed appointments for availability
         $appointments = Appointment::where('appointment_date', '>=', Carbon::today())
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
 
         // 3. Prepare data structures for the frontend
-        // Structure: ['2026-01-21' => 3]
         $dailyCounts = [];
-        
-        // Structure: ['2026-01-21' => ['09:00 AM', '10:00 AM']]
         $takenSlots = [];
 
         foreach ($appointments as $app) {
@@ -55,7 +52,7 @@ class AppointmentController extends Controller
         
         return view('patient.appointments', compact(
             'services', 
-            'hasActiveAppointment', 
+            'activeAppointment', // Passing the full object or null
             'dailyCounts', 
             'takenSlots'
         ));
@@ -105,5 +102,27 @@ class AppointmentController extends Controller
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Appointment request submitted successfully!');
+    }
+
+    // NEW: Cancel Appointment
+    public function cancel($id)
+    {
+        $appointment = Appointment::findOrFail($id);
+
+        // Security: Ensure the logged-in user owns this appointment
+        if ($appointment->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Security: Only allow cancelling if it is Pending or Confirmed
+        if (!in_array($appointment->status, [AppointmentStatus::Pending, AppointmentStatus::Confirmed])) {
+            return back()->with('error', 'This appointment cannot be cancelled.');
+        }
+
+        $appointment->update([
+            'status' => AppointmentStatus::Cancelled
+        ]);
+
+        return back()->with('success', 'Appointment cancelled successfully.');
     }
 }

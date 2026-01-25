@@ -44,7 +44,8 @@
                     
                     <div id="calendar" 
                          data-verified="{{ Auth::user()->is_verified }}"
-                         data-has-active="{{ $hasActiveAppointment ? '1' : '0' }}"
+                         {{-- UPDATED: Passing Active Appointment ID logic --}}
+                         data-has-active="{{ $activeAppointment ? '1' : '0' }}"
                          data-daily-counts="{{ json_encode($dailyCounts) }}"
                          data-taken-slots="{{ json_encode($takenSlots) }}"
                     ></div>
@@ -150,19 +151,43 @@
     </div>
 </div>
 
-{{-- 3. ACTIVE APPOINTMENT RESTRICTION MODAL --}}
+{{-- 3. ACTIVE APPOINTMENT RESTRICTION MODAL (UPDATED) --}}
 <div class="modal fade" id="activeAppointmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-body p-5 text-center">
                 <i class="bi bi-calendar-check text-warning display-1 mb-3"></i>
                 <h3 class="fw-bold">Active Appointment Found</h3>
-                <p class="text-muted mb-4">You already have a pending or confirmed appointment.<br>You cannot book another one until your current appointment is completed.</p>
                 
-                <div class="d-grid gap-2 col-10 mx-auto">
-                    <a href="{{ route('my.appointments') }}" class="btn btn-primary rounded-pill fw-bold">View My Appointments</a>
-                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close & View Calendar</button>
-                </div>
+                @if($activeAppointment)
+                    <p class="text-muted mb-4">
+                        You have a <strong>{{ $activeAppointment->status->value }}</strong> appointment on:
+                        <br>
+                        <span class="fs-5 text-dark fw-bold">
+                            {{ $activeAppointment->appointment_date->format('F d, Y') }} at {{ $activeAppointment->appointment_time }}
+                        </span>
+                        <br><br>
+                        You cannot book a new appointment until this one is completed or cancelled.
+                    </p>
+                    
+                    <div class="d-grid gap-2 col-10 mx-auto">
+                        <a href="{{ route('my.appointments') }}" class="btn btn-primary rounded-pill fw-bold">View My Appointments</a>
+                        
+                        {{-- NEW: Cancel Button directly in the modal --}}
+                        <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger rounded-pill fw-bold w-100">
+                                Cancel Existing Appointment
+                            </button>
+                        </form>
+
+                        <button type="button" class="btn btn-light rounded-pill mt-2" data-bs-dismiss="modal">Close</button>
+                    </div>
+                @else
+                    {{-- Fallback just in case (should not trigger if logic works) --}}
+                    <p class="text-muted mb-4">You already have a pending or confirmed appointment.</p>
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
+                @endif
             </div>
         </div>
     </div>
@@ -191,7 +216,7 @@
     </div>
 </div>
 
-{{-- 5. NEW: FULLY BOOKED MODAL --}}
+{{-- 5. FULLY BOOKED MODAL --}}
 <div class="modal fade" id="fullyBookedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -222,7 +247,7 @@
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
-        // HELPER: Get Local Date String (YYYY-MM-DD) to fix timezone issues
+        // HELPER: Get Local Date String (YYYY-MM-DD)
         function getLocalYMD(dateObj) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -282,13 +307,9 @@
             allDaySlot: false,
             expandRows: true,
 
-            // Style Logic (FIXED: Uses Local Date)
+            // Style Logic
             dayCellClassNames: function(arg) {
-                // OLD BROKEN CODE: let dateStr = arg.date.toISOString().split('T')[0];
-                
-                // NEW FIXED CODE:
                 let dateStr = getLocalYMD(arg.date);
-                
                 if (dailyCounts[dateStr] >= 5) {
                     return ['date-full']; 
                 }
@@ -326,7 +347,7 @@
                     return;
                 }
 
-                // 4. Check Full Booking (UPDATED: Uses Modal instead of Alert)
+                // 4. Check Full Booking
                 if (dailyCounts[dateStr] >= 5) {
                     var myModal = new bootstrap.Modal(document.getElementById('fullyBookedModal'));
                     myModal.show();
@@ -339,7 +360,6 @@
 
         calendar.render();
 
-        // HELPER FUNCTION FOR TODAY'S MODAL
         function openTodayModal(dateObj, takenArray) {
             document.getElementById('todayDateDisplay').innerText = dateObj.toLocaleDateString(undefined, { 
                 weekday: 'long', month: 'long', day: 'numeric' 
@@ -366,7 +386,6 @@
             myModal.show();
         }
 
-        // Helper to open booking modal
         function openBookingModal(dateStr, dateObj) {
             document.getElementById('modalDateInput').value = dateStr;
             document.getElementById('displayDate').innerText = dateObj.toLocaleDateString(undefined, { 

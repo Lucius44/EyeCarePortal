@@ -19,7 +19,7 @@ Route::post('/login', [AuthController::class, 'authenticate'])->name('login.post
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'store'])->name('register.post');
 
-// --- NEW: AJAX Email Check ---
+// AJAX Email Check
 Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.email');
 
 // Logout
@@ -31,9 +31,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [PatientController::class, 'profile'])->name('profile');
     
-    // Appointment Route
+    // Appointment Routes
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+    
+    // NEW: Cancel Appointment Route
+    Route::post('/appointments/{id}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
     // Settings & Upload
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
