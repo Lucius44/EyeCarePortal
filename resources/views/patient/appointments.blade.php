@@ -22,7 +22,6 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             
-            {{-- Error/Success Alerts --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
                     <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
@@ -61,6 +60,7 @@
     </div>
 </div>
 
+{{-- Modals (Keep your existing modals exactly as they are) --}}
 {{-- 1. BOOKING MODAL --}}
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -96,6 +96,7 @@
                         <select name="appointment_time" id="timeSlotSelect" class="form-select form-select-lg" required>
                             <option value="">-- Select Time --</option>
                             @php
+                                // Note: Admin added 12PM and 5PM, ensuring consistency
                                 $times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
                             @endphp
                             @foreach($times as $time)
@@ -131,24 +132,13 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-center">
-                
                 <h4 class="fw-bold text-secondary mb-3" id="todayDateDisplay"></h4>
-                
-                <p class="text-muted mb-4">
-                    We do not accept same-day appointments online.<br>
-                    Please call us at <strong>(123) 456-7890</strong> for urgent inquiries.
-                </p>
-
+                <p class="text-muted mb-4">We do not accept same-day appointments online.<br>Please call us at <strong>(123) 456-7890</strong> for urgent inquiries.</p>
                 <div class="card bg-light border-0 p-3 rounded-4">
                     <h6 class="fw-bold text-uppercase small text-muted mb-3">Booked Slots Today</h6>
-                    
                     <div id="todaySlotsList" class="d-flex flex-wrap justify-content-center gap-2"></div>
-                    
-                    <div id="todayNoSlots" class="text-success fw-bold small" style="display:none;">
-                        <i class="bi bi-check-circle me-1"></i> No appointments scheduled yet.
-                    </div>
+                    <div id="todayNoSlots" class="text-success fw-bold small" style="display:none;"><i class="bi bi-check-circle me-1"></i> No appointments scheduled yet.</div>
                 </div>
-
             </div>
             <div class="modal-footer border-0 justify-content-center pb-4">
                 <button type="button" class="btn btn-info text-white px-5 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal">I Understand</button>
@@ -157,40 +147,21 @@
     </div>
 </div>
 
-{{-- 3. ACTIVE APPOINTMENT RESTRICTION MODAL (UPDATED) --}}
+{{-- 3. ACTIVE APPOINTMENT MODAL --}}
 <div class="modal fade" id="activeAppointmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-body p-5 text-center">
                 <i class="bi bi-calendar-check text-warning display-1 mb-3"></i>
                 <h3 class="fw-bold">Active Appointment Found</h3>
-                
                 @if($activeAppointment)
-                    <p class="text-muted mb-4">
-                        You have a <strong>{{ $activeAppointment->status->value }}</strong> appointment on:
-                        <br>
-                        <span class="fs-5 text-dark fw-bold">
-                            {{ $activeAppointment->appointment_date->format('F d, Y') }} at {{ $activeAppointment->appointment_time }}
-                        </span>
-                        <br>
-                        You cannot book a new appointment until this one is completed or cancelled.
-                    </p>
-                    
+                    <p class="text-muted mb-4">You have a <strong>{{ $activeAppointment->status->value }}</strong> appointment on:<br><span class="fs-5 text-dark fw-bold">{{ $activeAppointment->appointment_date->format('F d, Y') }} at {{ $activeAppointment->appointment_time }}</span><br>You cannot book a new appointment until this one is completed or cancelled.</p>
                     <div class="d-grid gap-2 col-10 mx-auto">
                         <a href="{{ route('my.appointments') }}" class="btn btn-primary rounded-pill fw-bold">View My Appointments</a>
-                        
-                        {{-- DYNAMIC CANCEL BUTTON LOGIC --}}
                         @if($activeAppointment->status->value === 'pending')
-                            {{-- TRIGGER THE NEW BEAUTIFUL MODAL --}}
-                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="modal" data-bs-target="#pendingCancelModal">
-                                Cancel Request
-                            </button>
+                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="modal" data-bs-target="#pendingCancelModal">Cancel Request</button>
                         @else
-                            {{-- Confirmed Cancel (Trigger Collapse for Reason) --}}
-                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="collapse" data-bs-target="#cancelReasonCollapse">
-                                Cancel Existing Appointment
-                            </button>
-                            
+                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="collapse" data-bs-target="#cancelReasonCollapse">Cancel Existing Appointment</button>
                             <div class="collapse mt-3" id="cancelReasonCollapse">
                                 <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST" class="text-start p-3 bg-light rounded-3">
                                     @csrf
@@ -200,7 +171,6 @@
                                 </form>
                             </div>
                         @endif
-
                         <button type="button" class="btn btn-light rounded-pill mt-2" data-bs-dismiss="modal">Close & View Calendar</button>
                     </div>
                 @else
@@ -212,22 +182,16 @@
     </div>
 </div>
 
-{{-- 4. UNVERIFIED ACCOUNT MODAL --}}
+{{-- 4. UNVERIFIED MODAL --}}
 <div class="modal fade" id="unverifiedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-body p-5 text-center">
                 <i class="bi bi-shield-lock text-danger display-1 mb-3"></i>
                 <h3 class="fw-bold">Verification Required</h3>
-                <p class="text-muted mb-4">
-                    To ensure safety and security, you must verify your account before booking an appointment.
-                    <br>Please upload a valid ID in your settings.
-                </p>
-                
+                <p class="text-muted mb-4">To ensure safety and security, you must verify your account before booking an appointment.<br>Please upload a valid ID in your settings.</p>
                 <div class="d-grid gap-2 col-10 mx-auto">
-                    <a href="{{ route('settings') }}" class="btn btn-danger rounded-pill fw-bold shadow-sm">
-                        <i class="bi bi-upload me-2"></i>Upload ID Now
-                    </a>
+                    <a href="{{ route('settings') }}" class="btn btn-danger rounded-pill fw-bold shadow-sm"><i class="bi bi-upload me-2"></i>Upload ID Now</a>
                     <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -242,11 +206,7 @@
             <div class="modal-body p-5 text-center">
                 <i class="bi bi-calendar-x text-danger display-1 mb-3"></i>
                 <h3 class="fw-bold">Fully Booked</h3>
-                <p class="text-muted mb-4">
-                    This date has reached its maximum capacity (5/5 appointments).
-                    <br>Please select a different date for your consultation.
-                </p>
-                
+                <p class="text-muted mb-4">This date has reached its maximum capacity (5/5 appointments).<br>Please select a different date for your consultation.</p>
                 <div class="d-grid gap-2 col-8 mx-auto">
                     <button type="button" class="btn btn-primary rounded-pill fw-bold" data-bs-dismiss="modal">Select Another Date</button>
                 </div>
@@ -255,7 +215,7 @@
     </div>
 </div>
 
-{{-- 6. NEW: BEAUTIFUL PENDING CANCEL CONFIRMATION MODAL --}}
+{{-- 6. PENDING CANCEL MODAL --}}
 @if($activeAppointment && $activeAppointment->status->value === 'pending')
 <div class="modal fade" id="pendingCancelModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -264,9 +224,7 @@
                 <h5 class="fw-bold mb-3">Cancel Request?</h5>
                 <p class="text-muted mb-4">Are you sure you want to remove this appointment request?</p>
                 <div class="d-flex justify-content-center gap-2">
-                    {{-- Button to go back to the Active Appointment Modal --}}
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#activeAppointmentModal">Keep It</button>
-                    
                     <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-danger rounded-pill px-4">Yes, Cancel</button>
@@ -283,33 +241,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         
-        // Read attributes safely
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
         const hasActiveAppointment = calendarEl.getAttribute('data-has-active') == '1'; 
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
-        // HELPER: Get Local Date String (YYYY-MM-DD)
-        function getLocalYMD(dateObj) {
-            const year = dateObj.getFullYear();
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        // CONVERT COUNTS TO EVENTS
-        let countEvents = [];
+        // 1. Process Daily Counts (Background Events for Month View)
+        let calendarEvents = [];
         for (const [date, count] of Object.entries(dailyCounts)) {
             let color = '#198754'; 
             let title = count + ' Booked';
-            
             if (count >= 3 && count < 5) color = '#ffc107'; 
             if (count >= 5) {
                 color = '#dc3545';
                 title = 'FULL';
             }
-
-            countEvents.push({
+            calendarEvents.push({
                 title: title,
                 start: date,
                 allDay: true,
@@ -320,7 +267,33 @@
             });
         }
 
-        // DATE LIMITS
+        // 2. NEW: Process Taken Slots (Gray Blocks for Day View)
+        for (const [date, times] of Object.entries(takenSlots)) {
+            times.forEach(timeStr => {
+                // Convert "09:00 AM" to "2026-01-28T09:00:00"
+                // This ensures it shows up in the TimeGrid view
+                let timeParts = timeStr.match(/(\d+):(\d+) (\w+)/);
+                if(timeParts) {
+                    let hours = parseInt(timeParts[1]);
+                    let minutes = timeParts[2];
+                    let amp = timeParts[3];
+                    if (amp === "PM" && hours < 12) hours += 12;
+                    if (amp === "AM" && hours === 12) hours = 0;
+                    let isoTime = hours.toString().padStart(2, '0') + ':' + minutes + ':00';
+                    
+                    calendarEvents.push({
+                        title: 'Booked',
+                        start: date + 'T' + isoTime,
+                        end: date + 'T' + (hours + 1).toString().padStart(2, '0') + ':' + minutes + ':00', // Assume 1 hour
+                        backgroundColor: '#e9ecef',
+                        borderColor: '#dee2e6',
+                        textColor: '#6c757d',
+                        classNames: ['booked-slot-event']
+                    });
+                }
+            });
+        }
+
         let today = new Date();
         today.setHours(0,0,0,0);
         let maxBookableDate = new Date(today);
@@ -329,7 +302,7 @@
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'bootstrap5',
-            events: countEvents, 
+            events: calendarEvents, // Updated events array
             
             headerToolbar: {
                 left: 'title',
@@ -342,35 +315,29 @@
                 end: maxBookableDate
             },
 
-            // DAY VIEW CONFIG
             slotDuration: '01:00:00', 
             slotMinTime: '09:00:00',
             slotMaxTime: '18:00:00',
             allDaySlot: false,
             expandRows: true,
 
-            // Style Logic
             dayCellClassNames: function(arg) {
-                let dateStr = getLocalYMD(arg.date);
+                // Helper logic handled inside events mostly, but this keeps full days gray
+                // We use simple string match for the counts logic
+                let dateStr = arg.date.toISOString().split('T')[0];
                 if (dailyCounts[dateStr] >= 5) {
                     return ['date-full']; 
                 }
                 return [];
             },
 
-            // CLICK INTERACTION
             dateClick: function(info) {
-                // 1. Check Active Appointment FIRST
                 if (hasActiveAppointment) {
-                    var myModal = new bootstrap.Modal(document.getElementById('activeAppointmentModal'));
-                    myModal.show();
+                    new bootstrap.Modal(document.getElementById('activeAppointmentModal')).show();
                     return;
                 }
-
-                // 2. Check Verification
                 if (!isVerified) {
-                    var myModal = new bootstrap.Modal(document.getElementById('unverifiedModal'));
-                    myModal.show();
+                    new bootstrap.Modal(document.getElementById('unverifiedModal')).show();
                     return; 
                 }
 
@@ -382,17 +349,14 @@
                 
                 let isToday = clickedDate.getTime() === today.getTime();
 
-                // 3. Check if Today (Info Modal)
                 if (isToday) {
                     let takenToday = takenSlots[dateStr] || [];
                     openTodayModal(clickedDate, takenToday); 
                     return;
                 }
 
-                // 4. Check Full Booking
                 if (dailyCounts[dateStr] >= 5) {
-                    var myModal = new bootstrap.Modal(document.getElementById('fullyBookedModal'));
-                    myModal.show();
+                    new bootstrap.Modal(document.getElementById('fullyBookedModal')).show();
                     return;
                 }
 
@@ -406,12 +370,9 @@
             document.getElementById('todayDateDisplay').innerText = dateObj.toLocaleDateString(undefined, { 
                 weekday: 'long', month: 'long', day: 'numeric' 
             });
-
             const listContainer = document.getElementById('todaySlotsList');
             const emptyMsg = document.getElementById('todayNoSlots');
-            
             listContainer.innerHTML = ''; 
-
             if (takenArray.length === 0) {
                 emptyMsg.style.display = 'block';
             } else {
@@ -423,9 +384,7 @@
                     listContainer.appendChild(badge);
                 });
             }
-
-            var myModal = new bootstrap.Modal(document.getElementById('todayModal'));
-            myModal.show();
+            new bootstrap.Modal(document.getElementById('todayModal')).show();
         }
 
         function openBookingModal(dateStr, dateObj) {
@@ -433,18 +392,14 @@
             document.getElementById('displayDate').innerText = dateObj.toLocaleDateString(undefined, { 
                 weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
             });
-
             let count = dailyCounts[dateStr] || 0;
             document.getElementById('slotsInfo').innerText = count + " / 5 slots filled";
-
             let select = document.getElementById('timeSlotSelect');
             let taken = takenSlots[dateStr] || [];
             let options = select.options;
             let hasDisabled = false;
-
             for (let i = 0; i < options.length; i++) {
                 if (options[i].value === "") continue;
-
                 if (taken.includes(options[i].value)) {
                     options[i].disabled = true;
                     options[i].innerText = options[i].value + " (Booked)";
@@ -454,12 +409,9 @@
                     options[i].innerText = options[i].value;
                 }
             }
-            
             document.getElementById('timeSlotWarning').style.display = hasDisabled ? 'block' : 'none';
             select.value = "";
-
-            var myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-            myModal.show();
+            new bootstrap.Modal(document.getElementById('bookingModal')).show();
         }
 
         document.getElementById('btnDayView').addEventListener('click', function() {
@@ -483,7 +435,6 @@
 </script>
 
 <style>
-    /* Hero Section */
     .appointment-hero {
         background-color: #0d6efd; 
         background-image: url('/images/sixeyes.png'); 
@@ -498,50 +449,22 @@
         top: 0; left: 0; right: 0; bottom: 0;
         background: linear-gradient(rgba(13, 110, 253, 0.8), rgba(0, 0, 0, 0.4));
     }
-
-    /* Calendar Base Styles */
     .fc-toolbar-title { font-size: 1.75rem !important; font-weight: 700; color: #333; }
     .fc-button-primary { background-color: #0d6efd !important; border-color: #0d6efd !important; text-transform: capitalize; font-weight: 500; }
     .fc-theme-standard td, .fc-theme-standard th { border-color: #eff2f7; }
-
-    /* TODAY'S DATE */
     .fc-day-today { background-color: #d1e7dd !important; color: #0f5132 !important; font-weight: bold; }
-
-    /* DISABLED / FULL DATES */
     .fc-day-disabled, .date-full {
         background-color: #f8f9fa !important;
         opacity: 1 !important;
         cursor: not-allowed !important; 
     }
-    .date-full {
-        background-color: #ffeaea !important; /* Light red */
-    }
-    
+    .date-full { background-color: #ffeaea !important; }
     .fc-day-disabled .fc-daygrid-day-number { visibility: hidden; }
-
-    /* HOVER EFFECT - MONTH VIEW */
-    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full) {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full):hover {
-        background-color: #e7f1ff !important;
-    }
-
-    /* HOVER EFFECT - DAY VIEW (Time Slots) */
-    .fc-timegrid-slot-lane:hover {
-        background-color: #e7f1ff !important;
-        cursor: pointer;
-    }
-
-    /* Event Styling */
-    .booking-badge {
-        font-size: 0.75rem;
-        border-radius: 4px;
-        padding: 1px 2px;
-        margin-top: 2px;
-        text-align: center;
-        border: none !important;
-    }
+    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full) { cursor: pointer; transition: background-color 0.2s ease; }
+    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full):hover { background-color: #e7f1ff !important; }
+    .fc-timegrid-slot-lane:hover { background-color: #e7f1ff !important; cursor: pointer; }
+    .booking-badge { font-size: 0.75rem; border-radius: 4px; padding: 1px 2px; margin-top: 2px; text-align: center; border: none !important; }
+    /* New Style for gray booked blocks */
+    .booked-slot-event { border: none !important; pointer-events: none; }
 </style>
 @endsection

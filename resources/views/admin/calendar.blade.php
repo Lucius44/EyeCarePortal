@@ -2,15 +2,8 @@
 
 @section('content')
 <style>
-    /* Cursor and Highlight for Calendar Days */
-    .fc-daygrid-day {
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-    .fc-daygrid-day:hover {
-        background-color: #e9ecef !important; /* Light gray highlight */
-    }
-    
+    .fc-daygrid-day { cursor: pointer; transition: background-color 0.2s; }
+    .fc-daygrid-day:hover { background-color: #e9ecef !important; }
     .modal-header { border-bottom: none; }
     .modal-footer { border-top: none; }
 </style>
@@ -91,12 +84,9 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    {{-- Date Display (Visual Only) --}}
                     <div class="alert alert-light border mb-3 text-center">
                         <strong>Selected Date:</strong> <span id="displayDate" class="text-success"></span>
                     </div>
-                    
-                    {{-- Hidden Date Input --}}
                     <input type="hidden" name="appointment_date" id="createDate">
 
                     <div class="row g-2 mb-3">
@@ -104,7 +94,6 @@
                             <label class="form-label">First Name</label>
                             <input type="text" name="first_name" class="form-control" required>
                         </div>
-                        {{-- Added Middle Name --}}
                         <div class="col-4">
                             <label class="form-label">Middle (Opt)</label>
                             <input type="text" name="middle_name" class="form-control" placeholder="">
@@ -128,13 +117,16 @@
                         <div class="col-6">
                             <label class="form-label">Time</label>
                             <select name="appointment_time" id="createTime" class="form-select" required>
+                                <option value="" selected disabled>-- Select Time --</option>
                                 <option value="09:00 AM">09:00 AM</option>
                                 <option value="10:00 AM">10:00 AM</option>
                                 <option value="11:00 AM">11:00 AM</option>
+                                <option value="12:00 PM">12:00 PM</option>
                                 <option value="01:00 PM">01:00 PM</option>
                                 <option value="02:00 PM">02:00 PM</option>
                                 <option value="03:00 PM">03:00 PM</option>
                                 <option value="04:00 PM">04:00 PM</option>
+                                <option value="05:00 PM">05:00 PM</option>
                             </select>
                         </div>
                     </div>
@@ -168,11 +160,9 @@
         var calendarEl = document.getElementById('adminCalendar');
         var eventsData = JSON.parse(calendarEl.getAttribute('data-events'));
         
-        // Use window.bootstrap to find the loaded library
         var eventModal = new window.bootstrap.Modal(document.getElementById('eventModal'));
         var createModal = new window.bootstrap.Modal(document.getElementById('createModal'));
 
-        // Elements
         var modalPatient = document.getElementById('modalPatient');
         var modalTime = document.getElementById('modalTime');
         var modalStatus = document.getElementById('modalStatus');
@@ -193,10 +183,10 @@
             events: eventsData,
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
             slotLabelFormat: { hour: 'numeric', minute: '2-digit', omitZeroMinute: false, meridiem: 'short' },
-            slotMinTime: '08:00:00', 
+            // UPDATED: Matched Patient Side Time Range
+            slotMinTime: '09:00:00', 
             slotMaxTime: '18:00:00', 
             
-            // View Details
             eventClick: function(info) {
                 info.jsEvent.preventDefault();
                 modalPatient.textContent = info.event.title; 
@@ -216,44 +206,36 @@
                 eventModal.show();
             },
 
-            // Create Appointment
             dateClick: function(info) {
-                var clickedDate = info.dateStr; // YYYY-MM-DD
-                
-                // 1. Set Date (Hidden and Display)
+                var clickedDate = info.dateStr; 
                 if (clickedDate.includes('T')) clickedDate = clickedDate.split('T')[0];
                 createDateInput.value = clickedDate;
                 displayDate.textContent = new Date(clickedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-                // 2. Disable Booked Times (Robust Matching)
-                
-                // Reset options first
                 for (var i = 0; i < createTimeSelect.options.length; i++) {
                     createTimeSelect.options[i].disabled = false;
-                    createTimeSelect.options[i].innerText = createTimeSelect.options[i].value;
+                    // Reset text only if it has "(Booked)" suffix
+                    if(createTimeSelect.options[i].innerText.includes("(Booked)")) {
+                        createTimeSelect.options[i].innerText = createTimeSelect.options[i].value; 
+                    }
                 }
+                
+                // Reset Selection to Default
+                createTimeSelect.value = "";
 
-                // Filter events for this day
                 var bookedTimes = eventsData.filter(function(event) {
                     return event.start.startsWith(clickedDate);
                 }).map(function(event) {
-                    // Manually parse ISO string "2026-01-28T09:00:00" to "09:00 AM"
-                    // This guarantees matching the <select> values regardless of browser locale
                     var dateObj = new Date(event.start);
                     var hours = dateObj.getHours();
                     var minutes = dateObj.getMinutes();
                     var ampm = hours >= 12 ? 'PM' : 'AM';
-                    
                     hours = hours % 12;
-                    hours = hours ? hours : 12; // the hour '0' should be '12'
-                    
-                    // Pad with leading zero: 9 -> "09"
-                    var strTime = (hours < 10 ? '0' + hours : hours) + ':' + 
-                                  (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+                    hours = hours ? hours : 12; 
+                    var strTime = (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
                     return strTime;
                 });
 
-                // Disable matching options
                 for (var i = 0; i < createTimeSelect.options.length; i++) {
                     var optValue = createTimeSelect.options[i].value; 
                     if (bookedTimes.includes(optValue)) {

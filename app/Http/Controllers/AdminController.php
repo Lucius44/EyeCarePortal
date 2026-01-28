@@ -11,6 +11,7 @@ use App\Http\Resources\CalendarEventResource;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -42,7 +43,6 @@ class AdminController extends Controller
 
     public function calendar()
     {
-        // Fetch appointments (Works for both User and Guest)
         $appointments = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
@@ -52,12 +52,11 @@ class AdminController extends Controller
         return view('admin.calendar', compact('events'));
     }
 
-    // --- UPDATED: Store Appointment (Walk-in / Guest Logic) ---
     public function storeAppointment(Request $request)
     {
         $request->validate([
             'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255', // Optional Middle Name
+            'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
@@ -67,23 +66,19 @@ class AdminController extends Controller
             'description' => 'nullable|string'
         ]);
 
-        // 1. Check if an existing User matches this email
         $user = User::where('email', $request->email)->first();
 
-        // 2. Prepare Data
         $data = [
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
             'service' => $request->service,
             'description' => $request->description,
-            'status' => AppointmentStatus::Confirmed, // Admin bookings are confirmed
+            'status' => AppointmentStatus::Confirmed,
         ];
 
         if ($user) {
-            // Link to existing user
             $data['user_id'] = $user->id;
         } else {
-            // Save as Guest (No User ID, but save details)
             $data['user_id'] = null;
             $data['patient_first_name'] = $request->first_name;
             $data['patient_middle_name'] = $request->middle_name;
@@ -117,7 +112,6 @@ class AdminController extends Controller
         $query = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::Rejected, AppointmentStatus::NoShow]);
 
-        // Updated Search to check User OR Guest columns
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -159,33 +153,63 @@ class AdminController extends Controller
         return back()->with('success', 'Appointment status updated successfully.');
     }
 
+    // --- UPDATED: Users Method (Now fetches Guests too) ---
     public function users(Request $request)
     {
-        // ... (User logic remains the same, omitted for brevity as it didn't change)
-        // You can copy your previous users() method here.
-        $pendingUsers = User::where('role', UserRole::Patient)->whereNotNull('id_photo_path')->where('is_verified', false)->get();
+        // 1. Pending Verifications
+        $pendingUsers = User::where('role', UserRole::Patient)
+                            ->whereNotNull('id_photo_path')
+                            ->where('is_verified', false)
+                            ->get();
+
+        // 2. Registered Users Query
         $query = User::where('role', UserRole::Patient);
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
+
         if ($request->filled('filter_status')) {
             if ($request->filter_status === 'verified') $query->where('is_verified', true);
             elseif ($request->filter_status === 'unverified') $query->where('is_verified', false);
         }
+
         $allUsers = $query->orderBy('created_at', 'desc')->get();
-        return view('admin.users', compact('pendingUsers', 'allUsers'));
+
+        // 3. Guests (Walk-ins without accounts)
+        // We fetch distinct emails from appointments where user_id is null
+        $guests = Appointment::whereNull('user_id')
+            ->select('patient_first_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->unique('patient_email'); // Ensure unique guests by email
+
+        return view('admin.users', compact('pendingUsers', 'allUsers', 'guests'));
     }
-    
-    // Include verifyUser method as well...
-     public function verifyUser(Request $request, $id)
+
+    public function verifyUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
         $action = $request->input('action'); 
-        if ($action === 'approve') { $user->update(['is_verified' => true]); return back()->with('success', 'User verified successfully!'); } 
-        if ($action === 'reject') { $user->update(['id_photo_path' => null, 'is_verified' => false]); return back()->with('success', 'User verification rejected.'); }
+
+        if ($action === 'approve') {
+            $user->update(['is_verified' => true]);
+            return back()->with('success', 'User verified successfully!');
+        } 
+        
+        if ($action === 'reject') {
+            $user->update([
+                'id_photo_path' => null, 
+                'is_verified' => false
+            ]);
+            return back()->with('success', 'User verification rejected. They can upload a new ID.');
+        }
+
         return back()->with('error', 'Invalid action.');
     }
 }

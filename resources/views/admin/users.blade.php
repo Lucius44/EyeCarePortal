@@ -6,22 +6,11 @@
         <div class="col-md-2 bg-white shadow-sm" style="min-height: 80vh;">
             <div class="d-flex flex-column p-3">
                 <h5 class="text-primary mb-4">Admin Panel</h5>
-                
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                </a>
-                <a href="{{ route('admin.calendar') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-calendar-week me-2"></i> Calendar
-                </a>
-                <a href="{{ route('admin.appointments') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-check-circle me-2"></i> Appointments
-                </a>
-                <a href="{{ route('admin.history') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-clock-history me-2"></i> History
-                </a>
-                <a href="{{ route('admin.users') }}" class="btn btn-primary mb-2 text-start">
-                    <i class="bi bi-people me-2"></i> Users List
-                </a>
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary mb-2 text-start border-0"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+                <a href="{{ route('admin.calendar') }}" class="btn btn-outline-secondary mb-2 text-start border-0"><i class="bi bi-calendar-week me-2"></i> Calendar</a>
+                <a href="{{ route('admin.appointments') }}" class="btn btn-outline-secondary mb-2 text-start border-0"><i class="bi bi-check-circle me-2"></i> Appointments</a>
+                <a href="{{ route('admin.history') }}" class="btn btn-outline-secondary mb-2 text-start border-0"><i class="bi bi-clock-history me-2"></i> History</a>
+                <a href="{{ route('admin.users') }}" class="btn btn-primary mb-2 text-start"><i class="bi bi-people me-2"></i> Users List</a>
             </div>
         </div>
 
@@ -57,9 +46,7 @@
                                         <td>{{ $user->email }}</td>
                                         <td>
                                             <a href="{{ asset('storage/' . $user->id_photo_path) }}" target="_blank">
-                                                <img src="{{ asset('storage/' . $user->id_photo_path) }}" 
-                                                     class="img-thumbnail" 
-                                                     style="height: 50px;">
+                                                <img src="{{ asset('storage/' . $user->id_photo_path) }}" class="img-thumbnail" style="height: 50px;">
                                             </a>
                                         </td>
                                         <td>
@@ -78,64 +65,118 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">All Patients</h5>
-                </div>
-                
-                {{-- Search & Filter --}}
-                <div class="card-body border-bottom bg-white">
-                    <form action="{{ route('admin.users') }}" method="GET" class="row g-3">
-                        <div class="col-md-5">
-                            <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="{{ request('search') }}">
+            {{-- Tabs for Registered vs Guests --}}
+            <ul class="nav nav-tabs mb-3" id="usersTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="registered-tab" data-bs-toggle="tab" data-bs-target="#registered" type="button">Registered Patients</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="guests-tab" data-bs-toggle="tab" data-bs-target="#guests" type="button">Walk-in Guests</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="usersTabContent">
+                {{-- REGISTERED USERS --}}
+                <div class="tab-pane fade show active" id="registered">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">All Patients</h5>
                         </div>
-                        <div class="col-md-3">
-                            <select name="filter_status" class="form-select">
-                                <option value="">-- All Users --</option>
-                                <option value="verified" {{ request('filter_status') == 'verified' ? 'selected' : '' }}>Verified Only</option>
-                                <option value="unverified" {{ request('filter_status') == 'unverified' ? 'selected' : '' }}>Unverified Only</option>
-                            </select>
+                        <div class="card-body border-bottom bg-white">
+                            <form action="{{ route('admin.users') }}" method="GET" class="row g-3">
+                                <div class="col-md-5">
+                                    <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="{{ request('search') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="filter_status" class="form-select">
+                                        <option value="">-- All Users --</option>
+                                        <option value="verified" {{ request('filter_status') == 'verified' ? 'selected' : '' }}>Verified Only</option>
+                                        <option value="unverified" {{ request('filter_status') == 'unverified' ? 'selected' : '' }}>Unverified Only</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary w-100">Clear</a>
+                                </div>
+                            </form>
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($allUsers as $user)
+                                    <tr>
+                                        <td>{{ $user->first_name }} {{ $user->last_name }}</td>
+                                        <td>{{ $user->email }}</td>
+                                        <td>
+                                            @if($user->is_verified)
+                                                <span class="badge bg-success">Verified</span>
+                                            @else
+                                                <span class="badge bg-secondary">Unverified</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $user->created_at->format('M d, Y') }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No users found matching your search.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary w-100">Clear</a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
 
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Joined</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($allUsers as $user)
-                            <tr>
-                                <td>{{ $user->first_name }} {{ $user->last_name }}</td>
-                                <td>{{ $user->email }}</td>
-                                <td>
-                                    @if($user->is_verified)
-                                        <span class="badge bg-success">Verified</span>
-                                    @else
-                                        <span class="badge bg-secondary">Unverified</span>
-                                    @endif
-                                </td>
-                                <td>{{ $user->created_at->format('M d, Y') }}</td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">No users found matching your search.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                {{-- GUESTS TAB --}}
+                <div class="tab-pane fade" id="guests">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Guest Walk-ins (No Account)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info small">
+                                These are patients who were booked manually by admins as "Walk-ins" and do not have a registered account.
+                            </div>
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>First Visit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($guests as $guest)
+                                    <tr>
+                                        <td>
+                                            {{ $guest->patient_first_name }} 
+                                            {{ $guest->patient_middle_name ? $guest->patient_middle_name . ' ' : '' }}
+                                            {{ $guest->patient_last_name }}
+                                        </td>
+                                        <td>{{ $guest->patient_email }}</td>
+                                        <td>{{ $guest->patient_phone ?? '-' }}</td>
+                                        <td>{{ $guest->created_at->format('M d, Y') }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No guest records found.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
