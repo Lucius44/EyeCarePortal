@@ -53,8 +53,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/calendar', [AdminController::class, 'calendar'])->name('admin.calendar');
     
-    // NEW: Route to handle Admin creating appointments (Walk-ins)
+    // Appointment Actions
     Route::post('/calendar/store', [AdminController::class, 'storeAppointment'])->name('admin.calendar.store');
+    
+    // --- NEW: Route for Day Settings ---
+    Route::post('/calendar/settings', [AdminController::class, 'updateDaySetting'])->name('admin.calendar.settings');
     
     Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
     Route::get('/appointments-history', [AdminController::class, 'history'])->name('admin.history');

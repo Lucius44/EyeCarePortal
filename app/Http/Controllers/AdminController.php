@@ -5,24 +5,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\User;
+use App\Models\DaySetting; // <--- IMPORT THIS
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Http\Resources\CalendarEventResource;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        // Ensure we are using local PH time for "Today" calculations
         $today = Carbon::now('Asia/Manila')->startOfDay();
-
         $totalPatients = User::where('role', UserRole::Patient)->count();
         
-        // FIX: Only count Confirmed or Completed appointments as "Today's Visits"
         $appointmentsToday = Appointment::whereDate('appointment_date', $today)
             ->whereIn('status', [AppointmentStatus::Confirmed, AppointmentStatus::Completed])
             ->count();
@@ -51,13 +48,40 @@ class AdminController extends Controller
 
     public function calendar()
     {
+        // 1. Fetch Appointments
         $appointments = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
 
         $events = CalendarEventResource::collection($appointments)->resolve();
+
+        // 2. --- NEW: Fetch Day Settings ---
+        $daySettings = DaySetting::all()->keyBy(function($item) {
+            return $item->date->format('Y-m-d');
+        });
         
-        return view('admin.calendar', compact('events'));
+        // Pass both events and settings to the view
+        return view('admin.calendar', compact('events', 'daySettings'));
+    }
+
+    // --- NEW: Method to handle the "Day Setting" form from the Modal ---
+    public function updateDaySetting(Request $request) 
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'max_appointments' => 'required|integer|min:0',
+            'is_closed' => 'required|boolean' // 0 or 1
+        ]);
+
+        DaySetting::updateOrCreate(
+            ['date' => $request->date],
+            [
+                'max_appointments' => $request->max_appointments,
+                'is_closed' => $request->is_closed
+            ]
+        );
+
+        return back()->with('success', 'Day settings updated successfully.');
     }
 
     public function storeAppointment(Request $request)
@@ -74,16 +98,26 @@ class AdminController extends Controller
             'description' => 'nullable|string'
         ]);
 
-        // --- NEW VALIDATION: Check Daily Limit (Max 5) ---
+        // --- NEW: Check Day Settings for Admin too ---
+        $date = $request->appointment_date;
+        $setting = DaySetting::where('date', $date)->first();
+
+        // Optional: Allow Admin to override "Closed"? 
+        // For now, let's warn them or block them. Let's block for consistency.
+        if ($setting && $setting->is_closed) {
+             return back()->withErrors(['appointment_date' => 'The clinic is marked as CLOSED on this day.'])->withInput();
+        }
+
+        $limit = $setting ? $setting->max_appointments : 5;
+
         $countOnDate = Appointment::where('appointment_date', $request->appointment_date)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->count();
 
-        if ($countOnDate >= 5) {
-            return back()->withErrors(['appointment_date' => 'This date is fully booked (5/5 slots taken).'])->withInput();
+        if ($countOnDate >= $limit) {
+            return back()->withErrors(['appointment_date' => "This date is fully booked ({$countOnDate}/{$limit})."])->withInput();
         }
 
-        // --- NEW VALIDATION: Check for Double Booking ---
         $isTaken = Appointment::where('appointment_date', $request->appointment_date)
             ->where('appointment_time', $request->appointment_time)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
@@ -182,13 +216,11 @@ class AdminController extends Controller
 
     public function users(Request $request)
     {
-        // 1. Pending Verifications
         $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
                             ->where('is_verified', false)
                             ->get();
 
-        // 2. Registered Users Query
         $query = User::where('role', UserRole::Patient);
 
         if ($request->filled('search')) {
@@ -207,7 +239,6 @@ class AdminController extends Controller
 
         $allUsers = $query->orderBy('created_at', 'desc')->get();
 
-        // 3. Guests (Walk-ins without accounts)
         $guests = Appointment::whereNull('user_id')
             ->select('patient_first_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
             ->orderBy('created_at', 'desc')

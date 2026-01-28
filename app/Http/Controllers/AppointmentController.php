@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
+use App\Models\DaySetting; // <--- IMPORTED
 use App\Enums\AppointmentStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class AppointmentController extends Controller
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
 
+        // Fetch taken slots
         $appointments = Appointment::where('appointment_date', '>=', Carbon::today())
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
@@ -40,13 +42,19 @@ class AppointmentController extends Controller
             $takenSlots[$date][] = $app->appointment_time;
         }
 
+        // --- NEW: Fetch Day Settings to pass to view (for disabling dates) ---
+        $daySettings = DaySetting::where('date', '>=', Carbon::today())->get()->keyBy(function($item) {
+            return $item->date->format('Y-m-d');
+        });
+
         $services = Appointment::getServices();
         
         return view('patient.appointments', compact(
             'services', 
             'activeAppointment', 
             'dailyCounts', 
-            'takenSlots'
+            'takenSlots',
+            'daySettings' // <--- Pass this to view
         ));
     }
 
@@ -54,6 +62,7 @@ class AppointmentController extends Controller
     {
         $userId = Auth::id();
 
+        // 1. Check for existing active appointment
         $hasActive = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->exists();
@@ -62,14 +71,28 @@ class AppointmentController extends Controller
             return redirect()->back()->withErrors(['error' => 'You already have an active appointment.']);
         }
 
-        $countOnDate = Appointment::where('appointment_date', $request->appointment_date)
+        // 2. --- NEW: Check Day Settings (The Brain) ---
+        $date = $request->appointment_date;
+        $setting = DaySetting::where('date', $date)->first();
+
+        // Check if Closed
+        if ($setting && $setting->is_closed) {
+            return redirect()->back()->withErrors(['error' => 'The clinic is closed on this date.']);
+        }
+
+        // Determine Limit (Custom or Default 5)
+        $limit = $setting ? $setting->max_appointments : 5;
+
+        // Check Current Count
+        $countOnDate = Appointment::where('appointment_date', $date)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->count();
 
-        if ($countOnDate >= 5) {
+        if ($countOnDate >= $limit) {
             return redirect()->back()->withErrors(['error' => 'This date is fully booked.']);
         }
 
+        // 3. Check Double Booking
         $isTaken = Appointment::where('appointment_date', $request->appointment_date)
             ->where('appointment_time', $request->appointment_time)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
@@ -79,6 +102,7 @@ class AppointmentController extends Controller
             return redirect()->back()->withErrors(['error' => 'The selected time slot is already taken.']);
         }
 
+        // 4. Create
         Appointment::create([
             'user_id' => $userId,
             'service' => $request->service,
@@ -91,7 +115,6 @@ class AppointmentController extends Controller
         return redirect()->route('appointments.index')->with('success', 'Appointment request submitted successfully!');
     }
 
-    // UPDATED: Cancel now accepts Request for the reason
     public function cancel(Request $request, $id)
     {
         $appointment = Appointment::findOrFail($id);
@@ -100,15 +123,12 @@ class AppointmentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // 1. Pending -> Hard Delete (Simple Modal, no reason needed)
         if ($appointment->status === AppointmentStatus::Pending) {
             $appointment->delete();
             return back()->with('success', 'Appointment request removed successfully.');
         }
 
-        // 2. Confirmed -> Soft Cancel (Requires Reason)
         if ($appointment->status === AppointmentStatus::Confirmed) {
-            
             $request->validate([
                 'cancellation_reason' => 'required|string|max:255',
             ]);
