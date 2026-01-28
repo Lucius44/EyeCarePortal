@@ -66,6 +66,25 @@ class AdminController extends Controller
             'description' => 'nullable|string'
         ]);
 
+        // --- NEW VALIDATION: Check Daily Limit (Max 5) ---
+        $countOnDate = Appointment::where('appointment_date', $request->appointment_date)
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->count();
+
+        if ($countOnDate >= 5) {
+            return back()->withErrors(['appointment_date' => 'This date is fully booked (5/5 slots taken).'])->withInput();
+        }
+
+        // --- NEW VALIDATION: Check for Double Booking ---
+        $isTaken = Appointment::where('appointment_date', $request->appointment_date)
+            ->where('appointment_time', $request->appointment_time)
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->exists();
+
+        if ($isTaken) {
+            return back()->withErrors(['appointment_time' => 'The selected time slot is already taken.'])->withInput();
+        }
+
         $user = User::where('email', $request->email)->first();
 
         $data = [
@@ -153,7 +172,6 @@ class AdminController extends Controller
         return back()->with('success', 'Appointment status updated successfully.');
     }
 
-    // --- UPDATED: Users Method (Now fetches Guests too) ---
     public function users(Request $request)
     {
         // 1. Pending Verifications
@@ -182,12 +200,11 @@ class AdminController extends Controller
         $allUsers = $query->orderBy('created_at', 'desc')->get();
 
         // 3. Guests (Walk-ins without accounts)
-        // We fetch distinct emails from appointments where user_id is null
         $guests = Appointment::whereNull('user_id')
             ->select('patient_first_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->unique('patient_email'); // Ensure unique guests by email
+            ->unique('patient_email'); 
 
         return view('admin.users', compact('pendingUsers', 'allUsers', 'guests'));
     }

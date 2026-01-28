@@ -74,7 +74,10 @@
 </div>
 
 {{-- Create Appointment Modal --}}
-<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+{{-- UPDATED: Added data attributes here to pass PHP data to JS cleanly --}}
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true" 
+     data-has-errors="{{ $errors->any() ? 'true' : 'false' }}"
+     data-old-date="{{ old('appointment_date') }}">
     <div class="modal-dialog modal-dialog-centered">
         <form action="{{ route('admin.calendar.store') }}" method="POST">
             @csrf
@@ -84,49 +87,56 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    
+                    {{-- Validation Error Feedback --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <div class="alert alert-light border mb-3 text-center">
                         <strong>Selected Date:</strong> <span id="displayDate" class="text-success"></span>
                     </div>
-                    <input type="hidden" name="appointment_date" id="createDate">
+                    {{-- Retain old date on error --}}
+                    <input type="hidden" name="appointment_date" id="createDate" value="{{ old('appointment_date') }}">
 
                     <div class="row g-2 mb-3">
                         <div class="col-4">
                             <label class="form-label">First Name</label>
-                            <input type="text" name="first_name" class="form-control" required>
+                            <input type="text" name="first_name" class="form-control" required value="{{ old('first_name') }}">
                         </div>
                         <div class="col-4">
                             <label class="form-label">Middle (Opt)</label>
-                            <input type="text" name="middle_name" class="form-control" placeholder="">
+                            <input type="text" name="middle_name" class="form-control" value="{{ old('middle_name') }}">
                         </div>
                         <div class="col-4">
                             <label class="form-label">Last Name</label>
-                            <input type="text" name="last_name" class="form-control" required>
+                            <input type="text" name="last_name" class="form-control" required value="{{ old('last_name') }}">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" required>
+                        <input type="email" name="email" class="form-control" required value="{{ old('email') }}">
                     </div>
 
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label">Phone (Optional)</label>
-                            <input type="text" name="phone" class="form-control">
+                            <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Time</label>
                             <select name="appointment_time" id="createTime" class="form-select" required>
-                                <option value="" selected disabled>-- Select Time --</option>
-                                <option value="09:00 AM">09:00 AM</option>
-                                <option value="10:00 AM">10:00 AM</option>
-                                <option value="11:00 AM">11:00 AM</option>
-                                <option value="12:00 PM">12:00 PM</option>
-                                <option value="01:00 PM">01:00 PM</option>
-                                <option value="02:00 PM">02:00 PM</option>
-                                <option value="03:00 PM">03:00 PM</option>
-                                <option value="04:00 PM">04:00 PM</option>
-                                <option value="05:00 PM">05:00 PM</option>
+                                <option value="" disabled {{ old('appointment_time') ? '' : 'selected' }}>-- Select Time --</option>
+                                @foreach(['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] as $time)
+                                    <option value="{{ $time }}" {{ old('appointment_time') == $time ? 'selected' : '' }}>{{ $time }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -134,15 +144,15 @@
                     <div class="mb-3">
                         <label class="form-label">Service</label>
                         <select name="service" class="form-select" required>
-                            <option value="General Checkup">General Checkup</option>
-                            <option value="Laser Treatment">Laser Treatment</option>
-                            <option value="Glasses/Contacts">Glasses/Contacts Fitting</option>
+                            <option value="General Checkup" {{ old('service') == 'General Checkup' ? 'selected' : '' }}>General Checkup</option>
+                            <option value="Laser Treatment" {{ old('service') == 'Laser Treatment' ? 'selected' : '' }}>Laser Treatment</option>
+                            <option value="Glasses/Contacts" {{ old('service') == 'Glasses/Contacts' ? 'selected' : '' }}>Glasses/Contacts Fitting</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
-                        <textarea name="description" class="form-control" rows="2"></textarea>
+                        <textarea name="description" class="form-control" rows="2">{{ old('description') }}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -160,8 +170,11 @@
         var calendarEl = document.getElementById('adminCalendar');
         var eventsData = JSON.parse(calendarEl.getAttribute('data-events'));
         
+        // Grab the modal element to access data attributes
+        var createModalEl = document.getElementById('createModal');
+
         var eventModal = new window.bootstrap.Modal(document.getElementById('eventModal'));
-        var createModal = new window.bootstrap.Modal(document.getElementById('createModal'));
+        var createModal = new window.bootstrap.Modal(createModalEl);
 
         var modalPatient = document.getElementById('modalPatient');
         var modalTime = document.getElementById('modalTime');
@@ -183,7 +196,6 @@
             events: eventsData,
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
             slotLabelFormat: { hour: 'numeric', minute: '2-digit', omitZeroMinute: false, meridiem: 'short' },
-            // UPDATED: Matched Patient Side Time Range
             slotMinTime: '09:00:00', 
             slotMaxTime: '18:00:00', 
             
@@ -210,19 +222,21 @@
                 var clickedDate = info.dateStr; 
                 if (clickedDate.includes('T')) clickedDate = clickedDate.split('T')[0];
                 createDateInput.value = clickedDate;
+                
+                // Format Date for Display
                 displayDate.textContent = new Date(clickedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+                // Reset Time Options
                 for (var i = 0; i < createTimeSelect.options.length; i++) {
                     createTimeSelect.options[i].disabled = false;
-                    // Reset text only if it has "(Booked)" suffix
                     if(createTimeSelect.options[i].innerText.includes("(Booked)")) {
                         createTimeSelect.options[i].innerText = createTimeSelect.options[i].value; 
                     }
                 }
                 
-                // Reset Selection to Default
                 createTimeSelect.value = "";
 
+                // Disable Booked Times
                 var bookedTimes = eventsData.filter(function(event) {
                     return event.start.startsWith(clickedDate);
                 }).map(function(event) {
@@ -249,6 +263,23 @@
         });
         
         calendar.render();
+
+        // --- UPDATED: Handle Validation Errors (Pure JS) ---
+        // We read the data attributes from the modal div instead of injecting PHP here
+        var hasErrors = createModalEl.getAttribute('data-has-errors') === 'true';
+        var oldDate = createModalEl.getAttribute('data-old-date');
+
+        if (hasErrors) {
+            createModal.show();
+
+            // Refill the Display Date text using the preserved old date
+            if (oldDate) {
+                var parts = oldDate.split('-');
+                // Create local date object (Year, MonthIndex, Day)
+                var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                displayDate.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+        }
     });
 </script>
 @endsection
