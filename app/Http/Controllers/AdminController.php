@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\User;
-use App\Models\DaySetting; // <--- IMPORT THIS
+use App\Models\DaySetting;
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Http\Resources\CalendarEventResource;
@@ -48,33 +48,32 @@ class AdminController extends Controller
 
     public function calendar()
     {
-        // 1. Fetch Appointments
         $appointments = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
 
         $events = CalendarEventResource::collection($appointments)->resolve();
 
-        // 2. --- NEW: Fetch Day Settings ---
         $daySettings = DaySetting::all()->keyBy(function($item) {
             return $item->date->format('Y-m-d');
         });
         
-        // Pass both events and settings to the view
         return view('admin.calendar', compact('events', 'daySettings'));
     }
 
-    // --- NEW: Method to handle the "Day Setting" form from the Modal ---
     public function updateDaySetting(Request $request) 
     {
         $request->validate([
             'date' => 'required|date',
             'max_appointments' => 'required|integer|min:0',
-            'is_closed' => 'required|boolean' // 0 or 1
+            'is_closed' => 'required|boolean'
         ]);
 
+        // --- FIX: Force strict Date format to prevent "Duplicate Entry" with timestamps ---
+        $cleanDate = Carbon::parse($request->date)->format('Y-m-d');
+
         DaySetting::updateOrCreate(
-            ['date' => $request->date],
+            ['date' => $cleanDate],
             [
                 'max_appointments' => $request->max_appointments,
                 'is_closed' => $request->is_closed
@@ -98,12 +97,9 @@ class AdminController extends Controller
             'description' => 'nullable|string'
         ]);
 
-        // --- NEW: Check Day Settings for Admin too ---
         $date = $request->appointment_date;
         $setting = DaySetting::where('date', $date)->first();
 
-        // Optional: Allow Admin to override "Closed"? 
-        // For now, let's warn them or block them. Let's block for consistency.
         if ($setting && $setting->is_closed) {
              return back()->withErrors(['appointment_date' => 'The clinic is marked as CLOSED on this day.'])->withInput();
         }

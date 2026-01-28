@@ -20,7 +20,8 @@ class CalendarEventResource extends JsonResource
             'start' => $this->appointment_date->format('Y-m-d') . 'T' . $time24,
             'color' => $this->status->color(),
             'extendedProps' => [
-                'status' => $this->status,
+                // FIX BUG 2: Explicitly pass the string 'value' of the Enum
+                'status' => $this->status->value, 
                 'description' => $this->description,
             ]
         ];

@@ -234,6 +234,8 @@
                         
                         <input type="hidden" name="date" id="settingDateInput">
                         
+                        <input type="hidden" name="is_closed" value="0">
+
                         <div class="form-check form-switch mb-4">
                             <input class="form-check-input" type="checkbox" name="is_closed" value="1" id="isClosedCheck">
                             <label class="form-check-label fw-bold" for="isClosedCheck">Close Clinic on this Date?</label>
@@ -258,7 +260,6 @@
 </div>
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('adminCalendar');
@@ -267,14 +268,10 @@
         var today = new Date();
         today.setHours(0,0,0,0);
 
-        // --- FIX: Robust Modal Initialization ---
-        // We define the modal variable but initialize it ONLY when needed
-        // This prevents "bootstrap is not defined" errors on page load
         let masterModal = null;
 
         function getModal() {
             if (!masterModal) {
-                // Try to find bootstrap on window
                 if (typeof bootstrap !== 'undefined') {
                     masterModal = new bootstrap.Modal(document.getElementById('masterModal'));
                 } else if (window.bootstrap) {
@@ -294,12 +291,10 @@
             height: 'auto',
             events: eventsData,
 
-            // Visual Class Logic
             dayCellClassNames: function(arg) {
                 var cellDate = new Date(arg.date);
                 cellDate.setHours(0,0,0,0);
                 
-                // Visual only - does not affect click logic
                 if (cellDate < today) return ['past-date'];
 
                 var dateStr = formatDate(cellDate);
@@ -312,14 +307,16 @@
             dateClick: function(info) {
                 var clickedDate = new Date(info.dateStr);
                 clickedDate.setHours(0,0,0,0);
-
-                // --- DEBUG: Uncomment this to see what's happening in Console ---
-                // console.log("Clicked:", clickedDate, "Today:", today);
-
-                // RESTRICTION: Comment this out if you want to click past dates
+                
                 if (clickedDate < today) return; 
 
-                openMasterModal(info.dateStr);
+                // --- FIX: Normalize date string to remove time (YYYY-MM-DD) ---
+                // info.dateStr in 'dayGrid' is "2026-01-31"
+                // info.dateStr in 'timeGrid' is "2026-01-31T14:30:00"
+                // We split by 'T' to ensure we only get the date part.
+                var cleanDateStr = info.dateStr.split('T')[0];
+
+                openMasterModal(cleanDateStr);
             },
 
             eventClick: function(info) {
@@ -330,21 +327,22 @@
 
         calendar.render();
 
-        // -- Modal Logic --
         function openMasterModal(dateStr, defaultTab) {
             if (!defaultTab) defaultTab = 'book';
             
-            // 1. Update Date Display
             var dateObj = new Date(dateStr);
-            document.getElementById('masterDateDisplay').textContent = dateObj.toLocaleDateString('en-US', { 
+            // Fix timezone offset issue for display
+            // We use the date string parts to create the object strictly in local time concept
+            var parts = dateStr.split('-');
+            var displayDate = new Date(parts[0], parts[1]-1, parts[2]);
+
+            document.getElementById('masterDateDisplay').textContent = displayDate.toLocaleDateString('en-US', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
             });
 
-            // 2. Set Hidden Inputs
             document.getElementById('bookDateInput').value = dateStr;
             document.getElementById('settingDateInput').value = dateStr;
 
-            // 3. Populate Settings
             var settings = daySettings[dateStr];
             var isClosed = settings ? settings.is_closed : false;
             var maxLimit = settings ? settings.max_appointments : 5;
@@ -352,13 +350,11 @@
             document.getElementById('isClosedCheck').checked = isClosed;
             document.getElementById('maxApptInput').value = maxLimit;
 
-            // 4. Populate "View Appointments" List
             var listEl = document.getElementById('appointmentsList');
             var msgEl = document.getElementById('noAppointmentsMsg');
             listEl.innerHTML = '';
             
             var dayEvents = eventsData.filter(function(e) { return e.start.startsWith(dateStr); });
-            var bookedTimes = [];
 
             if (dayEvents.length === 0) {
                 msgEl.classList.remove('d-none');
@@ -368,11 +364,12 @@
 
                 dayEvents.forEach(function(event) {
                     var timeStr = new Date(event.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    bookedTimes.push(timeStr);
+                    
+                    var rawStatus = event.extendedProps.status;
+                    var statusVal = (rawStatus && rawStatus.value) ? rawStatus.value : rawStatus;
+                    if (!statusVal) statusVal = 'unknown';
 
                     var badgeClass = 'bg-secondary';
-                    var statusVal = event.extendedProps.status ? event.extendedProps.status.value : 'unknown';
-                    
                     if(statusVal === 'confirmed') badgeClass = 'bg-success';
                     if(statusVal === 'pending') badgeClass = 'bg-warning text-dark';
                     
@@ -389,15 +386,12 @@
                 });
             }
 
-            // 5. Reset UI
             resetSections();
             toggleSection(defaultTab);
             
-            // --- FIX: Call our robust getter ---
             getModal().show();
         }
 
-        // -- Accordion Logic --
         window.toggleSection = function(sectionName) {
             var targetId = 'section-' + sectionName;
             
@@ -405,9 +399,6 @@
                 if(el.id !== targetId) el.classList.remove('active');
             });
             document.getElementById(targetId).classList.add('active');
-
-            // Optional: Highlight button
-            // (Simulated logic for simplicity)
         };
 
         function resetSections() {
