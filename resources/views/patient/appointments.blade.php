@@ -42,17 +42,21 @@
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
                 
                 <div class="card-body p-4">
+                    {{-- Legend --}}
                     <div class="d-flex align-items-center mb-3 text-muted small flex-wrap gap-3">
                         <div><span class="d-inline-block border me-1 rounded-circle" style="width: 15px; height: 15px; background: #fff;"></span> Available</div>
                         <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #d1e7dd;"></span> Today</div>
-                        <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #dc3545;"></span> Fully Booked (5/5)</div>
+                        <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #ffeaea; border: 1px solid #dc3545;"></span> Closed</div>
+                        <div><span class="d-inline-block me-1 rounded-circle" style="width: 15px; height: 15px; background: #e9ecef; border: 1px solid #6c757d;"></span> Full</div>
                     </div>
                     
+                    {{-- Calendar Container --}}
                     <div id="calendar" 
                          data-verified="{{ Auth::user()->is_verified }}"
                          data-has-active="{{ $activeAppointment ? '1' : '0' }}"
                          data-daily-counts="{{ json_encode($dailyCounts) }}"
                          data-taken-slots="{{ json_encode($takenSlots) }}"
+                         data-status="{{ json_encode($calendarStatus ?? []) }}" 
                     ></div>
                 </div>
             </div>
@@ -60,7 +64,7 @@
     </div>
 </div>
 
-{{-- Modals --}}
+{{-- 1. Booking Modal --}}
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form action="{{ route('appointments.store') }}" method="POST">
@@ -115,6 +119,7 @@
     </div>
 </div>
 
+{{-- 2. Today Modal (Same Day Prevention) --}}
 <div class="modal fade" id="todayModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -138,6 +143,7 @@
     </div>
 </div>
 
+{{-- 3. Active Appointment Modal --}}
 <div class="modal fade" id="activeAppointmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -172,6 +178,7 @@
     </div>
 </div>
 
+{{-- 4. Unverified Modal --}}
 <div class="modal fade" id="unverifiedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -188,13 +195,14 @@
     </div>
 </div>
 
+{{-- 5. Fully Booked Modal (For Default Limits) --}}
 <div class="modal fade" id="fullyBookedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-body p-5 text-center">
                 <i class="bi bi-calendar-x text-danger display-1 mb-3"></i>
                 <h3 class="fw-bold">Fully Booked</h3>
-                <p class="text-muted mb-4">This date has reached its maximum capacity (5/5 appointments).<br>Please select a different date for your consultation.</p>
+                <p class="text-muted mb-4">This date has reached its maximum capacity.<br>Please select a different date for your consultation.</p>
                 <div class="d-grid gap-2 col-8 mx-auto">
                     <button type="button" class="btn btn-primary rounded-pill fw-bold" data-bs-dismiss="modal">Select Another Date</button>
                 </div>
@@ -231,7 +239,9 @@
         const isVerified = calendarEl.getAttribute('data-verified') == '1';
         const hasActiveAppointment = calendarEl.getAttribute('data-has-active') == '1'; 
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
-        const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
+        const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');
+        // --- NEW: Read Status Data ---
+        const calendarStatus = JSON.parse(calendarEl.getAttribute('data-status') || '{}');
 
         function getLocalYMD(dateObj) {
             const year = dateObj.getFullYear();
@@ -241,25 +251,29 @@
         }
 
         let calendarEvents = [];
+        
+        // 1. Generate "Booked" Visuals for Month View (Legacy logic kept for visual density)
         for (const [date, count] of Object.entries(dailyCounts)) {
-            let color = '#198754'; 
-            let title = count + ' Booked';
-            if (count >= 3 && count < 5) color = '#ffc107'; 
-            if (count >= 5) {
-                color = '#dc3545';
-                title = 'FULL';
+            // Only add these badges if the day isn't CLOSED or FULL via the new status
+            let status = calendarStatus[date];
+            if (status !== 'closed' && status !== 'full') {
+                let color = '#198754'; 
+                let title = count + ' Booked';
+                if (count >= 3) color = '#ffc107'; 
+                
+                calendarEvents.push({
+                    title: title,
+                    start: date,
+                    allDay: true,
+                    backgroundColor: color,
+                    borderColor: color,
+                    textColor: count >= 3 ? '#000' : '#fff',
+                    classNames: ['booking-badge'] 
+                });
             }
-            calendarEvents.push({
-                title: title,
-                start: date,
-                allDay: true,
-                backgroundColor: color,
-                borderColor: color,
-                textColor: count >= 3 && count < 5 ? '#000' : '#fff',
-                classNames: ['booking-badge'] 
-            });
         }
 
+        // 2. Generate Time Slot Blocks (for Day View)
         for (const [date, times] of Object.entries(takenSlots)) {
             times.forEach(timeStr => {
                 let timeParts = timeStr.match(/(\d+):(\d+) (\w+)/);
@@ -311,15 +325,22 @@
             allDaySlot: false,
             expandRows: true,
 
+            // --- MERGED LOGIC: Use new Status for Classes ---
             dayCellClassNames: function(arg) {
                 let dateStr = getLocalYMD(arg.date);
-                if (dailyCounts[dateStr] >= 5) {
-                    return ['date-full']; 
-                }
+                let status = calendarStatus[dateStr];
+
+                // 1. Closed by Admin
+                if (status === 'closed') return ['day-closed'];
+                
+                // 2. Full (Custom limit or Default 5)
+                if (status === 'full') return ['day-full'];
+
                 return [];
             },
 
             dateClick: function(info) {
+                // 1. Check User Status
                 if (hasActiveAppointment) {
                     new bootstrap.Modal(document.getElementById('activeAppointmentModal')).show();
                     return;
@@ -332,19 +353,22 @@
                 let dateStr = info.dateStr;
                 if(dateStr.includes('T')) dateStr = dateStr.split('T')[0]; 
 
+                // 2. Check Admin Status (Closed/Full) - NEW
+                let status = calendarStatus[dateStr];
+                if (status === 'closed') return; // Do nothing (Visuals already indicate closed)
+                if (status === 'full') {
+                     new bootstrap.Modal(document.getElementById('fullyBookedModal')).show();
+                     return;
+                }
+
                 let clickedDate = new Date(dateStr);
                 clickedDate.setHours(0,0,0,0); 
-                
                 let isToday = clickedDate.getTime() === today.getTime();
 
+                // 3. Check "Today"
                 if (isToday) {
                     let takenToday = takenSlots[dateStr] || [];
                     openTodayModal(clickedDate, takenToday); 
-                    return;
-                }
-
-                if (dailyCounts[dateStr] >= 5) {
-                    new bootstrap.Modal(document.getElementById('fullyBookedModal')).show();
                     return;
                 }
 
@@ -381,7 +405,7 @@
                 weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' 
             });
             let count = dailyCounts[dateStr] || 0;
-            document.getElementById('slotsInfo').innerText = count + " / 5 slots filled";
+            document.getElementById('slotsInfo').innerText = count + " booked"; // Removed " / 5" because limit varies now
             let select = document.getElementById('timeSlotSelect');
             let taken = takenSlots[dateStr] || [];
             let options = select.options;
@@ -423,6 +447,7 @@
 </script>
 
 <style>
+    /* HERO SECTION */
     .appointment-hero {
         background-color: #0d6efd; 
         background-image: url('/images/sixeyes.png'); 
@@ -437,25 +462,56 @@
         top: 0; left: 0; right: 0; bottom: 0;
         background: linear-gradient(rgba(13, 110, 253, 0.8), rgba(0, 0, 0, 0.4));
     }
+    
+    /* CALENDAR OVERRIDES */
     .fc-toolbar-title { font-size: 1.75rem !important; font-weight: 700; color: #333; }
     .fc-button-primary { background-color: #0d6efd !important; border-color: #0d6efd !important; text-transform: capitalize; font-weight: 500; }
     .fc-theme-standard td, .fc-theme-standard th { border-color: #eff2f7; }
     .fc-day-today { background-color: #d1e7dd !important; color: #0f5132 !important; font-weight: bold; }
-    .fc-day-disabled, .date-full {
-        background-color: #f8f9fa !important;
-        opacity: 1 !important;
-        cursor: not-allowed !important; 
+    
+    /* NEW STATUS STYLES (Merged) */
+    .day-closed {
+        background-color: #ffeaea !important; /* Light Red */
+        cursor: not-allowed !important;
+        position: relative;
     }
-    .date-full { background-color: #ffeaea !important; }
-    .fc-day-disabled .fc-daygrid-day-number { visibility: hidden; }
-    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full) { cursor: pointer; transition: background-color 0.2s ease; }
-    .fc-daygrid-day:not(.fc-day-disabled):not(.date-full):hover { background-color: #e7f1ff !important; }
+    .day-closed::after {
+        content: 'CLOSED';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #dc3545;
+        opacity: 0.5;
+        letter-spacing: 1px;
+    }
+
+    .day-full {
+        background-color: #e9ecef !important; /* Darker Gray */
+        cursor: not-allowed !important;
+        position: relative;
+    }
+    .day-full::after {
+        content: 'FULL';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #6c757d;
+        opacity: 0.5;
+        letter-spacing: 1px;
+    }
+
+    /* Standard Interactive Days */
+    .fc-daygrid-day:not(.day-closed):not(.day-full):not(.fc-day-today) { cursor: pointer; transition: background-color 0.2s ease; }
+    .fc-daygrid-day:not(.day-closed):not(.day-full):not(.fc-day-today):hover { background-color: #e7f1ff !important; }
+    
     .fc-timegrid-slot-lane:hover { background-color: #e7f1ff !important; cursor: pointer; }
     .booking-badge { font-size: 0.75rem; border-radius: 4px; padding: 1px 2px; margin-top: 2px; text-align: center; border: none !important; }
     
-    /* NEW STYLE: Hides the individual booked slots when in Month View (fc-dayGridMonth-view) */
     .fc-dayGridMonth-view .booked-slot-event { display: none !important; }
-    
     .booked-slot-event { border: none !important; pointer-events: none; }
 </style>
 @endsection

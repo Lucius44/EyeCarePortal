@@ -6,6 +6,16 @@
     .fc-daygrid-day { cursor: pointer; transition: background-color 0.2s; }
     .fc-daygrid-day:hover { background-color: #f1f3f5 !important; }
     
+    /* -- Admin Day View Styling -- */
+    /* Remove "All Day" text if any remains */
+    .fc-timegrid-allday { display: none !important; }
+    
+    /* Hover effect for Time Slots in Day View */
+    .fc-timegrid-slot-lane { cursor: pointer; } 
+    .fc-timegrid-slot-lane:hover {
+        background-color: #e7f1ff !important; /* Light Blue highlight */
+    }
+
     /* Past Dates */
     .past-date {
         background-color: #f8f9fa !important;
@@ -14,9 +24,9 @@
     }
     .past-date .fc-daygrid-day-number { color: #adb5bd !important; }
 
-    /* Closed Dates (Visual Indicator) */
+    /* Closed Dates */
     .closed-date {
-        background-color: #ffeaea !important; /* Light Red */
+        background-color: #ffeaea !important;
         position: relative;
     }
     .closed-date::after {
@@ -35,20 +45,17 @@
     .modal-header { border-bottom: none; }
     .modal-footer { border-top: none; }
     
-    /* The Accordion/Dropdown Animation Magic */
     .control-section {
         max-height: 0;
         overflow: hidden;
         opacity: 0;
         transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out;
     }
-    
     .control-section.active {
-        max-height: 800px; /* Arbitrary large height to allow expansion */
+        max-height: 800px;
         opacity: 1;
     }
 
-    /* Selection Buttons */
     .selection-btn {
         border: 2px solid #e9ecef;
         border-radius: 12px;
@@ -291,6 +298,13 @@
             height: 'auto',
             events: eventsData,
 
+            // --- ADMIN VIEW SETTINGS (9AM - 5PM) ---
+            allDaySlot: false,
+            slotMinTime: '09:00:00',
+            slotMaxTime: '18:00:00', // Ends at 6pm, so 5pm-6pm slot is visible
+            slotDuration: '01:00:00', // 1 hour slots = 1 bar per hour
+            expandRows: true, // Fill height
+
             dayCellClassNames: function(arg) {
                 var cellDate = new Date(arg.date);
                 cellDate.setHours(0,0,0,0);
@@ -310,12 +324,7 @@
                 
                 if (clickedDate < today) return; 
 
-                // --- FIX: Normalize date string to remove time (YYYY-MM-DD) ---
-                // info.dateStr in 'dayGrid' is "2026-01-31"
-                // info.dateStr in 'timeGrid' is "2026-01-31T14:30:00"
-                // We split by 'T' to ensure we only get the date part.
                 var cleanDateStr = info.dateStr.split('T')[0];
-
                 openMasterModal(cleanDateStr);
             },
 
@@ -331,8 +340,6 @@
             if (!defaultTab) defaultTab = 'book';
             
             var dateObj = new Date(dateStr);
-            // Fix timezone offset issue for display
-            // We use the date string parts to create the object strictly in local time concept
             var parts = dateStr.split('-');
             var displayDate = new Date(parts[0], parts[1]-1, parts[2]);
 
@@ -355,6 +362,16 @@
             listEl.innerHTML = '';
             
             var dayEvents = eventsData.filter(function(e) { return e.start.startsWith(dateStr); });
+            
+            // --- NEW: UX - Disable booked slots in the "Book" tab ---
+            var bookSelect = document.getElementById('bookTimeSelect');
+            var bookedTimes = [];
+
+            // Reset options first
+            for(var i=0; i<bookSelect.options.length; i++) {
+                bookSelect.options[i].disabled = false;
+                bookSelect.options[i].innerText = bookSelect.options[i].value;
+            }
 
             if (dayEvents.length === 0) {
                 msgEl.classList.remove('d-none');
@@ -364,7 +381,8 @@
 
                 dayEvents.forEach(function(event) {
                     var timeStr = new Date(event.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
+                    bookedTimes.push(timeStr); // Store time
+
                     var rawStatus = event.extendedProps.status;
                     var statusVal = (rawStatus && rawStatus.value) ? rawStatus.value : rawStatus;
                     if (!statusVal) statusVal = 'unknown';
@@ -385,6 +403,16 @@
                     listEl.appendChild(item);
                 });
             }
+
+            // Disable the booked times
+            for(var i=0; i<bookSelect.options.length; i++) {
+                // Ensure format matches (e.g., "09:00 AM")
+                if(bookedTimes.includes(bookSelect.options[i].value)) {
+                    bookSelect.options[i].disabled = true;
+                    bookSelect.options[i].innerText += " (Booked)";
+                }
+            }
+            bookSelect.value = ""; // Clear selection
 
             resetSections();
             toggleSection(defaultTab);

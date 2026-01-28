@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
-use App\Models\DaySetting; // <--- IMPORTED
+use App\Models\DaySetting;
 use App\Enums\AppointmentStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -20,7 +20,7 @@ class AppointmentController extends Controller
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
 
-        // Fetch taken slots
+        // Fetch taken slots for future checking
         $appointments = Appointment::where('appointment_date', '>=', Carbon::today())
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
@@ -42,10 +42,33 @@ class AppointmentController extends Controller
             $takenSlots[$date][] = $app->appointment_time;
         }
 
-        // --- NEW: Fetch Day Settings to pass to view (for disabling dates) ---
+        // Fetch Settings
         $daySettings = DaySetting::where('date', '>=', Carbon::today())->get()->keyBy(function($item) {
             return $item->date->format('Y-m-d');
         });
+
+        // --- NEW: Pre-calculate Status for the Calendar (Patient Side UX) ---
+        $calendarStatus = [];
+        // We look ahead 60 days or just use the data we have. 
+        // Let's iterate through the dailyCounts keys and DaySettings keys to build a map.
+        
+        $allDates = array_unique(array_merge(array_keys($dailyCounts), $daySettings->keys()->toArray()));
+
+        foreach ($allDates as $date) {
+            $setting = $daySettings[$date] ?? null;
+            $count = $dailyCounts[$date] ?? 0;
+            
+            $limit = $setting ? $setting->max_appointments : 5; // Default 5
+            $isClosed = $setting ? $setting->is_closed : false;
+
+            if ($isClosed) {
+                $calendarStatus[$date] = 'closed';
+            } elseif ($count >= $limit) {
+                $calendarStatus[$date] = 'full';
+            } else {
+                $calendarStatus[$date] = 'open';
+            }
+        }
 
         $services = Appointment::getServices();
         
@@ -54,7 +77,8 @@ class AppointmentController extends Controller
             'activeAppointment', 
             'dailyCounts', 
             'takenSlots',
-            'daySettings' // <--- Pass this to view
+            'daySettings',
+            'calendarStatus' // <--- Passing the calculated status
         ));
     }
 
@@ -62,7 +86,7 @@ class AppointmentController extends Controller
     {
         $userId = Auth::id();
 
-        // 1. Check for existing active appointment
+        // 1. Check for active
         $hasActive = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->exists();
@@ -71,19 +95,16 @@ class AppointmentController extends Controller
             return redirect()->back()->withErrors(['error' => 'You already have an active appointment.']);
         }
 
-        // 2. --- NEW: Check Day Settings (The Brain) ---
+        // 2. Check Settings
         $date = $request->appointment_date;
         $setting = DaySetting::where('date', $date)->first();
 
-        // Check if Closed
         if ($setting && $setting->is_closed) {
             return redirect()->back()->withErrors(['error' => 'The clinic is closed on this date.']);
         }
 
-        // Determine Limit (Custom or Default 5)
         $limit = $setting ? $setting->max_appointments : 5;
 
-        // Check Current Count
         $countOnDate = Appointment::where('appointment_date', $date)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->count();
