@@ -60,7 +60,7 @@
                                 <tbody>
                                     @forelse($pending as $appt)
                                     <tr>
-                                        <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
+                                        <td>{{ $appt->patient_name }}</td>
                                         <td>
                                             {{ $appt->appointment_date->format('M d, Y') }} 
                                             <br> 
@@ -145,7 +145,7 @@
                                 <tbody>
                                     @forelse($confirmed as $appt)
                                     <tr>
-                                        <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
+                                        <td>{{ $appt->patient_name }}</td>
                                         <td>
                                             {{ $appt->appointment_date->format('M d, Y') }} 
                                             <br> 

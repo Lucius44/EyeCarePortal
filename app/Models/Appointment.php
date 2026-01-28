@@ -12,35 +12,42 @@ class Appointment extends Model
 
     protected $fillable = [
         'user_id',
-        'service',
         'appointment_date',
         'appointment_time',
+        'service',
         'description',
         'status',
-        'cancellation_reason', // <--- ADD THIS
+        'cancellation_reason',
+        // New Fields
+        'patient_first_name',
+        'patient_middle_name',
+        'patient_last_name',
+        'patient_email',
+        'patient_phone',
     ];
 
-    public static function getServices()
-    {
-        return [
-            'General Eye Exam',
-            'Contact Lens Fitting',
-            'Pediatric Eye Exam',
-            'Glaucoma Screening',
-            'Cataract Evaluation',
-        ];
-    }
+    protected $casts = [
+        'appointment_date' => 'date',
+        'status' => AppointmentStatus::class,
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    protected function casts(): array 
+    // --- Helpers to get Patient Info (User OR Guest) ---
+
+    public function getPatientNameAttribute()
     {
-        return [
-            'appointment_date' => 'date',
-            'status' => AppointmentStatus::class,
-        ];
+        if ($this->user) {
+            return $this->user->first_name . ' ' . $this->user->last_name;
+        }
+        return $this->patient_first_name . ' ' . $this->patient_last_name;
+    }
+
+    public function getPatientEmailAttribute()
+    {
+        return $this->user ? $this->user->email : $this->patient_email;
     }
 }

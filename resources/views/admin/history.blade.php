@@ -70,7 +70,7 @@
                         <tbody>
                             @forelse($history as $appt)
                             <tr>
-                                <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
+                                <td>{{ $appt->patient_name }}</td>
                                 <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
                                 <td>
                                     @if($appt->status->value === 'completed') 

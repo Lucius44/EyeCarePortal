@@ -50,8 +50,12 @@ Route::middleware(['auth'])->group(function () {
 // -- Admin Routes (Protected) --
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard'); // New Stats Page
-    Route::get('/calendar', [AdminController::class, 'calendar'])->name('admin.calendar');    // Old Calendar Page
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/calendar', [AdminController::class, 'calendar'])->name('admin.calendar');
+    
+    // NEW: Route to handle Admin creating appointments (Walk-ins)
+    Route::post('/calendar/store', [AdminController::class, 'storeAppointment'])->name('admin.calendar.store');
+    
     Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
     Route::get('/appointments-history', [AdminController::class, 'history'])->name('admin.history');
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
