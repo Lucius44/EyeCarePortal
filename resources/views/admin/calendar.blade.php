@@ -2,12 +2,26 @@
 
 @section('content')
 <style>
+    /* Default Day Styling */
     .fc-daygrid-day { cursor: pointer; transition: background-color 0.2s; }
     .fc-daygrid-day:hover { background-color: #e9ecef !important; }
     
-    /* NEW: Patient Side Styling for Day View */
+    /* Patient Side Styling for Day View */
     .fc-timegrid-slot-lane:hover { background-color: #e7f1ff !important; cursor: pointer; }
     
+    /* UPDATED: Past Date Styling (Plain Gray, No Stripes) */
+    .past-date {
+        background-color: #f8f9fa !important; /* Solid Light Gray */
+        cursor: not-allowed !important;
+    }
+    
+    /* Mute the text color for past dates so they look inactive */
+    .past-date .fc-daygrid-day-number {
+        color: #adb5bd !important;
+    }
+
+    .past-date:hover { background-color: #f8f9fa !important; }
+
     .modal-header { border-bottom: none; }
     .modal-footer { border-top: none; }
 </style>
@@ -187,6 +201,10 @@
         var displayDate = document.getElementById('displayDate');
         var createTimeSelect = document.getElementById('createTime');
 
+        // Setup "Today" for comparison
+        var today = new Date();
+        today.setHours(0,0,0,0);
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'bootstrap5',
@@ -198,14 +216,23 @@
             height: 'auto',
             events: eventsData,
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
-            
-            // UPDATED: Sync with Patient Side Views
             slotLabelFormat: { hour: 'numeric', minute: '2-digit', omitZeroMinute: false, meridiem: 'short' },
-            slotDuration: '01:00:00', // Single bar (1 hour blocks)
+            slotDuration: '01:00:00',
             slotMinTime: '09:00:00', 
             slotMaxTime: '18:00:00',
-            allDaySlot: false, // Removed "All Day" row
-            expandRows: true, // Fills height nicely
+            allDaySlot: false,
+            expandRows: true,
+
+            // Apply 'past-date' class to days before today
+            dayCellClassNames: function(arg) {
+                var cellDate = new Date(arg.date);
+                cellDate.setHours(0,0,0,0);
+                
+                if (cellDate < today) {
+                    return ['past-date'];
+                }
+                return [];
+            },
             
             eventClick: function(info) {
                 info.jsEvent.preventDefault();
@@ -229,10 +256,19 @@
             dateClick: function(info) {
                 var clickedDate = info.dateStr; 
                 if (clickedDate.includes('T')) clickedDate = clickedDate.split('T')[0];
+                
+                var dateObj = new Date(clickedDate);
+                dateObj.setHours(0,0,0,0);
+
+                // Prevent interaction if date is in the past
+                if (dateObj < today) {
+                    return; 
+                }
+
                 createDateInput.value = clickedDate;
                 
                 // Format Date for Display
-                displayDate.textContent = new Date(clickedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                displayDate.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
                 // Reset Time Options
                 for (var i = 0; i < createTimeSelect.options.length; i++) {
@@ -248,9 +284,9 @@
                 var bookedTimes = eventsData.filter(function(event) {
                     return event.start.startsWith(clickedDate);
                 }).map(function(event) {
-                    var dateObj = new Date(event.start);
-                    var hours = dateObj.getHours();
-                    var minutes = dateObj.getMinutes();
+                    var eventDate = new Date(event.start);
+                    var hours = eventDate.getHours();
+                    var minutes = eventDate.getMinutes();
                     var ampm = hours >= 12 ? 'PM' : 'AM';
                     hours = hours % 12;
                     hours = hours ? hours : 12; 
@@ -280,8 +316,8 @@
             createModal.show();
             if (oldDate) {
                 var parts = oldDate.split('-');
-                var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-                displayDate.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                var oldDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                displayDate.textContent = oldDateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             }
         }
     });
