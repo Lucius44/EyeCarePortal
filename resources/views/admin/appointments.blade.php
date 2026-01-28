@@ -6,14 +6,21 @@
         <div class="col-md-2 bg-white shadow-sm" style="min-height: 80vh;">
             <div class="d-flex flex-column p-3">
                 <h5 class="text-primary mb-4">Admin Panel</h5>
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary mb-2 text-start border-0">
-                    📅 Calendar
+                
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+                <a href="{{ route('admin.calendar') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
+                    <i class="bi bi-calendar-week me-2"></i> Calendar
                 </a>
                 <a href="{{ route('admin.appointments') }}" class="btn btn-primary mb-2 text-start">
-                    ✅ Manage Appointments
+                    <i class="bi bi-check-circle me-2"></i> Appointments
+                </a>
+                <a href="{{ route('admin.history') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
+                    <i class="bi bi-clock-history me-2"></i> History
                 </a>
                 <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    👥 Users List
+                    <i class="bi bi-people me-2"></i> Users List
                 </a>
             </div>
         </div>
@@ -32,13 +39,11 @@
                 <li class="nav-item">
                     <button class="nav-link" id="ongoing-tab" data-bs-toggle="tab" data-bs-target="#ongoing" type="button">Ongoing / Confirmed</button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button">History</button>
-                </li>
             </ul>
 
             <div class="tab-content" id="myTabContent">
                 
+                {{-- Pending Tab --}}
                 <div class="tab-pane fade show active" id="pending">
                     <div class="card shadow-sm">
                         <div class="card-body">
@@ -76,6 +81,7 @@
                                         </td>
                                     </tr>
 
+                                    {{-- Reject Modal --}}
                                     <div class="modal fade" id="rejectModal-{{ $appt->id }}" tabindex="-1">
                                         <div class="modal-dialog">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
@@ -123,6 +129,7 @@
                     </div>
                 </div>
 
+                {{-- Ongoing Tab --}}
                 <div class="tab-pane fade" id="ongoing">
                     <div class="card shadow-sm">
                         <div class="card-body">
@@ -167,45 +174,6 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="history">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Reason/Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($history as $appt)
-                                    <tr>
-                                        <td>{{ $appt->user->first_name }} {{ $appt->user->last_name }}</td>
-                                        <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
-                                        <td>
-                                            @if($appt->status->value === 'completed') 
-                                                <span class="badge bg-success">Completed</span>
-                                            @elseif($appt->status->value === 'cancelled') 
-                                                <span class="badge bg-secondary">Cancelled</span>
-                                            @elseif($appt->status->value === 'rejected') 
-                                                <span class="badge bg-danger">Rejected</span>
-                                            @elseif($appt->status->value === 'no-show') 
-                                                <span class="badge bg-warning text-dark">No-Show</span>
-                                            @endif
-                                        </td>
-                                        <td class="small text-muted">
-                                            {{ $appt->cancellation_reason ?? '-' }}
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -219,11 +187,10 @@
         if (select.value === 'Other') {
             otherDiv.classList.remove('d-none');
             textArea.required = true;
-            textArea.value = ''; // clear it
+            textArea.value = '';
         } else {
             otherDiv.classList.add('d-none');
             textArea.required = false;
-            // Set the textarea value to the selected dropdown value so it submits correctly
             textArea.value = select.value;
         }
     }

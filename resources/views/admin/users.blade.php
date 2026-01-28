@@ -6,14 +6,21 @@
         <div class="col-md-2 bg-white shadow-sm" style="min-height: 80vh;">
             <div class="d-flex flex-column p-3">
                 <h5 class="text-primary mb-4">Admin Panel</h5>
+                
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    📅 Calendar
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+                <a href="{{ route('admin.calendar') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
+                    <i class="bi bi-calendar-week me-2"></i> Calendar
                 </a>
                 <a href="{{ route('admin.appointments') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    ✅ Manage Appointments
+                    <i class="bi bi-check-circle me-2"></i> Appointments
+                </a>
+                <a href="{{ route('admin.history') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
+                    <i class="bi bi-clock-history me-2"></i> History
                 </a>
                 <a href="{{ route('admin.users') }}" class="btn btn-primary mb-2 text-start">
-                    👥 Users List
+                    <i class="bi bi-people me-2"></i> Users List
                 </a>
             </div>
         </div>

@@ -32,7 +32,6 @@ Route::middleware(['auth'])->group(function () {
     
     // Profile Routes
     Route::get('/profile', [PatientController::class, 'profile'])->name('profile');
-    // REMOVED: Route::put('/profile', ...) to prevent identity changes.
     
     // Appointment Routes
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
@@ -51,8 +50,10 @@ Route::middleware(['auth'])->group(function () {
 // -- Admin Routes (Protected) --
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard'); // New Stats Page
+    Route::get('/calendar', [AdminController::class, 'calendar'])->name('admin.calendar');    // Old Calendar Page
     Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
+    Route::get('/appointments-history', [AdminController::class, 'history'])->name('admin.history');
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');

@@ -9,18 +9,58 @@ use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Http\Resources\CalendarEventResource;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    // --- NEW: The Stats Dashboard ---
     public function dashboard()
     {
-        // Filter out rejected/cancelled from the calendar to keep it clean? 
-        // Or keep them? Let's keep them but maybe the frontend filters them.
-        // For now, fetching all non-cancelled/rejected makes sense for a "Schedule", 
-        // but seeing history is good too. Let's grab all.
+        // 1. Basic Counters
+        $totalPatients = User::where('role', UserRole::Patient)->count();
+        $appointmentsToday = Appointment::whereDate('appointment_date', Carbon::today())->count();
+        $pendingRequests = Appointment::where('status', AppointmentStatus::Pending)->count();
+        $totalCompleted = Appointment::where('status', AppointmentStatus::Completed)->count();
+
+        // 2. Chart Data: Appointments per day (Last 7 Days)
+        // This query groups appointments by date and counts them
+        $chartData = Appointment::select(DB::raw('DATE(appointment_date) as date'), DB::raw('count(*) as count'))
+            ->where('appointment_date', '>=', Carbon::now()->subDays(7))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Prepare arrays for Chart.js
+        $labels = [];
+        $data = [];
+        
+        // Loop last 7 days to ensure even days with 0 appointments show up
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i)->format('Y-m-d');
+            $labels[] = Carbon::now()->subDays($i)->format('M d'); // e.g. "Jan 25"
+            
+            // Find count for this date or default to 0
+            $record = $chartData->firstWhere('date', $date);
+            $data[] = $record ? $record->count : 0;
+        }
+
+        return view('admin.dashboard', compact(
+            'totalPatients', 
+            'appointmentsToday', 
+            'pendingRequests', 
+            'totalCompleted',
+            'labels',
+            'data'
+        ));
+    }
+
+    // --- RENAMED: Old Dashboard is now Calendar ---
+    public function calendar()
+    {
         $appointments = Appointment::with('user')->get();
         $events = CalendarEventResource::collection($appointments)->resolve();
-        return view('admin.dashboard', compact('events'));
+        return view('admin.calendar', compact('events'));
     }
 
     public function appointments()
@@ -35,18 +75,22 @@ class AdminController extends Controller
                                 ->orderBy('appointment_date')
                                 ->get();
                                 
-        // History now includes Rejected
+        return view('admin.appointments', compact('pending', 'confirmed'));
+    }
+
+    public function history()
+    {
         $history = Appointment::whereIn('status', [
                                     AppointmentStatus::Completed, 
                                     AppointmentStatus::Cancelled, 
-                                    AppointmentStatus::Rejected, // <--- NEW
+                                    AppointmentStatus::Rejected,
                                     AppointmentStatus::NoShow
                                 ])
                               ->with('user')
                               ->orderByDesc('appointment_date')
                               ->get();
 
-        return view('admin.appointments', compact('pending', 'confirmed', 'history'));
+        return view('admin.history', compact('history'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -55,13 +99,11 @@ class AdminController extends Controller
         
         $request->validate([
             'status' => ['required', Rule::enum(AppointmentStatus::class)],
-            // If status is rejected, reason is required
             'cancellation_reason' => 'nullable|string|max:500', 
         ]);
 
         $data = ['status' => $request->status];
 
-        // If rejecting, save the reason
         if ($request->status === AppointmentStatus::Rejected->value) {
             $data['cancellation_reason'] = $request->input('cancellation_reason', 'No reason provided.');
         }
