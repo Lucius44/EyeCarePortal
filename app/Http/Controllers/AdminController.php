@@ -17,13 +17,21 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
+        // Ensure we are using local PH time for "Today" calculations
+        $today = Carbon::now('Asia/Manila')->startOfDay();
+
         $totalPatients = User::where('role', UserRole::Patient)->count();
-        $appointmentsToday = Appointment::whereDate('appointment_date', Carbon::today())->count();
+        
+        // FIX: Only count Confirmed or Completed appointments as "Today's Visits"
+        $appointmentsToday = Appointment::whereDate('appointment_date', $today)
+            ->whereIn('status', [AppointmentStatus::Confirmed, AppointmentStatus::Completed])
+            ->count();
+
         $pendingRequests = Appointment::where('status', AppointmentStatus::Pending)->count();
         $totalCompleted = Appointment::where('status', AppointmentStatus::Completed)->count();
 
         $chartData = Appointment::select(DB::raw('DATE(appointment_date) as date'), DB::raw('count(*) as count'))
-            ->where('appointment_date', '>=', Carbon::now()->subDays(7))
+            ->where('appointment_date', '>=', Carbon::now('Asia/Manila')->subDays(7))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -32,8 +40,8 @@ class AdminController extends Controller
         $data = [];
         
         for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $labels[] = Carbon::now()->subDays($i)->format('M d'); 
+            $date = Carbon::now('Asia/Manila')->subDays($i)->format('Y-m-d');
+            $labels[] = Carbon::now('Asia/Manila')->subDays($i)->format('M d'); 
             $record = $chartData->firstWhere('date', $date);
             $data[] = $record ? $record->count : 0;
         }
