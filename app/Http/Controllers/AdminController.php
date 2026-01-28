@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    // --- NEW: The Stats Dashboard ---
+    // --- The Stats Dashboard ---
     public function dashboard()
     {
         // 1. Basic Counters
@@ -24,7 +24,6 @@ class AdminController extends Controller
         $totalCompleted = Appointment::where('status', AppointmentStatus::Completed)->count();
 
         // 2. Chart Data: Appointments per day (Last 7 Days)
-        // This query groups appointments by date and counts them
         $chartData = Appointment::select(DB::raw('DATE(appointment_date) as date'), DB::raw('count(*) as count'))
             ->where('appointment_date', '>=', Carbon::now()->subDays(7))
             ->groupBy('date')
@@ -35,12 +34,10 @@ class AdminController extends Controller
         $labels = [];
         $data = [];
         
-        // Loop last 7 days to ensure even days with 0 appointments show up
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $labels[] = Carbon::now()->subDays($i)->format('M d'); // e.g. "Jan 25"
+            $labels[] = Carbon::now()->subDays($i)->format('M d'); 
             
-            // Find count for this date or default to 0
             $record = $chartData->firstWhere('date', $date);
             $data[] = $record ? $record->count : 0;
         }
@@ -55,11 +52,16 @@ class AdminController extends Controller
         ));
     }
 
-    // --- RENAMED: Old Dashboard is now Calendar ---
+    // --- UPDATED: Calendar (Shows Pending & Confirmed Only) ---
     public function calendar()
     {
-        $appointments = Appointment::with('user')->get();
+        // We now filter to show ONLY Pending and Confirmed appointments
+        $appointments = Appointment::with('user')
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->get();
+
         $events = CalendarEventResource::collection($appointments)->resolve();
+        
         return view('admin.calendar', compact('events'));
     }
 

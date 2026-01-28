@@ -31,6 +31,7 @@
             
             <div class="card shadow-sm">
                 <div class="card-body">
+                    {{-- Calendar Container --}}
                     <div id="adminCalendar" data-events="{{ json_encode($events) }}"></div>
                 </div>
             </div>
@@ -49,12 +50,39 @@
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,listWeek'
+                right: 'dayGridMonth,timeGridDay' // Swapped list/week for Day view
             },
             height: 'auto',
             events: eventsData,
+
+            // --- 1. FORCE 12-HOUR FORMAT (AM/PM) ON THE EVENTS ---
+            eventTimeFormat: {
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short' // Result: "2:30 PM"
+            },
+
+            // --- 2. FORCE 12-HOUR FORMAT ON THE LEFT AXIS (Day View) ---
+            slotLabelFormat: {
+                hour: 'numeric',
+                minute: '2-digit',
+                omitZeroMinute: false,
+                meridiem: 'short' // Result: "9:00 AM"
+            },
+
+            // Optional: Better time range for the day view
+            slotMinTime: '08:00:00', // Start calendar at 8 AM
+            slotMaxTime: '18:00:00', // End at 6 PM
+            
             eventClick: function(info) {
-                alert('Appointment for: ' + info.event.title + '\nStatus: ' + info.event.extendedProps.status);
+                // We also format the alert to show nice time
+                var timeStr = info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                alert(
+                    'Patient: ' + info.event.title + 
+                    '\nTime: ' + timeStr +
+                    '\nStatus: ' + info.event.extendedProps.status.value
+                );
             }
         });
         
