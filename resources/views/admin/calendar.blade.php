@@ -168,6 +168,7 @@
         var calendarEl = document.getElementById('adminCalendar');
         var eventsData = JSON.parse(calendarEl.getAttribute('data-events'));
         
+        // Use window.bootstrap to find the loaded library
         var eventModal = new window.bootstrap.Modal(document.getElementById('eventModal'));
         var createModal = new window.bootstrap.Modal(document.getElementById('createModal'));
 
@@ -224,31 +225,37 @@
                 createDateInput.value = clickedDate;
                 displayDate.textContent = new Date(clickedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-                // 2. Disable Booked Times
-                // Reset all options first
+                // 2. Disable Booked Times (Robust Matching)
+                
+                // Reset options first
                 for (var i = 0; i < createTimeSelect.options.length; i++) {
                     createTimeSelect.options[i].disabled = false;
-                    createTimeSelect.options[i].innerText = createTimeSelect.options[i].value; // Reset text
+                    createTimeSelect.options[i].innerText = createTimeSelect.options[i].value;
                 }
 
                 // Filter events for this day
                 var bookedTimes = eventsData.filter(function(event) {
                     return event.start.startsWith(clickedDate);
                 }).map(function(event) {
-                    // Convert "YYYY-MM-DDTHH:mm:ss" to "09:00 AM" format to match value
+                    // Manually parse ISO string "2026-01-28T09:00:00" to "09:00 AM"
+                    // This guarantees matching the <select> values regardless of browser locale
                     var dateObj = new Date(event.start);
-                    return dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    var hours = dateObj.getHours();
+                    var minutes = dateObj.getMinutes();
+                    var ampm = hours >= 12 ? 'PM' : 'AM';
+                    
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    
+                    // Pad with leading zero: 9 -> "09"
+                    var strTime = (hours < 10 ? '0' + hours : hours) + ':' + 
+                                  (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+                    return strTime;
                 });
 
                 // Disable matching options
                 for (var i = 0; i < createTimeSelect.options.length; i++) {
-                    // Simple comparison (Ensure exact string match, e.g. "09:00 AM")
-                    // Note: This relies on the format matching exactly.
-                    // A more robust way handles time parsing, but this works if formats align.
                     var optValue = createTimeSelect.options[i].value; 
-                    
-                    // Normalize time strings for comparison (remove leading zeros if needed)
-                    // But here we just check inclusion.
                     if (bookedTimes.includes(optValue)) {
                         createTimeSelect.options[i].disabled = true;
                         createTimeSelect.options[i].innerText = optValue + " (Booked)";

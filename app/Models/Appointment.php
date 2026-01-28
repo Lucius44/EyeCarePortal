@@ -18,7 +18,6 @@ class Appointment extends Model
         'description',
         'status',
         'cancellation_reason',
-        // New Fields
         'patient_first_name',
         'patient_middle_name',
         'patient_last_name',
@@ -43,11 +42,30 @@ class Appointment extends Model
         if ($this->user) {
             return $this->user->first_name . ' ' . $this->user->last_name;
         }
-        return $this->patient_first_name . ' ' . $this->patient_last_name;
+        
+        // Handle Guest Name with Middle Name support
+        $name = $this->patient_first_name;
+        if ($this->patient_middle_name) {
+            $name .= ' ' . $this->patient_middle_name;
+        }
+        $name .= ' ' . $this->patient_last_name;
+        
+        return $name;
     }
 
     public function getPatientEmailAttribute()
     {
         return $this->user ? $this->user->email : $this->patient_email;
+    }
+
+    // --- NEW: Define Available Services ---
+    // This fixes the "Call to undefined method" error
+    public static function getServices()
+    {
+        return [
+            'General Checkup',
+            'Laser Treatment',
+            'Glasses/Contacts Fitting',
+        ];
     }
 }
