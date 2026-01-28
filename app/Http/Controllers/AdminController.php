@@ -14,23 +14,20 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    // --- The Stats Dashboard ---
+    // --- Stats Dashboard ---
     public function dashboard()
     {
-        // 1. Basic Counters
         $totalPatients = User::where('role', UserRole::Patient)->count();
         $appointmentsToday = Appointment::whereDate('appointment_date', Carbon::today())->count();
         $pendingRequests = Appointment::where('status', AppointmentStatus::Pending)->count();
         $totalCompleted = Appointment::where('status', AppointmentStatus::Completed)->count();
 
-        // 2. Chart Data: Appointments per day (Last 7 Days)
         $chartData = Appointment::select(DB::raw('DATE(appointment_date) as date'), DB::raw('count(*) as count'))
             ->where('appointment_date', '>=', Carbon::now()->subDays(7))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // Prepare arrays for Chart.js
         $labels = [];
         $data = [];
         
@@ -52,10 +49,9 @@ class AdminController extends Controller
         ));
     }
 
-    // --- UPDATED: Calendar (Shows Pending & Confirmed Only) ---
+    // --- Calendar ---
     public function calendar()
     {
-        // We now filter to show ONLY Pending and Confirmed appointments
         $appointments = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->get();
@@ -65,6 +61,7 @@ class AdminController extends Controller
         return view('admin.calendar', compact('events'));
     }
 
+    // --- Manage Appointments ---
     public function appointments()
     {
         $pending = Appointment::where('status', AppointmentStatus::Pending)
@@ -80,17 +77,32 @@ class AdminController extends Controller
         return view('admin.appointments', compact('pending', 'confirmed'));
     }
 
-    public function history()
+    // --- UPDATED: History with Search & Filter ---
+    public function history(Request $request)
     {
-        $history = Appointment::whereIn('status', [
-                                    AppointmentStatus::Completed, 
-                                    AppointmentStatus::Cancelled, 
-                                    AppointmentStatus::Rejected,
-                                    AppointmentStatus::NoShow
-                                ])
-                              ->with('user')
-                              ->orderByDesc('appointment_date')
-                              ->get();
+        $query = Appointment::with('user')
+            ->whereIn('status', [
+                AppointmentStatus::Completed, 
+                AppointmentStatus::Cancelled, 
+                AppointmentStatus::Rejected,
+                AppointmentStatus::NoShow
+            ]);
+
+        // 1. Search by Patient Name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        // 2. Filter by Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $history = $query->orderByDesc('appointment_date')->get();
 
         return view('admin.history', compact('history'));
     }
@@ -115,14 +127,38 @@ class AdminController extends Controller
         return back()->with('success', 'Appointment status updated successfully.');
     }
 
-    public function users()
+    // --- UPDATED: Users with Search & Filter ---
+    public function users(Request $request)
     {
+        // Keep pending separate (always show these)
         $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
                             ->where('is_verified', false)
                             ->get();
 
-        $allUsers = User::where('role', UserRole::Patient)->get();
+        // Main User Query
+        $query = User::where('role', UserRole::Patient);
+
+        // 1. Search by Name or Email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // 2. Filter by Verification Status
+        if ($request->filled('filter_status')) {
+            if ($request->filter_status === 'verified') {
+                $query->where('is_verified', true);
+            } elseif ($request->filter_status === 'unverified') {
+                $query->where('is_verified', false);
+            }
+        }
+
+        $allUsers = $query->orderBy('created_at', 'desc')->get();
 
         return view('admin.users', compact('pendingUsers', 'allUsers'));
     }

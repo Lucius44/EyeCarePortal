@@ -79,9 +79,32 @@
             </div>
 
             <div class="card shadow-sm">
-                <div class="card-header bg-light">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">All Patients</h5>
                 </div>
+                
+                {{-- Search & Filter --}}
+                <div class="card-body border-bottom bg-white">
+                    <form action="{{ route('admin.users') }}" method="GET" class="row g-3">
+                        <div class="col-md-5">
+                            <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="filter_status" class="form-select">
+                                <option value="">-- All Users --</option>
+                                <option value="verified" {{ request('filter_status') == 'verified' ? 'selected' : '' }}>Verified Only</option>
+                                <option value="unverified" {{ request('filter_status') == 'unverified' ? 'selected' : '' }}>Unverified Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary w-100">Clear</a>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="card-body">
                     <table class="table table-hover">
                         <thead>
@@ -93,7 +116,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($allUsers as $user)
+                            @forelse($allUsers as $user)
                             <tr>
                                 <td>{{ $user->first_name }} {{ $user->last_name }}</td>
                                 <td>{{ $user->email }}</td>
@@ -106,7 +129,11 @@
                                 </td>
                                 <td>{{ $user->created_at->format('M d, Y') }}</td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No users found matching your search.</td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

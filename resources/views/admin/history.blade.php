@@ -28,6 +28,34 @@
         <div class="col-md-10 p-4">
             <h2 class="mb-4">Appointment History</h2>
 
+            {{-- Filter & Search Form --}}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form action="{{ route('admin.history') }}" method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" name="search" class="form-control" placeholder="Search by Patient Name..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status" class="form-select">
+                                <option value="">-- All Statuses --</option>
+                                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                <option value="no-show" {{ request('status') == 'no-show' ? 'selected' : '' }}>No-Show</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-filter"></i> Filter
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ route('admin.history') }}" class="btn btn-outline-secondary w-100">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="card shadow-sm">
                 <div class="card-body">
                     <table class="table table-bordered table-striped align-middle">
