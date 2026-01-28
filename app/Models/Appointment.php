@@ -55,11 +55,14 @@ class Appointment extends Model
 
     public function getPatientEmailAttribute()
     {
-        return $this->user ? $this->user->email : $this->patient_email;
+        if ($this->user) {
+            return $this->user->email;
+        }
+        // FIX: Access the raw attribute directly to prevent infinite loop
+        return $this->attributes['patient_email'] ?? null;
     }
 
-    // --- NEW: Define Available Services ---
-    // This fixes the "Call to undefined method" error
+    // --- Define Available Services ---
     public static function getServices()
     {
         return [

@@ -60,8 +60,7 @@
     </div>
 </div>
 
-{{-- Modals (Keep your existing modals exactly as they are) --}}
-{{-- 1. BOOKING MODAL --}}
+{{-- Modals --}}
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form action="{{ route('appointments.store') }}" method="POST">
@@ -72,15 +71,12 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    
                     <input type="hidden" name="appointment_date" id="modalDateInput">
-                    
                     <div class="mb-3">
                         <label class="fw-bold text-secondary small text-uppercase">Selected Date</label>
                         <div id="displayDate" class="fs-4 text-primary fw-bold"></div>
                         <div id="slotsInfo" class="small text-muted mt-1"></div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label fw-bold">Service Required</label>
                         <select name="service" class="form-select form-select-lg" required>
@@ -90,13 +86,11 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label fw-bold">Preferred Time</label>
                         <select name="appointment_time" id="timeSlotSelect" class="form-select form-select-lg" required>
                             <option value="">-- Select Time --</option>
                             @php
-                                // Note: Admin added 12PM and 5PM, ensuring consistency
                                 $times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
                             @endphp
                             @foreach($times as $time)
@@ -107,12 +101,10 @@
                             Some slots are disabled because they are already booked.
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label fw-bold">Notes / Symptoms (Optional)</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Describe any specific eye issues..."></textarea>
                     </div>
-
                 </div>
                 <div class="modal-footer border-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -123,7 +115,6 @@
     </div>
 </div>
 
-{{-- 2. TODAY'S SCHEDULE INFO MODAL --}}
 <div class="modal fade" id="todayModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -147,7 +138,6 @@
     </div>
 </div>
 
-{{-- 3. ACTIVE APPOINTMENT MODAL --}}
 <div class="modal fade" id="activeAppointmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -182,7 +172,6 @@
     </div>
 </div>
 
-{{-- 4. UNVERIFIED MODAL --}}
 <div class="modal fade" id="unverifiedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -199,7 +188,6 @@
     </div>
 </div>
 
-{{-- 5. FULLY BOOKED MODAL --}}
 <div class="modal fade" id="fullyBookedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -215,7 +203,6 @@
     </div>
 </div>
 
-{{-- 6. PENDING CANCEL MODAL --}}
 @if($activeAppointment && $activeAppointment->status->value === 'pending')
 <div class="modal fade" id="pendingCancelModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -246,7 +233,13 @@
         const dailyCounts = JSON.parse(calendarEl.getAttribute('data-daily-counts') || '{}'); 
         const takenSlots = JSON.parse(calendarEl.getAttribute('data-taken-slots') || '{}');   
 
-        // 1. Process Daily Counts (Background Events for Month View)
+        function getLocalYMD(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         let calendarEvents = [];
         for (const [date, count] of Object.entries(dailyCounts)) {
             let color = '#198754'; 
@@ -267,11 +260,8 @@
             });
         }
 
-        // 2. NEW: Process Taken Slots (Gray Blocks for Day View)
         for (const [date, times] of Object.entries(takenSlots)) {
             times.forEach(timeStr => {
-                // Convert "09:00 AM" to "2026-01-28T09:00:00"
-                // This ensures it shows up in the TimeGrid view
                 let timeParts = timeStr.match(/(\d+):(\d+) (\w+)/);
                 if(timeParts) {
                     let hours = parseInt(timeParts[1]);
@@ -284,7 +274,7 @@
                     calendarEvents.push({
                         title: 'Booked',
                         start: date + 'T' + isoTime,
-                        end: date + 'T' + (hours + 1).toString().padStart(2, '0') + ':' + minutes + ':00', // Assume 1 hour
+                        end: date + 'T' + (hours + 1).toString().padStart(2, '0') + ':' + minutes + ':00',
                         backgroundColor: '#e9ecef',
                         borderColor: '#dee2e6',
                         textColor: '#6c757d',
@@ -302,7 +292,7 @@
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'bootstrap5',
-            events: calendarEvents, // Updated events array
+            events: calendarEvents, 
             
             headerToolbar: {
                 left: 'title',
@@ -322,9 +312,7 @@
             expandRows: true,
 
             dayCellClassNames: function(arg) {
-                // Helper logic handled inside events mostly, but this keeps full days gray
-                // We use simple string match for the counts logic
-                let dateStr = arg.date.toISOString().split('T')[0];
+                let dateStr = getLocalYMD(arg.date);
                 if (dailyCounts[dateStr] >= 5) {
                     return ['date-full']; 
                 }
@@ -464,7 +452,10 @@
     .fc-daygrid-day:not(.fc-day-disabled):not(.date-full):hover { background-color: #e7f1ff !important; }
     .fc-timegrid-slot-lane:hover { background-color: #e7f1ff !important; cursor: pointer; }
     .booking-badge { font-size: 0.75rem; border-radius: 4px; padding: 1px 2px; margin-top: 2px; text-align: center; border: none !important; }
-    /* New Style for gray booked blocks */
+    
+    /* NEW STYLE: Hides the individual booked slots when in Month View (fc-dayGridMonth-view) */
+    .fc-dayGridMonth-view .booked-slot-event { display: none !important; }
+    
     .booked-slot-event { border: none !important; pointer-events: none; }
 </style>
 @endsection
