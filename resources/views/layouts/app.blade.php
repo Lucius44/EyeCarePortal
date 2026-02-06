@@ -3,165 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EyeCare Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ClearOptics | Professional Eye Care</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --primary-color: #0F172A; /* Deep Navy */
+            --accent-color: #3B82F6;  /* Bright Blue */
+            --brand-gold: #D97706;    /* Subtle Gold for premium feel */
+            --bg-body: #F8FAFC;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-gradient);
-            min-height: 100vh;
+            background-color: var(--bg-body);
+            color: #334155;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
 
-        /* Modern Navbar */
+        /* Premium Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 15px rgba(0,0,0,0.04);
-            padding: 0.8rem 0;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary-color) !important;
-            letter-spacing: -0.5px;
-            font-size: 1.5rem;
-        }
-
-        /* Nav Buttons */
-        .nav-link {
-            font-weight: 500;
-            color: #555 !important;
-            transition: color 0.2s;
-        }
-        .nav-link:hover {
-            color: var(--primary-color) !important;
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
         }
         
-        .btn-nav-primary {
-            background-color: var(--primary-color);
-            color: white !important;
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            transition: all 0.3s;
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
         }
-        .btn-nav-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
-            color: white !important;
+        
+        .nav-link {
+            font-weight: 600;
+            color: #64748B !important;
+            font-size: 0.95rem;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent-color) !important;
         }
 
-        /* Dropdown Tweaks */
+        /* Special Buttons */
+        .btn-nav-primary {
+            background: var(--primary-color);
+            color: white !important;
+            border-radius: 50px;
+            padding: 0.6rem 1.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
+        
+        .btn-nav-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+            background: #1e293b;
+        }
+
+        /* Dropdown Polish */
         .dropdown-menu {
             border: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            padding: 10px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            padding: 0.75rem;
+            margin-top: 15px !important;
         }
+        
         .dropdown-item {
             border-radius: 8px;
-            padding: 8px 15px;
+            padding: 10px 15px;
             font-weight: 500;
+            color: #475569;
         }
+        
         .dropdown-item:hover {
-            background-color: #f0f7ff;
-            color: var(--primary-color);
-        }
-        .dropdown-item.text-danger:hover {
-            background-color: #fff5f5;
-            color: #dc3545;
+            background-color: #F1F5F9;
+            color: var(--accent-color);
         }
 
         /* Footer */
         footer {
-            background: #fff;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            padding: 3rem 0;
             margin-top: auto;
-            padding: 2rem 0;
-            text-align: center;
+        }
+        
+        footer p {
+            color: #94a3b8;
             font-size: 0.9rem;
-            color: #777;
+            margin: 0;
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg sticky-top">
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-                <i class="bi bi-eye-fill fs-3"></i> ClearOptics
+                <i class="bi bi-eye-fill text-primary"></i> 
+                <span>Clear<span class="text-primary">Optics</span></span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-3">
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
                     @guest
-                        {{-- HIDE these buttons if we are on Login or Register page --}}
                         @if(!request()->routeIs('login') && !request()->routeIs('register'))
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('login') }}">Login</a>
+                                <a class="nav-link" href="{{ route('login') }}">Log In</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link btn-nav-primary" href="{{ route('register') }}">Create Account</a>
+                                <a class="nav-link btn-nav-primary ms-2" href="{{ route('register') }}">Get Started</a>
                             </li>
                         @endif
                     @else
-                        {{-- HIDE "Book Appointment" if we are already on the appointment page --}}
                         @if(Auth::user()->role === \App\Enums\UserRole::Patient && !request()->routeIs('appointments.index'))
                             <li class="nav-item">
-                                <a class="nav-link fw-bold text-primary" href="{{ route('appointments.index') }}">
-                                    <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+                                <a class="nav-link text-primary fw-bold" href="{{ route('appointments.index') }}">
+                                    Book Appointment
                                 </a>
                             </li>
                         @endif
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                        <li class="nav-item dropdown ms-3">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px; font-size: 1.1rem;">
                                     {{ substr(Auth::user()->first_name, 0, 1) }}
                                 </div>
-                                <span>{{ Auth::user()->first_name }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <ul class="dropdown-menu dropdown-menu-end animate slideIn">
+                                <li class="px-3 py-2 text-muted small text-uppercase fw-bold ls-1">Menu</li>
                                 <li>
                                     <a class="dropdown-item" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
-                                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                                        <i class="bi bi-grid-1x2 me-2"></i> Dashboard
                                     </a>
                                 </li>
                                 @if(Auth::user()->role === \App\Enums\UserRole::Patient)
                                     <li>
                                         <a class="dropdown-item" href="{{ route('profile') }}">
-                                            <i class="bi bi-person me-2"></i> My Profile
+                                            <i class="bi bi-person me-2"></i> Profile
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('my.appointments') }}">
-                                            <i class="bi bi-calendar-check me-2"></i> My Appointments
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('settings') }}">
-                                            <i class="bi bi-gear me-2"></i> Account Settings
+                                            <i class="bi bi-calendar4-week me-2"></i> Appointments
                                         </a>
                                     </li>
                                 @endif
-                                <li><hr class="dropdown-divider"></li>
+                                <li><hr class="dropdown-divider my-2"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
                                         </button>
                                     </form>
                                 </li>
@@ -173,13 +189,16 @@
         </div>
     </nav>
 
-    <main class="{{ Request::is('/') ? '' : 'py-4' }}">
+    <div style="padding-top: 80px;">
         @yield('content')
-    </main>
+    </div>
 
     <footer>
-        <div class="container">
-            &copy; {{ date('Y') }} ClearOptics Eye Clinic. All rights reserved.
+        <div class="container text-center">
+            <div class="mb-3">
+                <i class="bi bi-eye-fill fs-4 text-primary opacity-50"></i>
+            </div>
+            <p>&copy; {{ date('Y') }} ClearOptics Eye Clinic. Excellence in Vision Care.</p>
         </div>
     </footer>
 
