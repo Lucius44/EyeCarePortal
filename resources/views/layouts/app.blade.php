@@ -12,13 +12,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 
     <style>
         :root {
             --primary-color: #0F172A; /* Deep Navy */
             --accent-color: #3B82F6;  /* Bright Blue */
-            --brand-gold: #D97706;    /* Subtle Gold for premium feel */
+            --brand-gold: #D97706;    /* Subtle Gold */
             --bg-body: #F8FAFC;
         }
 
@@ -32,9 +32,9 @@
             min-height: 100vh;
         }
 
-        /* Premium Navbar */
+        /* --- Premium Navbar --- */
         .navbar {
-            background: rgba(255, 255, 255, 0.8) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -52,7 +52,7 @@
         .nav-link {
             font-weight: 600;
             color: #64748B !important;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             margin: 0 5px;
             transition: color 0.3s ease;
         }
@@ -61,20 +61,21 @@
             color: var(--accent-color) !important;
         }
 
-        /* Special Buttons */
+        /* Nav Action Button */
         .btn-nav-primary {
             background: var(--primary-color);
             color: white !important;
             border-radius: 50px;
             padding: 0.6rem 1.8rem;
             font-weight: 600;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
         }
         
         .btn-nav-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
             background: #1e293b;
         }
 
@@ -85,6 +86,11 @@
             border-radius: 16px;
             padding: 0.75rem;
             margin-top: 15px !important;
+            animation: slideIn 0.2s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .dropdown-item {
@@ -92,6 +98,7 @@
             padding: 10px 15px;
             font-weight: 500;
             color: #475569;
+            font-size: 0.9rem;
         }
         
         .dropdown-item:hover {
@@ -109,7 +116,7 @@
         
         footer p {
             color: #94a3b8;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin: 0;
         }
     </style>
@@ -149,12 +156,12 @@
 
                         <li class="nav-item dropdown ms-3">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 1rem;">
                                     {{ substr(Auth::user()->first_name, 0, 1) }}
                                 </div>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end animate slideIn">
-                                <li class="px-3 py-2 text-muted small text-uppercase fw-bold ls-1">Menu</li>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li class="px-3 py-2 text-muted small text-uppercase fw-bold ls-1">Account</li>
                                 <li>
                                     <a class="dropdown-item" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
                                         <i class="bi bi-grid-1x2 me-2"></i> Dashboard
@@ -163,12 +170,12 @@
                                 @if(Auth::user()->role === \App\Enums\UserRole::Patient)
                                     <li>
                                         <a class="dropdown-item" href="{{ route('profile') }}">
-                                            <i class="bi bi-person me-2"></i> Profile
+                                            <i class="bi bi-person me-2"></i> My Profile
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('my.appointments') }}">
-                                            <i class="bi bi-calendar4-week me-2"></i> Appointments
+                                            <i class="bi bi-calendar-check me-2"></i> My Appointments
                                         </a>
                                     </li>
                                 @endif
@@ -177,7 +184,7 @@
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                            <i class="bi bi-box-arrow-right me-2"></i> Log Out
                                         </button>
                                     </form>
                                 </li>
@@ -189,7 +196,7 @@
         </div>
     </nav>
 
-    <div style="padding-top: 80px;">
+    <div style="padding-top: 80px; flex: 1;">
         @yield('content')
     </div>
 

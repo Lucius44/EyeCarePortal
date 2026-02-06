@@ -2,45 +2,108 @@
 
 @section('content')
 <style>
-    :root {
-        /* Light Bluish Gradient for Login */
-        --bg-gradient: linear-gradient(135deg, #e3f2fd 0%, #90caf9 100%);
+    /* Full Height Split Layout */
+    .login-container {
+        min-height: calc(100vh - 80px); /* Subtract navbar height */
+        display: flex;
+    }
+    
+    .login-image-side {
+        background: url('{{ asset("images/contact-bg.jpg") }}') no-repeat center center;
+        background-size: cover;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        padding: 4rem;
+    }
+    
+    .login-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.4));
+    }
+    
+    .login-quote {
+        position: relative;
+        z-index: 2;
+        color: white;
+        max-width: 400px;
     }
 
-    /* Password Toggle Icon Style */
-    .password-toggle {
-        position: absolute;
-        top: 50%;
-        right: 20px;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #6c757d; /* Secondary color */
-        z-index: 10;
-        font-size: 1.2rem;
-        transition: color 0.2s;
+    .login-form-side {
+        background: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 4rem;
+        position: relative;
     }
-    .password-toggle:hover {
-        color: #0d6efd; /* Primary color */
+
+    /* Input Styling */
+    .form-floating > .form-control {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background-color: #f8fafc;
+    }
+    .form-floating > .form-control:focus {
+        background-color: #fff;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-login {
+        background: var(--primary-color);
+        color: white;
+        border-radius: 12px;
+        padding: 1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-login:hover {
+        background: #1e293b;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+        color: white;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 991px) {
+        .login-image-side { display: none; }
+        .login-form-side { padding: 2rem; }
     }
 </style>
 
-<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-5 col-lg-4">
-        <div class="card card-modern p-4">
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-                        <i class="bi bi-person-lock fs-3"></i>
-                    </div>
-                    <h4 class="fw-bold text-primary">Login</h4>
-                    <p class="text-muted small">Access your patient portal securely</p>
+<div class="container-fluid p-0">
+    <div class="row g-0 login-container">
+        <div class="col-lg-6 login-image-side">
+            <div class="login-overlay"></div>
+            <div class="login-quote">
+                <h2 class="fw-bold mb-3 display-6">"Vision is the art of seeing what is invisible to others."</h2>
+                <p class="opacity-75">— Jonathan Swift</p>
+                <div class="mt-4">
+                    <span class="badge bg-white text-dark px-3 py-2 rounded-pill fw-bold">
+                        <i class="bi bi-star-fill text-warning me-1"></i> #1 Rated Clinic
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 login-form-side">
+            <div style="max-width: 400px; margin: 0 auto; width: 100%;">
+                
+                <div class="mb-5">
+                    <h3 class="fw-bold display-6 mb-2" style="color: var(--primary-color);">Welcome Back</h3>
+                    <p class="text-muted">Please enter your details to sign in.</p>
                 </div>
 
                 <form action="{{ route('login.post') }}" method="POST">
                     @csrf 
 
                     @if ($errors->any())
-                        <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small rounded-3">
+                        <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small rounded-3 mb-4">
                             <i class="bi bi-exclamation-circle me-1"></i> Invalid credentials. Please try again.
                         </div>
                     @endif
@@ -53,18 +116,17 @@
                     <div class="form-floating mb-4 position-relative">
                         <input type="password" name="password" class="form-control" id="password" placeholder="Password" required>
                         <label for="password">Password</label>
-                        <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                        <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" 
+                           id="togglePassword" style="cursor: pointer; z-index: 5;"></i>
                     </div>
 
-                    <div class="d-grid gap-2 mb-3">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            Sign In
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-login w-100 mb-4">
+                        Sign In to Portal
+                    </button>
 
                     <div class="text-center">
-                        <span class="text-muted small">Don't have an account?</span> 
-                        <a href="{{ route('register') }}" class="text-decoration-none fw-semibold text-success">Create Account</a>
+                        <span class="text-muted">Don't have an account?</span> 
+                        <a href="{{ route('register') }}" class="fw-bold text-decoration-none" style="color: var(--accent-color);">Create one now</a>
                     </div>
                 </form>
             </div>
@@ -77,15 +139,14 @@
         const togglePassword = document.querySelector('#togglePassword');
         const password = document.querySelector('#password');
 
-        togglePassword.addEventListener('click', function (e) {
-            // Toggle the type attribute
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            
-            // Toggle the eye icon
-            this.classList.toggle('bi-eye');
-            this.classList.toggle('bi-eye-slash');
-        });
+        if(togglePassword && password) {
+            togglePassword.addEventListener('click', function (e) {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        }
     });
 </script>
 @endsection
