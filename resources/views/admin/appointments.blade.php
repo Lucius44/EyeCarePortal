@@ -1,81 +1,111 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 bg-white shadow-sm" style="min-height: 80vh;">
-            <div class="d-flex flex-column p-3">
-                <h5 class="text-primary mb-4">Admin Panel</h5>
-                
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                </a>
-                <a href="{{ route('admin.calendar') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-calendar-week me-2"></i> Calendar
-                </a>
-                <a href="{{ route('admin.appointments') }}" class="btn btn-primary mb-2 text-start">
-                    <i class="bi bi-check-circle me-2"></i> Appointments
-                </a>
-                <a href="{{ route('admin.history') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-clock-history me-2"></i> History
-                </a>
-                <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary mb-2 text-start border-0">
-                    <i class="bi bi-people me-2"></i> Users List
-                </a>
+<style>
+    .admin-wrapper { display: flex; min-height: calc(100vh - 80px); }
+    .admin-sidebar { width: 260px; background: #0F172A; color: #94a3b8; flex-shrink: 0; }
+    .admin-content { flex-grow: 1; background: #F1F5F9; padding: 2rem; }
+    
+    .admin-nav-link {
+        display: flex; align-items: center; padding: 12px 20px;
+        color: #94a3b8; text-decoration: none; font-weight: 500;
+        border-radius: 8px; margin-bottom: 5px; transition: all 0.2s;
+    }
+    .admin-nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
+    .admin-nav-link.active { background: #3B82F6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+    .admin-nav-link i { font-size: 1.1rem; margin-right: 12px; }
+
+    /* Page Specific */
+    .table-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .nav-pills .nav-link { 
+        color: #64748b; font-weight: 600; border-radius: 50px; padding: 0.5rem 1.5rem; 
+    }
+    .nav-pills .nav-link.active { 
+        background: #0F172A; color: white; 
+    }
+</style>
+
+<div class="container-fluid p-0">
+    <div class="admin-wrapper">
+        
+        <div class="admin-sidebar p-3 d-none d-lg-block">
+            <div class="mb-4 px-2 py-3">
+                <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
+            <nav class="nav flex-column gap-1">
+                <a href="{{ route('admin.dashboard') }}" class="admin-nav-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                <a href="{{ route('admin.calendar') }}" class="admin-nav-link"><i class="bi bi-calendar-week"></i> Calendar</a>
+                <a href="{{ route('admin.appointments') }}" class="admin-nav-link active"><i class="bi bi-calendar-check"></i> Appointments</a>
+                <a href="{{ route('admin.history') }}" class="admin-nav-link"><i class="bi bi-clock-history"></i> History</a>
+                <a href="{{ route('admin.users') }}" class="admin-nav-link"><i class="bi bi-people"></i> Users & Patients</a>
+            </nav>
         </div>
 
-        <div class="col-md-10 p-4">
-            <h2 class="mb-4">Manage Appointments</h2>
+        <div class="admin-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark mb-0">Manage Appointments</h2>
+            </div>
 
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success border-0 rounded-4 shadow-sm mb-4">
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                </div>
             @endif
 
-            <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">Pending Requests</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="ongoing-tab" data-bs-toggle="tab" data-bs-target="#ongoing" type="button">Ongoing / Confirmed</button>
-                </li>
-            </ul>
+            <div class="d-flex mb-4">
+                <ul class="nav nav-pills bg-white p-2 rounded-pill shadow-sm" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+                            Pending Requests <span class="badge bg-danger ms-2 rounded-circle">{{ $pending->count() }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="ongoing-tab" data-bs-toggle="tab" data-bs-target="#ongoing" type="button">
+                            Confirmed / Ongoing
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
             <div class="tab-content" id="myTabContent">
                 
-                {{-- Pending Tab --}}
+                {{-- PENDING TAB --}}
                 <div class="tab-pane fade show active" id="pending">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                    <div class="table-card shadow-sm">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
                                     <tr>
-                                        <th>Patient</th>
-                                        <th>Date & Time</th>
-                                        <th>Service</th>
-                                        <th>Notes</th>
-                                        <th>Actions</th>
+                                        <th class="py-3 ps-4 text-secondary small text-uppercase">Patient</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Date & Time</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Service</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Notes</th>
+                                        <th class="py-3 text-end pe-4 text-secondary small text-uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($pending as $appt)
                                     <tr>
-                                        <td>{{ $appt->patient_name }}</td>
+                                        <td class="ps-4 fw-bold text-dark">{{ $appt->patient_name }}</td>
                                         <td>
-                                            {{ $appt->appointment_date->format('M d, Y') }} 
-                                            <br> 
-                                            <small class="text-muted">{{ $appt->appointment_time }}</small>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded p-2 text-center me-3" style="min-width: 50px;">
+                                                    <span class="d-block text-danger fw-bold small text-uppercase">{{ $appt->appointment_date->format('M') }}</span>
+                                                    <span class="d-block fw-bold h5 mb-0">{{ $appt->appointment_date->format('d') }}</span>
+                                                </div>
+                                                <small class="text-muted fw-bold">{{ $appt->appointment_time }}</small>
+                                            </div>
                                         </td>
-                                        <td>{{ $appt->service }}</td>
-                                        <td>{{ Str::limit($appt->description, 30) ?: '-' }}</td>
-                                        <td>
+                                        <td><span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{ $appt->service }}</span></td>
+                                        <td class="small text-muted" style="max-width: 200px;">{{ Str::limit($appt->description, 30) ?: '-' }}</td>
+                                        <td class="text-end pe-4">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="confirmed">
-                                                <button class="btn btn-success btn-sm">Accept</button>
+                                                <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold">Accept</button>
                                             </form>
                                             
-                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal-{{ $appt->id }}">
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold ms-1" data-bs-toggle="modal" data-bs-target="#rejectModal-{{ $appt->id }}">
                                                 Reject
                                             </button>
                                         </td>
@@ -83,21 +113,20 @@
 
                                     {{-- Reject Modal --}}
                                     <div class="modal fade" id="rejectModal-{{ $appt->id }}" tabindex="-1">
-                                        <div class="modal-dialog">
+                                        <div class="modal-dialog modal-dialog-centered">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="status" value="rejected">
-                                                <div class="modal-content">
-                                                    <div class="modal-header bg-danger text-white">
-                                                        <h5 class="modal-title">Reject Appointment</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-danger">Reject Appointment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body">
-                                                        <p>Why are you rejecting this appointment?</p>
+                                                    <div class="modal-body p-4">
+                                                        <p class="text-muted mb-3">Please select a reason for rejecting <strong>{{ $appt->patient_name }}</strong>.</p>
                                                         
                                                         <div class="mb-3">
-                                                            <label class="form-label">Reason</label>
-                                                            <select class="form-select" name="reason_select" onchange="toggleOther(this, '{{ $appt->id }}')" required>
+                                                            <select class="form-select form-select-lg" name="reason_select" onchange="toggleOther(this, '{{ $appt->id }}')" required>
                                                                 <option value="">-- Select Reason --</option>
                                                                 <option value="Doctor Unavailable">Doctor Unavailable</option>
                                                                 <option value="Double Booked">Double Booked</option>
@@ -108,20 +137,19 @@
                                                         </div>
 
                                                         <div class="mb-3 d-none" id="otherReasonDiv-{{ $appt->id }}">
-                                                            <label class="form-label">Specific Reason</label>
-                                                            <textarea name="cancellation_reason" id="textArea-{{ $appt->id }}" class="form-control" rows="3"></textarea>
+                                                            <textarea name="cancellation_reason" id="textArea-{{ $appt->id }}" class="form-control" rows="3" placeholder="Please specify the reason..."></textarea>
                                                         </div>
                                                     </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                        <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Confirm Rejection</button>
                                                     </div>
                                                 </div>
                                             </form>
                                         </div>
                                     </div>
                                     @empty
-                                    <tr><td colspan="5" class="text-center text-muted">No pending requests.</td></tr>
+                                    <tr><td colspan="5" class="text-center py-5 text-muted">No pending requests found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -129,44 +157,43 @@
                     </div>
                 </div>
 
-                {{-- Ongoing Tab --}}
+                {{-- ONGOING TAB --}}
                 <div class="tab-pane fade" id="ongoing">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                    <div class="table-card shadow-sm">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
                                     <tr>
-                                        <th>Patient</th>
-                                        <th>Date & Time</th>
-                                        <th>Service</th>
-                                        <th>Actions</th>
+                                        <th class="py-3 ps-4 text-secondary small text-uppercase">Patient</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Schedule</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Service</th>
+                                        <th class="py-3 text-end pe-4 text-secondary small text-uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($confirmed as $appt)
                                     <tr>
-                                        <td>{{ $appt->patient_name }}</td>
+                                        <td class="ps-4 fw-bold text-dark">{{ $appt->patient_name }}</td>
                                         <td>
-                                            {{ $appt->appointment_date->format('M d, Y') }} 
-                                            <br> 
-                                            <small class="text-muted">{{ $appt->appointment_time }}</small>
+                                            <span class="text-dark fw-bold">{{ $appt->appointment_date->format('M d, Y') }}</span>
+                                            <span class="text-muted small ms-2">{{ $appt->appointment_time }}</span>
                                         </td>
                                         <td>{{ $appt->service }}</td>
-                                        <td>
+                                        <td class="text-end pe-4">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="completed">
-                                                <button class="btn btn-primary btn-sm">Mark Complete</button>
+                                                <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">Mark Complete</button>
                                             </form>
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="no-show">
-                                                <button class="btn btn-warning btn-sm text-white">No-Show</button>
+                                                <button class="btn btn-light text-warning-emphasis btn-sm rounded-pill px-3 fw-bold border">No-Show</button>
                                             </form>
                                         </td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="4" class="text-center text-muted">No upcoming appointments.</td></tr>
+                                    <tr><td colspan="4" class="text-center py-5 text-muted">No upcoming appointments found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>

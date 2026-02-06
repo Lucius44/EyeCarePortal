@@ -34,7 +34,7 @@
 
         /* --- Premium Navbar --- */
         .navbar {
-            background: rgba(255, 255, 255, 0.9) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -106,11 +106,11 @@
             color: var(--accent-color);
         }
 
-        /* Footer */
+        /* Footer - Flattened */
         footer {
             background: white;
             border-top: 1px solid #e2e8f0;
-            padding: 3rem 0;
+            padding: 1.5rem 0;
             margin-top: auto;
         }
         
@@ -118,6 +118,10 @@
             color: #94a3b8;
             font-size: 0.85rem;
             margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
     </style>
 </head>
@@ -154,7 +158,7 @@
                             </li>
                         @endif
 
-                        <li class="nav-item dropdown ms-3">
+                        <li class="nav-item dropdown ms-3 d-none d-lg-block">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
                                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 1rem;">
                                     {{ substr(Auth::user()->first_name, 0, 1) }}
@@ -195,6 +199,37 @@
                                 </li>
                             </ul>
                         </li>
+
+                        <li class="nav-item d-lg-none mt-2 w-100">
+                            <hr class="text-secondary opacity-10">
+                            <div class="px-2 mb-2 text-uppercase text-muted small fw-bold">
+                                Hi, {{ Auth::user()->first_name }}
+                            </div>
+                            
+                            <a class="nav-link py-2 ps-2" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
+                                <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+                            </a>
+                            
+                            @if(Auth::user()->role === \App\Enums\UserRole::Patient)
+                                <a class="nav-link py-2 ps-2" href="{{ route('profile') }}">
+                                    <i class="bi bi-person me-2"></i> My Profile
+                                </a>
+                                <a class="nav-link py-2 ps-2" href="{{ route('my.appointments') }}">
+                                    <i class="bi bi-calendar-check me-2"></i> My Appointments
+                                </a>
+                                <a class="nav-link py-2 ps-2" href="{{ route('settings') }}">
+                                    <i class="bi bi-gear me-2"></i> Settings
+                                </a>
+                            @endif
+                            
+                            <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                                @csrf
+                                <button type="submit" class="nav-link text-danger py-2 ps-2 bg-transparent border-0 w-100 text-start">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Log Out
+                                </button>
+                            </form>
+                        </li>
+
                     @endguest
                 </ul>
             </div>
@@ -207,10 +242,10 @@
 
     <footer>
         <div class="container text-center">
-            <div class="mb-3">
-                <i class="bi bi-eye-fill fs-4 text-primary opacity-50"></i>
-            </div>
-            <p>&copy; {{ date('Y') }} ClearOptics Eye Clinic. Excellence in Vision Care.</p>
+            <p>
+                <i class="bi bi-eye-fill text-primary opacity-50"></i>
+                <span>&copy; {{ date('Y') }} ClearOptics Eye Clinic. Excellence in Vision Care.</span>
+            </p>
         </div>
     </footer>
 
