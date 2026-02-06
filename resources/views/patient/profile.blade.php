@@ -1,96 +1,86 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4">
-    
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-8">
             
-            {{-- Profile Card --}}
-            <div class="card border-0 shadow-lg overflow-hidden rounded-4">
-                {{-- Banner/Cover --}}
-                <div class="bg-primary" style="height: 150px; background: linear-gradient(45deg, #0d6efd, #0dcaf0);"></div>
-                
-                <div class="card-body p-0">
-                    <div class="row g-0">
-                        {{-- Left Column: Avatar & Identity --}}
-                        <div class="col-md-4 text-center border-end bg-light p-4">
-                            <div class="position-relative d-inline-block mt-n5 mb-3">
-                                {{-- Auto-generated Avatar based on Name --}}
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=ffffff&color=0d6efd&size=128&bold=true" 
-                                     class="rounded-circle shadow-lg border border-4 border-white" 
-                                     alt="Profile Avatar" width="128" height="128">
-                                
-                                @if($user->is_verified)
-                                    <span class="position-absolute bottom-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle" title="Verified Patient">
-                                        <span class="visually-hidden">Verified</span>
-                                    </span>
-                                @endif
-                            </div>
-                            
-                            <h4 class="fw-bold mb-1">{{ $user->first_name }} {{ $user->last_name }}</h4>
-                            <p class="text-muted small mb-3">{{ $user->email }}</p>
-                            
-                            <div class="d-flex justify-content-center gap-2 mb-4">
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-2">
-                                    Member since {{ $user->created_at->format('M Y') }}
-                                </span>
-                            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-dark">My Profile</h4>
+                <a href="{{ route('settings') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold text-sm">
+                    <i class="bi bi-gear-fill me-2"></i> Settings
+                </a>
+            </div>
 
-                            {{-- REMOVED: Edit Button --}}
-                            <div class="alert alert-light text-muted small border-0 bg-transparent">
-                                <i class="bi bi-info-circle me-1"></i> Identity details are locked for verification purposes.
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div style="height: 120px; background: linear-gradient(135deg, #0F172A 0%, #334155 100%);"></div>
+                
+                <div class="card-body p-4 p-lg-5 position-relative">
+                    <div class="position-absolute top-0 start-50 translate-middle">
+                        <div class="p-1 bg-white rounded-circle shadow-sm">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=0F172A&color=fff&size=150" 
+                                 class="rounded-circle" width="100" height="100" alt="Profile">
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5 mb-5">
+                        <h3 class="fw-bold mb-1">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</h3>
+                        <p class="text-muted mb-2">{{ $user->email }}</p>
+                        
+                        @if($user->is_verified)
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold">
+                                <i class="bi bi-check-circle-fill me-1"></i> Verified Patient
+                            </span>
+                        @else
+                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis rounded-pill px-3 py-2 fw-bold">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i> Unverified
+                            </span>
+                        @endif
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-4 bg-light rounded-4 h-100">
+                                <h6 class="fw-bold text-uppercase text-secondary small mb-4 ls-1">Personal Info</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="small text-muted d-block mb-1">Date of Birth</label>
+                                    <span class="fw-bold text-dark fs-5">
+                                        {{ \Carbon\Carbon::parse($user->birthday)->format('F d, Y') }}
+                                    </span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="small text-muted d-block mb-1">Gender</label>
+                                    <span class="fw-bold text-dark fs-5">{{ $user->gender }}</span>
+                                </div>
                             </div>
                         </div>
 
-                        {{-- Right Column: Details --}}
-                        <div class="col-md-8 p-5">
-                            <h5 class="fw-bold text-secondary text-uppercase small mb-4">Personal Information</h5>
-                            
-                            <div class="row g-4">
-                                <div class="col-sm-6">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">First Name</label>
-                                    <span class="fs-5 fw-medium text-dark">{{ $user->first_name }}</span>
+                        <div class="col-md-6">
+                            <div class="p-4 bg-light rounded-4 h-100">
+                                <h6 class="fw-bold text-uppercase text-secondary small mb-4 ls-1">Contact Details</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="small text-muted d-block mb-1">Phone Number</label>
+                                    @if($user->phone_number)
+                                        <span class="fw-bold text-dark fs-5">{{ $user->phone_number }}</span>
+                                    @else
+                                        <span class="text-muted fst-italic">Not provided</span>
+                                        <a href="{{ route('settings') }}" class="small ms-2 fw-bold text-decoration-none">Add</a>
+                                    @endif
                                 </div>
-                                <div class="col-sm-6">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Last Name</label>
-                                    <span class="fs-5 fw-medium text-dark">{{ $user->last_name }}</span>
+                                
+                                <div class="mb-3">
+                                    <label class="small text-muted d-block mb-1">Member Since</label>
+                                    <span class="fw-bold text-dark fs-5">{{ $user->created_at->format('M Y') }}</span>
                                 </div>
-                                <div class="col-sm-6">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Middle Name</label>
-                                    <span class="fs-5 fw-medium text-dark">{{ $user->middle_name ?? '-' }}</span>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Gender</label>
-                                    <span class="fs-5 fw-medium text-dark">{{ $user->gender }}</span>
-                                </div>
-                                <div class="col-sm-12">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Date of Birth</label>
-                                    <span class="fs-5 fw-medium text-dark">
-                                        {{ \Carbon\Carbon::parse($user->birthday)->format('F d, Y') }} 
-                                        <small class="text-muted fw-normal">({{ \Carbon\Carbon::parse($user->birthday)->age }} years old)</small>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <hr class="my-4 border-light">
-                            
-                            <h5 class="fw-bold text-secondary text-uppercase small mb-3">Contact Information</h5>
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light p-2 rounded-circle me-3">
-                                    <i class="bi bi-telephone text-primary"></i>
-                                </div>
-                                <div>
-                                    <span class="d-block fw-bold">{{ $user->phone_number ?? 'Not Set' }}</span>
-                                    <small class="text-muted">Primary Mobile</small>
-                                </div>
-                                <a href="{{ route('settings') }}" class="ms-auto btn btn-sm btn-light text-primary fw-bold">Update</a>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </div>
-
         </div>
     </div>
 </div>

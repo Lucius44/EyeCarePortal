@@ -178,6 +178,11 @@
                                             <i class="bi bi-calendar-check me-2"></i> My Appointments
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('settings') }}">
+                                            <i class="bi bi-gear me-2"></i> Settings
+                                        </a>
+                                    </li>
                                 @endif
                                 <li><hr class="dropdown-divider my-2"></li>
                                 <li>

@@ -1,182 +1,129 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">My Appointments</h2>
-    </div>
+<div class="container py-5">
     
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="row mb-4 align-items-end">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-dark mb-1">My Appointments</h2>
+            <p class="text-muted">Track your scheduled visits and history.</p>
         </div>
-    @endif
-    
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <ul class="nav nav-tabs nav-fill" id="apptTab" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active py-3 fw-bold" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">
-                        <i class="bi bi-calendar-event me-2"></i> Upcoming
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link py-3 fw-bold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button">
-                        <i class="bi bi-clock-history me-2"></i> History
-                    </button>
-                </li>
-            </ul>
+        <div class="col-md-6 text-md-end">
+            <a href="{{ route('appointments.index') }}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Book New
+            </a>
+        </div>
+    </div>
 
-            <div class="tab-content p-4" id="apptTabContent">
-                
-                <div class="tab-pane fade show active" id="upcoming">
-                    @if($upcoming->isEmpty())
-                        <div class="text-center py-5">
-                            <div class="mb-3"><i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i></div>
-                            <h5 class="text-muted">No upcoming appointments</h5>
-                            <a href="{{ route('appointments.index') }}" class="btn btn-outline-primary mt-2">Book Now</a>
-                        </div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 25%;">Date & Time</th>
-                                        <th style="width: 20%;">Service</th>
-                                        <th style="width: 15%;">Status</th>
-                                        <th style="width: 25%;">Notes</th>
-                                        <th class="text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($upcoming as $appt)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold">{{ $appt->appointment_date->format('M d, Y') }}</div>
-                                            <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ $appt->appointment_time }}</div>
-                                        </td>
-                                        <td>{{ $appt->service }}</td>
-                                        <td>
-                                            @if($appt->status->value === 'confirmed')
-                                                <span class="badge bg-success rounded-pill px-3">Confirmed</span>
-                                            @else
-                                                <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ Str::limit($appt->description, 30) ?: '-' }}</td>
-                                        <td class="text-end">
-                                            @if($appt->status->value === 'pending')
-                                                {{-- 1. PENDING: Simple Confirm Modal --}}
-                                                <button class="btn btn-sm btn-outline-danger rounded-pill" data-bs-toggle="modal" data-bs-target="#cancelPending-{{ $appt->id }}">
-                                                    <i class="bi bi-x-circle me-1"></i>Cancel
-                                                </button>
-                                            @else
-                                                {{-- 2. CONFIRMED: Reason Modal --}}
-                                                <button class="btn btn-sm btn-outline-danger rounded-pill" data-bs-toggle="modal" data-bs-target="#cancelConfirmed-{{ $appt->id }}">
-                                                    <i class="bi bi-x-circle me-1"></i>Cancel
-                                                </button>
-                                            @endif
-                                        </td>
-                                    </tr>
+    <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill fw-bold px-4 me-2" id="pills-upcoming-tab" data-bs-toggle="pill" data-bs-target="#pills-upcoming" type="button" role="tab">
+                Upcoming <span class="badge bg-white text-primary ms-1 shadow-sm">{{ $upcoming->count() }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill fw-bold px-4" id="pills-history-tab" data-bs-toggle="pill" data-bs-target="#pills-history" type="button" role="tab">
+                Past History
+            </button>
+        </li>
+    </ul>
 
-                                    {{-- MODALS --}}
+    <div class="tab-content" id="pills-tabContent">
+        
+        <div class="tab-pane fade show active" id="pills-upcoming" role="tabpanel">
+            @if($upcoming->isEmpty())
+                <div class="text-center py-5 bg-light rounded-4">
+                    <div class="text-muted opacity-50 mb-3"><i class="bi bi-calendar-x" style="font-size: 3rem;"></i></div>
+                    <h5 class="fw-bold">No upcoming appointments</h5>
+                    <p class="text-muted">You have no scheduled visits at the moment.</p>
+                </div>
+            @else
+                <div class="row g-4">
+                    @foreach($upcoming as $app)
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        @if($app->status->value === 'confirmed')
+                                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">Confirmed</span>
+                                        @else
+                                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis rounded-pill px-3 py-2">Pending</span>
+                                        @endif
+                                        <small class="text-muted fw-bold">#{{ str_pad($app->id, 5, '0', STR_PAD_LEFT) }}</small>
+                                    </div>
                                     
-                                    <div class="modal fade" id="cancelPending-{{ $appt->id }}" tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content rounded-4 border-0">
-                                                <div class="modal-body p-4 text-center">
-                                                    <h5 class="fw-bold mb-3">Cancel Request?</h5>
-                                                    <p class="text-muted mb-4">Are you sure you want to remove this appointment request? It hasn't been confirmed yet.</p>
-                                                    <div class="d-flex justify-content-center gap-2">
-                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Keep It</button>
-                                                        <form action="{{ route('appointments.cancel', $appt->id) }}" method="POST">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-danger rounded-pill px-4">Yes, Cancel</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <h5 class="fw-bold mb-1">{{ $app->service }}</h5>
+                                    <div class="d-flex align-items-center text-muted mb-4">
+                                        <i class="bi bi-clock me-2"></i> {{ $app->appointment_date->format('F d, Y') }} at {{ $app->appointment_time }}
                                     </div>
 
-                                    <div class="modal fade" id="cancelConfirmed-{{ $appt->id }}" tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <form action="{{ route('appointments.cancel', $appt->id) }}" method="POST">
-                                                @csrf
-                                                <div class="modal-content rounded-4 border-0">
-                                                    <div class="modal-header bg-danger text-white">
-                                                        <h5 class="modal-title">Cancel Appointment</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4">
-                                                        <p class="text-muted">Since this appointment is confirmed, please let us know why you are cancelling.</p>
-                                                        
-                                                        <div class="mb-3">
-                                                            <label class="fw-bold small text-uppercase">Reason</label>
-                                                            <textarea name="cancellation_reason" class="form-control" rows="3" required placeholder="e.g. I found another doctor, I got sick..."></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer border-0">
-                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                                                        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <form action="{{ route('appointments.cancel', $app->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link text-danger text-decoration-none fw-bold p-0 small">
+                                                Cancel Request
+                                            </button>
+                                        </form>
+                                        
+                                        {{-- Only allow modify if not confirmed? Or just link to calendar --}}
+                                        <a href="{{ route('appointments.index') }}" class="btn btn-light rounded-pill btn-sm fw-bold">
+                                            View in Calendar
+                                        </a>
                                     </div>
-
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                </div>
+                                <div class="card-footer bg-light border-0 py-3">
+                                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Please arrive 10 mins early.</small>
+                                </div>
+                            </div>
                         </div>
-                    @endif
+                    @endforeach
                 </div>
+            @endif
+        </div>
 
-                <div class="tab-pane fade" id="history">
-                    @if($history->isEmpty())
-                        {{-- ADDED: Empty State for History --}}
-                        <div class="text-center py-5">
-                            <div class="mb-3"><i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i></div>
-                            <h5 class="text-muted">No appointment history available</h5>
-                            <p class="text-muted small">Completed and cancelled appointments will appear here.</p>
-                        </div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Service</th>
-                                        <th>Status</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($history as $appt)
-                                    <tr>
-                                        <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
-                                        <td>{{ $appt->service }}</td>
-                                        <td>
-                                            @if($appt->status->value === 'completed') 
-                                                <span class="badge bg-primary rounded-pill px-3">Completed</span>
-                                            @elseif($appt->status->value === 'cancelled') 
-                                                <span class="badge bg-secondary rounded-pill px-3">Cancelled</span>
-                                            @elseif($appt->status->value === 'rejected') 
-                                                <span class="badge bg-danger rounded-pill px-3">Rejected</span>
-                                            @elseif($appt->status->value === 'no-show') 
-                                                <span class="badge bg-warning text-dark rounded-pill px-3">No-Show</span>
-                                            @endif
-                                        </td>
-                                        <td class="small text-muted">{{ $appt->cancellation_reason ?? '-' }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
+        <div class="tab-pane fade" id="pills-history" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="py-3 ps-4 text-secondary small text-uppercase">Date</th>
+                                <th class="py-3 text-secondary small text-uppercase">Service</th>
+                                <th class="py-3 text-secondary small text-uppercase">Status</th>
+                                <th class="py-3 text-secondary small text-uppercase text-end pe-4">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($history as $app)
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">
+                                        {{ $app->appointment_date->format('M d, Y') }}
+                                        <div class="small text-muted fw-normal">{{ $app->appointment_time }}</div>
+                                    </td>
+                                    <td>{{ $app->service }}</td>
+                                    <td>
+                                        @if($app->status->value == 'completed')
+                                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">Completed</span>
+                                        @elseif($app->status->value == 'cancelled')
+                                            <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Cancelled</span>
+                                        @else
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">{{ ucfirst($app->status->value) }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end pe-4 text-muted small">
+                                        {{ $app->cancellation_reason ?? '-' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        No past appointments found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-
             </div>
         </div>
     </div>
