@@ -58,9 +58,9 @@
             </nav>
             
             <div class="mt-auto px-2 pt-5">
-                <div class="p-3 rounded-3 bg-white bg-opacity-5 border border-white border-opacity-10">
-                    <small class="text-white fw-bold d-block mb-1">Support Line</small>
-                    <small class="text-muted" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+                <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                    <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+                    <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
                 </div>
             </div>
         </div>

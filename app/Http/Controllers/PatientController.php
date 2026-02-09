@@ -36,9 +36,6 @@ class PatientController extends Controller
         return view('patient.profile', compact('user'));
     }
 
-    // REMOVED: updateProfile method. 
-    // Identity details (Name, DOB, Gender) are now immutable to preserve verification integrity.
-
     // 4. Show Settings Page
     public function settings()
     {
@@ -90,8 +87,11 @@ class PatientController extends Controller
     // 7. Update Phone Number
     public function updatePhone(Request $request)
     {
+        // CHANGED: Added Regex for PH Phone Number (09xxxxxxxxx)
         $request->validate([
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
+        ], [
+            'phone_number.regex' => 'Please enter a valid Philippine mobile number (e.g., 09123456789).'
         ]);
 
         /** @var \App\Models\User $user */

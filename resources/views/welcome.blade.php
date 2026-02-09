@@ -340,7 +340,7 @@
     </div>
 </section>
 
-<section class="section-padding bg-light">
+<section id="about" class="section-padding bg-light">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-5 mb-5 mb-lg-0">
@@ -430,7 +430,7 @@
     </div>
 </section>
 
-<section class="container pb-5">
+<section id="contact" class="container pb-5">
     <div class="contact-wrapper">
         <div class="row g-0">
             <div class="col-lg-5 order-2 order-lg-1">
@@ -453,7 +453,7 @@
                         <div class="me-4 text-warning fs-4"><i class="bi bi-telephone-fill"></i></div>
                         <div>
                             <h5 class="fw-bold mb-1">+63 945 826 4969</h5>
-                            <p class="text-white-50 mb-0">Mon - Sat, 9:00 AM - 6:00 PM</p>
+                            <p class="text-white-50 mb-0">Mon - Sun, 9:00 AM - 6:00 PM</p>
                         </div>
                     </div>
 

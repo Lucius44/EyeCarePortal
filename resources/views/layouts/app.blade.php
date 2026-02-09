@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scroll-behavior: smooth;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -106,11 +106,12 @@
             color: var(--accent-color);
         }
 
-        /* Footer - Flattened */
+        /* Footer - Flattened & Slimmer */
         footer {
             background: white;
             border-top: 1px solid #e2e8f0;
-            padding: 1.5rem 0;
+            /* CHANGED: Reduced padding for a slimmer look */
+            padding: 1rem 0; 
             margin-top: auto;
         }
         
@@ -140,6 +141,14 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    
+                    @if(request()->routeIs('home'))
+                        <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                        <li class="nav-item"><span class="text-muted mx-2 opacity-25">|</span></li>
+                    @endif
+
                     @guest
                         @if(!request()->routeIs('login') && !request()->routeIs('register'))
                             <li class="nav-item">
@@ -243,7 +252,6 @@
     <footer>
         <div class="container text-center">
             <p>
-                <i class="bi bi-eye-fill text-primary opacity-50"></i>
                 <span>&copy; {{ date('Y') }} ClearOptics Eye Clinic. Excellence in Vision Care.</span>
             </p>
         </div>

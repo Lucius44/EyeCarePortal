@@ -52,8 +52,10 @@
                         </div>
                         @if(Auth::user()->id_photo_path)
                             <div class="mt-3">
-                                <small class="text-muted d-block mb-2">Current ID on file:</small>
-                                <img src="{{ asset('storage/' . Auth::user()->id_photo_path) }}" class="img-fluid rounded-3 border" style="max-height: 150px; object-fit: contain;">
+                                <small class="text-muted d-block mb-2">Current ID on file (Click to view):</small>
+                                <a href="{{ asset('storage/' . Auth::user()->id_photo_path) }}" target="_blank" title="View Full Size">
+                                    <img src="{{ asset('storage/' . Auth::user()->id_photo_path) }}" class="img-fluid rounded-3 border shadow-sm cursor-pointer" style="max-height: 150px; object-fit: contain; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                                </a>
                             </div>
                         @endif
                     @else
@@ -91,12 +93,21 @@
                 <div class="card-body p-4">
                     <form action="{{ route('settings.phone') }}" method="POST">
                         @csrf
-                        <div class="input-group mb-3">
-                            <input type="text" name="phone_number" class="form-control" placeholder="09123456789" value="{{ Auth::user()->phone_number }}">
-                            <button class="btn btn-outline-primary" type="submit">Update</button>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Mobile Number (PH Format)</label>
+                            <div class="input-group">
+                                <input type="text" name="phone_number" class="form-control" 
+                                       placeholder="09123456789" 
+                                       value="{{ Auth::user()->phone_number }}"
+                                       pattern="^09[0-9]{9}$" 
+                                       maxlength="11"
+                                       title="Please enter a valid 11-digit Philippine mobile number starting with 09."
+                                       required>
+                                <button class="btn btn-outline-primary" type="submit">Update</button>
+                            </div>
                         </div>
                         <div class="form-text text-muted small">
-                            Used for appointment notifications.
+                            Format: 09xxxxxxxxx
                         </div>
                     </form>
                 </div>

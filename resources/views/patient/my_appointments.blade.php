@@ -58,14 +58,14 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <form action="{{ route('appointments.cancel', $app->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel?');">
-                                            @csrf
-                                            <button type="submit" class="btn btn-link text-danger text-decoration-none fw-bold p-0 small">
-                                                Cancel Request
-                                            </button>
-                                        </form>
+                                        <button type="button" 
+                                                class="btn btn-link text-danger text-decoration-none fw-bold p-0 small btn-cancel-hover"
+                                                data-action="{{ route('appointments.cancel', $app->id) }}"
+                                                data-status="{{ $app->status->value }}"
+                                                onclick="openCancelModal(this)">
+                                            Cancel Request
+                                        </button>
                                         
-                                        {{-- Only allow modify if not confirmed? Or just link to calendar --}}
                                         <a href="{{ route('appointments.index') }}" class="btn btn-light rounded-pill btn-sm fw-bold">
                                             View in Calendar
                                         </a>
@@ -128,4 +128,65 @@
         </div>
     </div>
 </div>
+
+<style>
+    .btn-cancel-hover { transition: all 0.2s ease; }
+    .btn-cancel-hover:hover { text-decoration: underline !important; transform: translateX(2px); }
+</style>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form id="cancelForm" method="POST" action="">
+                @csrf
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">Cancel Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="simpleCancelMsg" class="d-none">
+                        <p class="text-muted">Are you sure you want to cancel this pending request? This action cannot be undone.</p>
+                    </div>
+                    
+                    <div id="reasonCancelMsg" class="d-none">
+                        <p class="text-muted mb-3">Since your appointment is already <strong>Confirmed</strong>, please provide a reason for cancellation.</p>
+                        <textarea name="cancellation_reason" class="form-control" rows="3" placeholder="e.g. Family emergency, feeling unwell..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Keep It</button>
+                    <button type="submit" class="btn btn-danger rounded-pill fw-bold px-4">Yes, Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // FIX: Function now accepts the button element ('this')
+    function openCancelModal(button) {
+        // Retrieve data from attributes
+        const actionUrl = button.getAttribute('data-action');
+        const status = button.getAttribute('data-status');
+
+        const form = document.getElementById('cancelForm');
+        const simpleMsg = document.getElementById('simpleCancelMsg');
+        const reasonMsg = document.getElementById('reasonCancelMsg');
+        const textArea = reasonMsg.querySelector('textarea');
+        
+        form.action = actionUrl;
+        
+        if(status === 'confirmed') {
+            simpleMsg.classList.add('d-none');
+            reasonMsg.classList.remove('d-none');
+            textArea.required = true;
+        } else {
+            simpleMsg.classList.remove('d-none');
+            reasonMsg.classList.add('d-none');
+            textArea.required = false;
+        }
+        
+        new bootstrap.Modal(document.getElementById('cancelModal')).show();
+    }
+</script>
 @endsection
