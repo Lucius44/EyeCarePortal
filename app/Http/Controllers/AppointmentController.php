@@ -6,79 +6,40 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\DaySetting;
 use App\Enums\AppointmentStatus;
+use App\Services\AppointmentService; // Import the new Service
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
+    protected $appointmentService;
+
+    // Inject the Service
+    public function __construct(AppointmentService $appointmentService)
+    {
+        $this->appointmentService = $appointmentService;
+    }
+
     public function index()
     {
         $userId = Auth::id();
 
+        // Active Appointment Check
         $activeAppointment = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
 
-        // Fetch taken slots for future checking
-        $appointments = Appointment::where('appointment_date', '>=', Carbon::today())
-            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
-            ->get();
-
-        $dailyCounts = [];
-        $takenSlots = [];
-
-        foreach ($appointments as $app) {
-            $date = $app->appointment_date->format('Y-m-d');
-            
-            if (!isset($dailyCounts[$date])) {
-                $dailyCounts[$date] = 0;
-            }
-            $dailyCounts[$date]++;
-
-            if (!isset($takenSlots[$date])) {
-                $takenSlots[$date] = [];
-            }
-            $takenSlots[$date][] = $app->appointment_time;
-        }
-
-        // Fetch Settings
-        $daySettings = DaySetting::where('date', '>=', Carbon::today())->get()->keyBy(function($item) {
-            return $item->date->format('Y-m-d');
-        });
-
-        // --- NEW: Pre-calculate Status for the Calendar (Patient Side UX) ---
-        $calendarStatus = [];
-        // We look ahead 60 days or just use the data we have. 
-        // Let's iterate through the dailyCounts keys and DaySettings keys to build a map.
-        
-        $allDates = array_unique(array_merge(array_keys($dailyCounts), $daySettings->keys()->toArray()));
-
-        foreach ($allDates as $date) {
-            $setting = $daySettings[$date] ?? null;
-            $count = $dailyCounts[$date] ?? 0;
-            
-            $limit = $setting ? $setting->max_appointments : 5; // Default 5
-            $isClosed = $setting ? $setting->is_closed : false;
-
-            if ($isClosed) {
-                $calendarStatus[$date] = 'closed';
-            } elseif ($count >= $limit) {
-                $calendarStatus[$date] = 'full';
-            } else {
-                $calendarStatus[$date] = 'open';
-            }
-        }
+        // Delegate heavy lifting to Service
+        $calendarData = $this->appointmentService->getCalendarData();
 
         $services = Appointment::getServices();
         
-        return view('patient.appointments', compact(
-            'services', 
-            'activeAppointment', 
-            'dailyCounts', 
-            'takenSlots',
-            'daySettings',
-            'calendarStatus' // <--- Passing the calculated status
+        return view('patient.appointments', array_merge(
+            [
+                'services' => $services, 
+                'activeAppointment' => $activeAppointment
+            ],
+            $calendarData
         ));
     }
 
