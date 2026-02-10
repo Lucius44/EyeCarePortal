@@ -2,10 +2,29 @@
 
 @section('content')
 <style>
-    /* --- ADMIN LAYOUT STYLES (Matches Dashboard) --- */
-    .admin-wrapper { display: flex; min-height: calc(100vh - 80px); }
-    .admin-sidebar { width: 260px; background: #0F172A; color: #94a3b8; flex-shrink: 0; transition: all 0.3s; }
-    .admin-content { flex-grow: 1; background: #F1F5F9; padding: 2rem; }
+    /* --- ADMIN LAYOUT STYLES --- */
+    .admin-wrapper { display: flex; min-height: calc(100vh - 80px); overflow-x: hidden; }
+    
+    .admin-sidebar { 
+        width: 260px; 
+        background: #0F172A; 
+        color: #94a3b8; 
+        flex-shrink: 0; 
+        transition: all 0.3s;
+        display: none; 
+    }
+
+    .admin-content { 
+        flex-grow: 1; 
+        background: #F1F5F9; 
+        padding: 1.5rem; 
+        min-width: 0; 
+    }
+
+    @media (min-width: 992px) {
+        .admin-sidebar { display: block; }
+        .admin-content { padding: 2rem; }
+    }
     
     .admin-nav-link {
         display: flex; align-items: center; padding: 12px 20px;
@@ -50,12 +69,8 @@
     .day-num { font-size: 1.25rem; font-weight: 800; line-height: 1; margin-top: 2px; }
 
     /* --- MODAL STYLES --- */
-    .control-section {
-        display: none; opacity: 0; transition: opacity 0.3s ease;
-    }
-    .control-section.active {
-        display: block; opacity: 1;
-    }
+    .control-section { display: none; opacity: 0; transition: opacity 0.3s ease; }
+    .control-section.active { display: block; opacity: 1; }
 
     .selection-btn {
         border: 2px solid #e9ecef; border-radius: 12px; padding: 15px;
@@ -67,44 +82,44 @@
         color: var(--accent-color); font-weight: bold;
     }
     .selection-btn i { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; }
+    
+    .transition-btn { transition: all 0.2s ease; }
+    .transition-btn:hover { transform: translateY(-2px); }
 </style>
 
 <div class="container-fluid p-0">
     <div class="admin-wrapper">
         
-        {{-- 1. UNIFIED ADMIN SIDEBAR --}}
+        {{-- SIDEBAR --}}
         <div class="admin-sidebar p-3 d-none d-lg-block">
             <div class="mb-4 px-2 py-3">
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
-            <nav class="nav flex-column gap-1">
-                <a href="{{ route('admin.dashboard') }}" class="admin-nav-link">
-                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                </a>
-                <a href="{{ route('admin.calendar') }}" class="admin-nav-link active">
-                    <i class="bi bi-calendar-week"></i> Calendar
-                </a>
-                <a href="{{ route('admin.appointments') }}" class="admin-nav-link">
-                    <i class="bi bi-calendar-check"></i> Appointments
-                </a>
-                <a href="{{ route('admin.history') }}" class="admin-nav-link">
-                    <i class="bi bi-clock-history"></i> History
-                </a>
-                <a href="{{ route('admin.users') }}" class="admin-nav-link">
-                    <i class="bi bi-people"></i> Users & Patients
-                </a>
-            </nav>
+            @include('admin.partials.nav_links')
         </div>
 
-        {{-- 2. MAIN CONTENT AREA --}}
+        {{-- MAIN CONTENT --}}
         <div class="admin-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold text-dark mb-1">Master Schedule</h2>
-                    <p class="text-secondary mb-0">Manage clinic availability and bookings.</p>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
+                        <i class="bi bi-list fs-5 text-primary"></i>
+                    </button>
+
+                    <div>
+                        <h2 class="fw-bold text-dark mb-1">Master Schedule</h2>
+                        <p class="text-secondary mb-0 small">Manage clinic availability and bookings.</p>
+                    </div>
                 </div>
-                <div class="d-lg-none">
-                    {{-- Mobile Toggle for Sidebar could go here if needed, keeping it simple for now --}}
+
+                <div class="d-none d-md-flex gap-2">
+                    <button id="btnMonthView" class="btn btn-primary px-3 fw-bold rounded-pill shadow-sm transition-btn">
+                        <i class="bi bi-calendar-month me-2"></i>Month
+                    </button>
+                    <button id="btnDayView" class="btn btn-outline-secondary px-3 fw-bold rounded-pill transition-btn">
+                        <i class="bi bi-calendar-day me-2"></i>Day
+                    </button>
                 </div>
             </div>
 
@@ -126,7 +141,7 @@
                 </div>
             @endif
 
-            {{-- 3. MOBILE VIEW: DATE STRIP --}}
+            {{-- MOBILE VIEW: DATE STRIP --}}
             <div class="d-md-none mb-4">
                 <h6 class="text-uppercase text-muted small fw-bold mb-2">Select Date to Manage</h6>
                 <div class="date-strip-wrapper">
@@ -140,7 +155,7 @@
                 </div>
             </div>
 
-            {{-- 4. DESKTOP VIEW: FULLCALENDAR --}}
+            {{-- DESKTOP VIEW: FULLCALENDAR --}}
             <div class="d-none d-md-block card shadow-sm border-0 rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div id="adminCalendar" 
@@ -153,7 +168,7 @@
     </div>
 </div>
 
-{{-- 5. MASTER CONTROL MODAL (Preserved Functionality, Updated Design) --}}
+{{-- MASTER CONTROL MODAL --}}
 <div class="modal fade" id="masterModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -167,7 +182,6 @@
             </div>
 
             <div class="modal-body p-4">
-                {{-- Navigation Tabs --}}
                 <div class="row g-3 mb-4">
                     <div class="col-4">
                         <div class="selection-btn text-center" onclick="toggleSection('book')" id="btn-book">
@@ -280,27 +294,45 @@
     </div>
 </div>
 
-{{-- 6. LOGIC SCRIPT --}}
+{{-- MOBILE MENU --}}
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileAdminMenu" style="background: #0F172A; width: 280px;">
+    <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
+        <h5 class="offcanvas-title text-white fw-bold">Admin Console</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        @include('admin.partials.nav_links')
+        
+        <div class="mt-5 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+            <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+            <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+        </div>
+    </div>
+</div>
+
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- DATA SETUP ---
         var calendarEl = document.getElementById('adminCalendar');
         var eventsData = JSON.parse(calendarEl.getAttribute('data-events'));
         var daySettings = JSON.parse(calendarEl.getAttribute('data-settings'));
         var today = new Date(); 
         today.setHours(0,0,0,0);
 
-        // --- 1. FULLCALENDAR (DESKTOP) ---
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
-            themeSystem: 'standard', // Clean theme
+            themeSystem: 'standard',
             headerToolbar: { left: 'title', right: 'today prev,next' },
             height: 'auto',
             events: eventsData,
-            allDaySlot: false,
             
-            // Highlight closed/past days
+            // --- TIME GRID SETTINGS (FIXED FOR 9AM - 6PM) ---
+            allDaySlot: false,
+            slotMinTime: '09:00:00',
+            slotMaxTime: '18:00:00', // Shows up to 17:00-18:00 slot
+            slotDuration: '01:00:00', // 1 Hour Row
+            expandRows: true, // Fill height logic
+
             dayCellClassNames: function(arg) {
                 var d = new Date(arg.date); d.setHours(0,0,0,0);
                 if (d < today) return ['past-date'];
@@ -310,72 +342,82 @@
                 return [];
             },
 
-            // Click Handlers
             dateClick: function(info) {
-                var d = new Date(info.dateStr); d.setHours(0,0,0,0);
-                if (d < today) return; // Ignore past
-                openMasterModal(info.dateStr);
+                var d = new Date(info.dateStr); 
+                d.setHours(0,0,0,0);
+                if (d < today) return;
+                
+                // IMPORTANT: Extract just the date part for lookups to fix Day View bug
+                var safeDateStr = info.dateStr.split('T')[0];
+                openMasterModal(safeDateStr);
             },
             eventClick: function(info) {
-                // Open modal on the event's start date
                 var iso = info.event.startStr.split('T')[0];
                 openMasterModal(iso, 'view');
             }
         });
         calendar.render();
 
-        // --- 2. MOBILE DATE STRIP ---
+        var btnMonth = document.getElementById('btnMonthView');
+        var btnDay = document.getElementById('btnDayView');
+
+        if(btnMonth && btnDay) {
+            btnMonth.addEventListener('click', function() {
+                calendar.changeView('dayGridMonth');
+                btnMonth.classList.remove('btn-outline-secondary');
+                btnMonth.classList.add('btn-primary', 'shadow-sm');
+                btnDay.classList.remove('btn-primary', 'shadow-sm');
+                btnDay.classList.add('btn-outline-secondary');
+            });
+
+            btnDay.addEventListener('click', function() {
+                calendar.changeView('timeGridDay');
+                btnDay.classList.remove('btn-outline-secondary');
+                btnDay.classList.add('btn-primary', 'shadow-sm');
+                btnMonth.classList.remove('btn-primary', 'shadow-sm');
+                btnMonth.classList.add('btn-outline-secondary');
+            });
+        }
+
+        // --- MOBILE STRIP ---
         function initMobileStrip() {
             var container = document.getElementById('mobileDateStrip');
-            if(!container) return; // Safety check
-
-            // Render next 30 days
+            if(!container) return; 
             for(let i=0; i<30; i++) {
                 let d = new Date();
                 d.setDate(today.getDate() + i);
                 let iso = formatDate(d);
-                
                 let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
                 let dayNum = d.getDate();
-                
                 let settings = daySettings[iso];
                 let isClosed = settings ? settings.is_closed : false;
                 
                 let card = document.createElement('div');
                 card.className = 'date-card ' + (isClosed ? 'closed-day' : '');
-                card.innerHTML = `
-                    <div class="day-name">${dayName}</div>
-                    <div class="day-num">${dayNum}</div>
-                    ${isClosed ? '<small class="fw-bold mt-1" style="font-size:0.6rem">CLOSED</small>' : ''}
-                `;
-                
-                card.onclick = function() {
-                    openMasterModal(iso);
-                };
-                
+                card.innerHTML = `<div class="day-name">${dayName}</div><div class="day-num">${dayNum}</div>${isClosed ? '<small class="fw-bold mt-1" style="font-size:0.6rem">CLOSED</small>' : ''}`;
+                card.onclick = function() { openMasterModal(iso); };
                 container.appendChild(card);
             }
         }
         initMobileStrip();
 
-        // --- 3. MASTER MODAL LOGIC ---
+        // --- MODAL LOGIC ---
         var masterModal = null;
         
         function openMasterModal(dateStr, defaultTab = 'book') {
-            // Lazy load modal instance
             if (!masterModal) masterModal = new bootstrap.Modal(document.getElementById('masterModal'));
             
-            // Set Header Info
-            var dateObj = new Date(dateStr + 'T00:00:00'); // Safe parse
-            document.getElementById('masterDateDisplay').textContent = dateObj.toLocaleDateString('en-US', { 
+            // Fix "Invalid Date" by forcing standard string format
+            var parts = dateStr.split('-');
+            var displayDate = new Date(parts[0], parts[1]-1, parts[2]);
+
+            document.getElementById('masterDateDisplay').textContent = displayDate.toLocaleDateString('en-US', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
             });
 
-            // Set Form Inputs
             document.getElementById('bookDateInput').value = dateStr;
             document.getElementById('settingDateInput').value = dateStr;
 
-            // Load Settings (Closed/Max)
             var settings = daySettings[dateStr];
             var isClosed = settings ? settings.is_closed : false;
             var maxLimit = settings ? settings.max_appointments : 5;
@@ -383,7 +425,6 @@
             document.getElementById('isClosedCheck').checked = isClosed;
             document.getElementById('maxApptInput').value = maxLimit;
             
-            // Badge Update
             var badge = document.getElementById('masterDateStatus');
             if(isClosed) {
                 badge.className = 'badge bg-danger text-white mt-2';
@@ -393,63 +434,40 @@
                 badge.textContent = 'Open for Booking';
             }
 
-            // Load Appointments List & Filter Book Form
             var dayEvents = eventsData.filter(e => e.start.startsWith(dateStr));
             var listContainer = document.getElementById('appointmentsList');
             var noMsg = document.getElementById('noAppointmentsMsg');
             var bookSelect = document.getElementById('bookTimeSelect');
             
             listContainer.innerHTML = '';
-            
-            // Reset Book Select
-            for(let opt of bookSelect.options) {
-                opt.disabled = false;
-                if(opt.text.includes('(Booked)')) opt.text = opt.value; // Reset text
-            }
+            for(let opt of bookSelect.options) { opt.disabled = false; if(opt.text.includes('(Booked)')) opt.text = opt.value; }
 
             if(dayEvents.length === 0) {
                 noMsg.classList.remove('d-none');
             } else {
                 noMsg.classList.add('d-none');
                 dayEvents.forEach(evt => {
-                    // Add to List
                     let time = new Date(evt.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     let status = (evt.extendedProps.status?.value || evt.extendedProps.status || 'unknown');
                     let badgeColor = status === 'confirmed' ? 'bg-success' : (status === 'pending' ? 'bg-warning' : 'bg-secondary');
                     
                     let div = document.createElement('div');
                     div.className = 'p-3 bg-white rounded-3 shadow-sm border mb-1 d-flex justify-content-between align-items-center';
-                    div.innerHTML = `
-                        <div>
-                            <div class="fw-bold">${evt.title}</div>
-                            <div class="small text-muted"><i class="bi bi-clock me-1"></i>${time}</div>
-                        </div>
-                        <span class="badge ${badgeColor} rounded-pill text-uppercase" style="font-size:0.7rem">${status}</span>
-                    `;
+                    div.innerHTML = `<div><div class="fw-bold">${evt.title}</div><div class="small text-muted"><i class="bi bi-clock me-1"></i>${time}</div></div><span class="badge ${badgeColor} rounded-pill text-uppercase" style="font-size:0.7rem">${status}</span>`;
                     listContainer.appendChild(div);
 
-                    // Disable in Book Form
-                    // Simple string match for time (e.g., "09:00 AM")
                     for(let opt of bookSelect.options) {
-                        if(opt.value === time) { // time format must match value
-                             opt.disabled = true;
-                             opt.text = opt.value + ' (Booked)';
-                        }
+                        if(opt.value === time) { opt.disabled = true; opt.text = opt.value + ' (Booked)'; }
                     }
                 });
             }
-
             toggleSection(defaultTab);
             masterModal.show();
         }
 
-        // Expose toggle function globally
         window.toggleSection = function(sec) {
-            // Hide all
             document.querySelectorAll('.control-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.selection-btn').forEach(el => el.classList.remove('active-btn'));
-            
-            // Show target
             document.getElementById('section-'+sec).classList.add('active');
             document.getElementById('btn-'+sec).classList.add('active-btn');
         };

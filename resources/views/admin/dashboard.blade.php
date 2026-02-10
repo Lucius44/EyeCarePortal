@@ -3,11 +3,33 @@
 @section('content')
 <style>
     /* Admin Specific Overrides */
-    .admin-wrapper { display: flex; min-height: calc(100vh - 80px); }
-    .admin-sidebar { width: 260px; background: #0F172A; color: #94a3b8; flex-shrink: 0; transition: all 0.3s; }
-    .admin-content { flex-grow: 1; background: #F1F5F9; padding: 2rem; }
+    .admin-wrapper { display: flex; min-height: calc(100vh - 80px); overflow-x: hidden; }
     
-    /* Sidebar Links */
+    /* Sidebar (Desktop) */
+    .admin-sidebar { 
+        width: 260px; 
+        background: #0F172A; 
+        color: #94a3b8; 
+        flex-shrink: 0; 
+        transition: all 0.3s;
+        display: none; /* Default hidden on mobile */
+    }
+    
+    /* Content Area */
+    .admin-content { 
+        flex-grow: 1; 
+        background: #F1F5F9; 
+        padding: 1.5rem; 
+        min-width: 0; /* CRITICAL FIX: Prevents flex children from overflowing screen */
+    }
+
+    /* Desktop View Media Query */
+    @media (min-width: 992px) {
+        .admin-sidebar { display: block; } /* Show on large screens */
+        .admin-content { padding: 2rem; }
+    }
+    
+    /* Sidebar Links Styling */
     .admin-nav-link {
         display: flex; align-items: center; padding: 12px 20px;
         color: #94a3b8; text-decoration: none; font-weight: 500;
@@ -35,51 +57,41 @@
 <div class="container-fluid p-0">
     <div class="admin-wrapper">
         
+        {{-- DESKTOP SIDEBAR --}}
         <div class="admin-sidebar p-3 d-none d-lg-block">
             <div class="mb-4 px-2 py-3">
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
-            <nav class="nav flex-column gap-1">
-                <a href="{{ route('admin.dashboard') }}" class="admin-nav-link active">
-                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                </a>
-                <a href="{{ route('admin.calendar') }}" class="admin-nav-link">
-                    <i class="bi bi-calendar-week"></i> Calendar
-                </a>
-                <a href="{{ route('admin.appointments') }}" class="admin-nav-link">
-                    <i class="bi bi-calendar-check"></i> Appointments
-                </a>
-                <a href="{{ route('admin.history') }}" class="admin-nav-link">
-                    <i class="bi bi-clock-history"></i> History
-                </a>
-                <a href="{{ route('admin.users') }}" class="admin-nav-link">
-                    <i class="bi bi-people"></i> Users & Patients
-                </a>
-            </nav>
-            
-            <div class="mt-auto px-2 pt-5">
-                <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
-                    <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
-                    <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
-                </div>
-            </div>
+            {{-- LOAD THE SHARED NAV LINKS --}}
+            @include('admin.partials.nav_links')
         </div>
 
+        {{-- MAIN CONTENT --}}
         <div class="admin-content">
-            <div class="d-flex justify-content-between align-items-center mb-5">
-                <div>
-                    <h2 class="fw-bold text-dark mb-1">Dashboard Overview</h2>
-                    <p class="text-secondary mb-0">Welcome back, Admin. Here's what's happening today.</p>
+            
+            {{-- HEADER SECTION --}}
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    {{-- MOBILE MENU TOGGLE --}}
+                    <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
+                        <i class="bi bi-list fs-5 text-primary"></i>
+                    </button>
+                    
+                    <div>
+                        <h2 class="fw-bold text-dark mb-1">Dashboard</h2>
+                        <p class="text-secondary mb-0 small">Welcome back, Admin.</p>
+                    </div>
                 </div>
                 <div>
-                    <span class="bg-white border px-3 py-2 rounded-pill shadow-sm fw-bold text-secondary small">
+                    <span class="bg-white border px-3 py-2 rounded-pill shadow-sm fw-bold text-secondary small d-inline-flex align-items-center">
                         <i class="bi bi-calendar-event me-2 text-primary"></i> {{ now()->format('l, F d, Y') }}
                     </span>
                 </div>
             </div>
 
-            <div class="row g-4 mb-5">
-                <div class="col-md-3">
+            {{-- STATS GRID --}}
+            <div class="row g-3 g-md-4 mb-5">
+                <div class="col-12 col-sm-6 col-md-3">
                     <div class="stat-card d-flex align-items-center">
                         <div class="icon-box bg-primary bg-opacity-10 text-primary">
                             <i class="bi bi-people-fill"></i>
@@ -91,7 +103,7 @@
                     </div>
                 </div>
                 
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-md-3">
                     <div class="stat-card d-flex align-items-center">
                         <div class="icon-box bg-success bg-opacity-10 text-success">
                             <i class="bi bi-calendar-check-fill"></i>
@@ -103,7 +115,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-md-3">
                     <div class="stat-card d-flex align-items-center">
                         <div class="icon-box bg-warning bg-opacity-10 text-warning">
                             <i class="bi bi-hourglass-split"></i>
@@ -115,7 +127,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-md-3">
                     <div class="stat-card d-flex align-items-center">
                         <div class="icon-box bg-info bg-opacity-10 text-info">
                             <i class="bi bi-clipboard-check-fill"></i>
@@ -128,6 +140,7 @@
                 </div>
             </div>
 
+            {{-- CHARTS & ACTIONS --}}
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm rounded-4 h-100">
@@ -136,10 +149,11 @@
                             <small class="text-muted">Appointments over the last 7 days</small>
                         </div>
                         <div class="card-body px-4 pb-4">
-                            <canvas id="appointmentsChart" 
-                                    data-labels="{{ json_encode($labels) }}" 
-                                    data-counts="{{ json_encode($data) }}"
-                                    height="120"></canvas>
+                            <div style="position: relative; height: 100%; width: 100%; min-height: 250px;">
+                                <canvas id="appointmentsChart" 
+                                        data-labels="{{ json_encode($labels) }}" 
+                                        data-counts="{{ json_encode($data) }}"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -190,6 +204,23 @@
     </div>
 </div>
 
+{{-- MOBILE OFF CANVAS MENU --}}
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileAdminMenu" style="background: #0F172A; width: 280px;">
+    <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
+        <h5 class="offcanvas-title text-white fw-bold">Admin Console</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        {{-- LOAD THE SHARED NAV LINKS --}}
+        @include('admin.partials.nav_links')
+        
+        <div class="mt-5 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+            <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+            <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('appointmentsChart');
@@ -217,6 +248,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // Allows chart to resize in container
                 plugins: {
                     legend: { display: false },
                     tooltip: {
