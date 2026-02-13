@@ -23,11 +23,11 @@
         overflow: hidden;
     }
 
-    /* Back Button Styling (Top Right) */
+    /* Back Button Styling (Matches Login Page) */
     .btn-back-home {
         position: absolute;
         top: 2rem;
-        right: 2rem; /* Moved to Right */
+        right: 2rem;
         left: auto;
         text-decoration: none;
         color: #64748B;
@@ -37,16 +37,18 @@
         align-items: center;
         gap: 0.5rem;
         transition: all 0.2s;
-        z-index: 10;
+        z-index: 1050;
         background: white;
         padding: 8px 16px;
         border-radius: 50px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 1px solid #f1f5f9;
     }
     .btn-back-home:hover {
         color: var(--primary-color);
         transform: translateX(-3px);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        border-color: #e2e8f0;
     }
 
     /* Progress Indicators */
