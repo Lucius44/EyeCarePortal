@@ -1,10 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- Data Retrieval ---
     const dataEl = document.getElementById('calendarData');
-    if (!dataEl) return; // Guard clause in case this JS loads on other pages
+    if (!dataEl) return; 
 
     const isVerified = dataEl.getAttribute('data-verified') == '1';
     const hasActive = dataEl.getAttribute('data-has-active') == '1'; 
+    
+    // NEW: Get Server Time Logic
+    const currentHour = parseInt(dataEl.getAttribute('data-server-hour') || '0');
+    const cutoffTomorrowStr = dataEl.getAttribute('data-server-tomorrow') || '';
+
     const dailyCounts = JSON.parse(dataEl.getAttribute('data-daily-counts') || '{}'); 
     const takenSlots = JSON.parse(dataEl.getAttribute('data-taken-slots') || '{}');
     const calendarStatus = JSON.parse(dataEl.getAttribute('data-status') || '{}');
@@ -17,6 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${year}-${month}-${day}`;
     }
 
+    // Check if the date is "Tomorrow" AND it is past 8PM
+    function isCutoffBlocked(dateStr) {
+        // We use the strict server date string for comparison
+        return (dateStr === cutoffTomorrowStr && currentHour >= 20);
+    }
+
     function checkBlockers(dateStr) {
         if (hasActive) {
             new bootstrap.Modal(document.getElementById('activeAppointmentModal')).show();
@@ -26,6 +37,12 @@ document.addEventListener('DOMContentLoaded', function() {
             new bootstrap.Modal(document.getElementById('unverifiedModal')).show();
             return true;
         }
+        // Check Cutoff First
+        if (isCutoffBlocked(dateStr)) {
+            // No modal needed here if visually disabled, but good safety net
+            return true; 
+        }
+
         const status = calendarStatus[dateStr];
         if (status === 'closed' || status === 'full') {
             return true; 
@@ -37,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initMobileView() {
         const stripContainer = document.getElementById('mobileDateStrip');
         const timeContainer = document.getElementById('mobileTimeGrid');
-        if (!stripContainer) return; // Mobile view elements missing
+        if (!stripContainer) return;
 
         const today = new Date();
         const daysToRender = 30;
@@ -54,21 +71,31 @@ document.addEventListener('DOMContentLoaded', function() {
             let isClosed = status === 'closed';
             let isFull = status === 'full';
             let isToday = i === 0;
+            
+            // NEW: Check Cutoff
+            let isCutoff = isCutoffBlocked(dateStr);
 
             let cardClass = 'date-card';
             if (isToday) cardClass += ' is-today';
-            if (isClosed || isFull) cardClass += ' disabled';
+            // Disable if Closed, Full, OR Cutoff
+            if (isClosed || isFull || isCutoff) cardClass += ' disabled';
 
             let card = document.createElement('div');
             card.className = cardClass;
+            
+            // Render Status Dot
+            let dotHtml = '';
+            if (isClosed) dotHtml = '<span class="status-dot closed"></span>';
+            else if (isFull) dotHtml = '<span class="status-dot full"></span>';
+            // We could add a dot for cutoff, but generic disabled is usually enough
+            
             card.innerHTML = `
                 <div class="day-name">${dayName}</div>
                 <div class="day-num">${dayNum}</div>
-                ${isClosed ? '<span class="status-dot closed"></span>' : ''}
-                ${isFull ? '<span class="status-dot full"></span>' : ''}
+                ${dotHtml}
             `;
             
-            if (!isClosed && !isFull && !isToday) {
+            if (!isClosed && !isFull && !isCutoff && !isToday) {
                 card.onclick = () => selectMobileDate(d, dateStr, card);
             } else if (isToday) {
                 card.onclick = () => openTodayModal(d, dateStr);
@@ -183,6 +210,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             dayCellClassNames: function(arg) {
                 let dateStr = getLocalYMD(arg.date);
+                
+                // NEW: Apply Cutoff Class
+                if (isCutoffBlocked(dateStr)) return ['day-cutoff'];
+
                 let status = calendarStatus[dateStr];
                 if (status === 'closed') return ['day-closed'];
                 if (status === 'full') return ['day-full'];
@@ -193,8 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let dateStr = info.dateStr;
                 if(dateStr.includes('T')) dateStr = dateStr.split('T')[0];
                 
-                if (checkBlockers(dateStr)) return;
-                
+                // Check "Today" First
                 let clickedDate = new Date(dateStr + 'T00:00:00');
                 let today = new Date(); today.setHours(0,0,0,0);
                 
@@ -202,6 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     openTodayModal(clickedDate, dateStr);
                     return;
                 }
+                
+                // Then Check Blockers (Cutoff, Active, Unverified)
+                if (checkBlockers(dateStr)) return;
                 
                 openBookingModal(dateStr, clickedDate, null, 'desktop');
             }

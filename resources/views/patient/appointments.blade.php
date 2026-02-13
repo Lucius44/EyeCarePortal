@@ -89,6 +89,7 @@
                         <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #eff6ff; border: 1px solid var(--accent-color);"></span> Today</div>
                         <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #fff5f5; border: 1px solid #dc3545;"></span> Closed</div>
                         <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #f8fafc; border: 1px solid #94a3b8;"></span> Full</div>
+                        <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #f1f5f9; border: 1px dashed #64748b;"></span> Cutoff (8PM)</div>
                     </div>
                     
                     {{-- Calendar Container --}}
@@ -104,6 +105,8 @@
 <div id="calendarData" 
      data-verified="{{ Auth::user()->is_verified }}"
      data-has-active="{{ $activeAppointment ? '1' : '0' }}"
+     data-server-hour="{{ \Carbon\Carbon::now('Asia/Manila')->hour }}"
+     data-server-tomorrow="{{ \Carbon\Carbon::tomorrow('Asia/Manila')->format('Y-m-d') }}"
      data-daily-counts="{{ json_encode($dailyCounts) }}"
      data-taken-slots="{{ json_encode($takenSlots) }}"
      data-status="{{ json_encode($calendarStatus ?? []) }}" 
@@ -344,14 +347,18 @@
     .fc-daygrid-day-frame { transition: background-color 0.2s ease; min-height: 100px; }
     .fc-daygrid-day:not(.day-closed):not(.day-full):not(.fc-day-today):hover .fc-daygrid-day-frame { background-color: #f8fafc; cursor: pointer; }
     
-    /* --- NEW RULE FOR TODAY HOVER --- */
     .fc-day-today { cursor: pointer !important; transition: background-color 0.2s; }
     .fc-day-today:hover { background-color: #dbeafe !important; }
 
     .day-closed { background-color: #fff5f5 !important; cursor: not-allowed !important; position: relative; }
     .day-closed::after { content: 'CLOSED'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; font-weight: 800; color: #dc3545; opacity: 0.5; letter-spacing: 1px; }
+    
     .day-full { background-color: #f8fafc !important; cursor: not-allowed !important; position: relative; }
     .day-full::after { content: 'FULL'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; font-weight: 800; color: #94a3b8; opacity: 0.5; letter-spacing: 1px; }
+
+    /* --- NEW: CUTOFF STYLE --- */
+    .day-cutoff { background-color: #f1f5f9 !important; cursor: not-allowed !important; position: relative; border-color: #e2e8f0 !important; }
+    .day-cutoff::after { content: 'CUTOFF'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; font-weight: 800; color: #64748b; opacity: 0.5; letter-spacing: 1px; }
 
     .booking-badge { 
         font-size: 0.75rem; border: none !important; padding: 2px 6px; margin-top: 4px; 

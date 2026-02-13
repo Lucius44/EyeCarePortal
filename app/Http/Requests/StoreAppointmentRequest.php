@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Carbon\Carbon;
 
 class StoreAppointmentRequest extends FormRequest
 {
@@ -23,15 +24,30 @@ class StoreAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'appointment_date' => 'required|date|after_or_equal:today',
-            // NEW: Strict validation to match frontend format (e.g. 09:00 AM)
+            'appointment_date' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+                function ($attribute, $value, $fail) {
+                    $date = Carbon::parse($value);
+                    $now = Carbon::now('Asia/Manila');
+                    
+                    // Check if the selected date is technically "Tomorrow" relative to server time
+                    if ($date->copy()->startOfDay()->eq($now->copy()->addDay()->startOfDay())) {
+                        // If it is tomorrow, check if it's past 8:00 PM (20:00)
+                        if ($now->hour >= 20) {
+                            $fail('Bookings for tomorrow close at 8:00 PM. Please choose a later date.');
+                        }
+                    }
+                },
+            ],
+            // Strict validation to match frontend format (e.g. 09:00 AM)
             'appointment_time' => 'required|date_format:h:i A', 
             'service' => 'required|string',
             'description' => 'nullable|string',
         ];
     }
 
-    // Optional: Custom error message to help future developers/API users
     public function messages(): array
     {
         return [
