@@ -7,10 +7,11 @@
         background-color: #F8FAFC;
         background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
         background-size: 30px 30px;
-        min-height: calc(100vh - 80px);
+        min-height: 100vh; /* Full Height */
         padding: 40px 0;
         display: flex;
         align-items: center;
+        position: relative;
     }
 
     .card-wizard {
@@ -20,6 +21,31 @@
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         overflow: hidden;
+    }
+
+    /* Back Button Styling */
+    .btn-back-home {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        text-decoration: none;
+        color: #64748B;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        z-index: 10;
+        background: white;
+        padding: 8px 16px;
+        border-radius: 50px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .btn-back-home:hover {
+        color: var(--primary-color);
+        transform: translateX(-3px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     /* Progress Indicators */
@@ -117,9 +143,18 @@
         margin-top: 0.25rem;
         display: none;
     }
+
+    @media (max-width: 991px) {
+        .btn-back-home { top: 1rem; left: 1rem; }
+    }
 </style>
 
 <div class="register-bg">
+    {{-- BACK BUTTON --}}
+    <a href="{{ route('home') }}" class="btn-back-home">
+        <i class="bi bi-arrow-left"></i> Home
+    </a>
+
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8">
@@ -310,7 +345,6 @@
 
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
-    // Logic preserved exactly as requested
     document.addEventListener('DOMContentLoaded', () => {
         const maxDate = new Date();
         maxDate.setFullYear(maxDate.getFullYear() - 18);
@@ -419,7 +453,6 @@
     function createAccount() {
         let isValid = true;
         
-        // Recaptcha check
         const response = grecaptcha.getResponse();
         const captchaErr = document.getElementById('captchaError');
         if(response.length === 0) {

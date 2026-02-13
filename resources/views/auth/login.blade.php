@@ -4,7 +4,7 @@
 <style>
     /* Full Height Split Layout */
     .login-container {
-        min-height: calc(100vh - 80px); /* Subtract navbar height */
+        min-height: 100vh; /* Full screen */
         display: flex;
     }
     
@@ -42,6 +42,26 @@
         position: relative;
     }
 
+    /* Back Button Styling */
+    .btn-back-home {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        text-decoration: none;
+        color: #64748B;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        z-index: 10;
+    }
+    .btn-back-home:hover {
+        color: var(--primary-color);
+        transform: translateX(-3px);
+    }
+
     /* Input Styling */
     .form-floating > .form-control {
         border: 1px solid #e2e8f0;
@@ -73,11 +93,18 @@
     @media (max-width: 991px) {
         .login-image-side { display: none; }
         .login-form-side { padding: 2rem; }
+        .btn-back-home { top: 1.5rem; left: 1.5rem; }
     }
 </style>
 
 <div class="container-fluid p-0">
     <div class="row g-0 login-container">
+        
+        {{-- BACK BUTTON --}}
+        <a href="{{ route('home') }}" class="btn-back-home">
+            <i class="bi bi-arrow-left"></i> Back to Home
+        </a>
+
         <div class="col-lg-6 login-image-side">
             <div class="login-overlay"></div>
             <div class="login-quote">

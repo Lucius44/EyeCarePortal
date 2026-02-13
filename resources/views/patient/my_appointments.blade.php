@@ -1,6 +1,29 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* --- CUSTOM PILLS: Fix Drowning Contrast --- */
+    .custom-pills .nav-link {
+        color: var(--primary-color);
+        background-color: #f1f5f9; /* Light Gray for inactive */
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    .custom-pills .nav-link:hover {
+        background-color: #e2e8f0;
+    }
+
+    .custom-pills .nav-link.active {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
+    }
+    
+    .btn-cancel-hover { transition: all 0.2s ease; }
+    .btn-cancel-hover:hover { text-decoration: underline !important; transform: translateX(2px); }
+</style>
+
 <div class="container py-5">
     
     <div class="row mb-4 align-items-end">
@@ -15,7 +38,8 @@
         </div>
     </div>
 
-    <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+    {{-- UPDATED CLASS: custom-pills --}}
+    <ul class="nav nav-pills custom-pills mb-4" id="pills-tab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active rounded-pill fw-bold px-4 me-2" id="pills-upcoming-tab" data-bs-toggle="pill" data-bs-target="#pills-upcoming" type="button" role="tab">
                 Upcoming <span class="badge bg-white text-primary ms-1 shadow-sm">{{ $upcoming->count() }}</span>
@@ -129,11 +153,6 @@
     </div>
 </div>
 
-<style>
-    .btn-cancel-hover { transition: all 0.2s ease; }
-    .btn-cancel-hover:hover { text-decoration: underline !important; transform: translateX(2px); }
-</style>
-
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -163,9 +182,7 @@
 </div>
 
 <script>
-    // FIX: Function now accepts the button element ('this')
     function openCancelModal(button) {
-        // Retrieve data from attributes
         const actionUrl = button.getAttribute('data-action');
         const status = button.getAttribute('data-status');
 

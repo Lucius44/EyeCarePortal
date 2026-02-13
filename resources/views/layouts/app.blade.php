@@ -110,7 +110,6 @@
         footer {
             background: white;
             border-top: 1px solid #e2e8f0;
-            /* CHANGED: Reduced padding for a slimmer look */
             padding: 1rem 0; 
             margin-top: auto;
         }
@@ -128,126 +127,138 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-                <i class="bi bi-eye-fill text-primary"></i> 
-                <span>Clear<span class="text-primary">Optics</span></span>
-            </a>
+    {{-- CONDITIONAL NAVBAR: Hidden on Login/Register and Admin Pages (Mobile) --}}
+    @if(!request()->routeIs('login') && !request()->routeIs('register'))
+        <nav class="navbar navbar-expand-lg fixed-top">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
+                    <i class="bi bi-eye-fill text-primary"></i> 
+                    <span>Clear<span class="text-primary">Optics</span></span>
+                </a>
 
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-2">
-                    
-                    @if(request()->routeIs('home'))
-                        <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                        <li class="nav-item"><span class="text-muted mx-2 opacity-25">|</span></li>
-                    @endif
-
-                    @guest
-                        @if(!request()->routeIs('login') && !request()->routeIs('register'))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('login') }}">Log In</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link btn-nav-primary ms-2" href="{{ route('register') }}">Get Started</a>
-                            </li>
-                        @endif
-                    @else
-                        @if(Auth::user()->role === \App\Enums\UserRole::Patient && !request()->routeIs('appointments.index'))
-                            <li class="nav-item">
-                                <a class="nav-link text-primary fw-bold" href="{{ route('appointments.index') }}">
-                                    Book Appointment
-                                </a>
-                            </li>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center gap-2">
+                        
+                        @if(request()->routeIs('home'))
+                            <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                            <li class="nav-item"><span class="text-muted mx-2 opacity-25">|</span></li>
                         @endif
 
-                        <li class="nav-item dropdown ms-3 d-none d-lg-block">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 1rem;">
-                                    {{ substr(Auth::user()->first_name, 0, 1) }}
-                                </div>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li class="px-3 py-2 text-muted small text-uppercase fw-bold ls-1">Account</li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
-                                        <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+                        @guest
+                            @if(!request()->routeIs('login') && !request()->routeIs('register'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('login') }}">Log In</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link btn-nav-primary ms-2" href="{{ route('register') }}">Get Started</a>
+                                </li>
+                            @endif
+                        @else
+                            {{-- If Patient, show Book Appointment --}}
+                            @if(Auth::user()->role === \App\Enums\UserRole::Patient && !request()->routeIs('appointments.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link text-primary fw-bold" href="{{ route('appointments.index') }}">
+                                        Book Appointment
                                     </a>
                                 </li>
-                                @if(Auth::user()->role === \App\Enums\UserRole::Patient)
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('profile') }}">
-                                            <i class="bi bi-person me-2"></i> My Profile
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('my.appointments') }}">
-                                            <i class="bi bi-calendar-check me-2"></i> My Appointments
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('settings') }}">
-                                            <i class="bi bi-gear me-2"></i> Settings
-                                        </a>
-                                    </li>
-                                @endif
-                                <li><hr class="dropdown-divider my-2"></li>
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i> Log Out
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item d-lg-none mt-2 w-100">
-                            <hr class="text-secondary opacity-10">
-                            <div class="px-2 mb-2 text-uppercase text-muted small fw-bold">
-                                Hi, {{ Auth::user()->first_name }}
-                            </div>
-                            
-                            <a class="nav-link py-2 ps-2" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
-                                <i class="bi bi-grid-1x2 me-2"></i> Dashboard
-                            </a>
-                            
-                            @if(Auth::user()->role === \App\Enums\UserRole::Patient)
-                                <a class="nav-link py-2 ps-2" href="{{ route('profile') }}">
-                                    <i class="bi bi-person me-2"></i> My Profile
-                                </a>
-                                <a class="nav-link py-2 ps-2" href="{{ route('my.appointments') }}">
-                                    <i class="bi bi-calendar-check me-2"></i> My Appointments
-                                </a>
-                                <a class="nav-link py-2 ps-2" href="{{ route('settings') }}">
-                                    <i class="bi bi-gear me-2"></i> Settings
-                                </a>
                             @endif
-                            
-                            <form method="POST" action="{{ route('logout') }}" class="mt-2">
-                                @csrf
-                                <button type="submit" class="nav-link text-danger py-2 ps-2 bg-transparent border-0 w-100 text-start">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Log Out
-                                </button>
-                            </form>
-                        </li>
 
-                    @endguest
-                </ul>
+                            {{-- User Dropdown --}}
+                            <li class="nav-item dropdown ms-3 d-none d-lg-block">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 1rem;">
+                                        {{ substr(Auth::user()->first_name, 0, 1) }}
+                                    </div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li class="px-3 py-2 text-muted small text-uppercase fw-bold ls-1">Account</li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
+                                            <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    @if(Auth::user()->role === \App\Enums\UserRole::Patient)
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('profile') }}">
+                                                <i class="bi bi-person me-2"></i> My Profile
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('my.appointments') }}">
+                                                <i class="bi bi-calendar-check me-2"></i> My Appointments
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('settings') }}">
+                                                <i class="bi bi-gear me-2"></i> Settings
+                                            </a>
+                                        </li>
+                                    @endif
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Log Out
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            {{-- Mobile Menu --}}
+                            <li class="nav-item d-lg-none mt-2 w-100">
+                                <hr class="text-secondary opacity-10">
+                                <div class="px-2 mb-2 text-uppercase text-muted small fw-bold">
+                                    Hi, {{ Auth::user()->first_name }}
+                                </div>
+                                
+                                <a class="nav-link py-2 ps-2" href="{{ Auth::user()->role === \App\Enums\UserRole::Admin ? route('admin.dashboard') : route('dashboard') }}">
+                                    <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+                                </a>
+                                
+                                @if(Auth::user()->role === \App\Enums\UserRole::Patient)
+                                    <a class="nav-link py-2 ps-2" href="{{ route('profile') }}">
+                                        <i class="bi bi-person me-2"></i> My Profile
+                                    </a>
+                                    <a class="nav-link py-2 ps-2" href="{{ route('my.appointments') }}">
+                                        <i class="bi bi-calendar-check me-2"></i> My Appointments
+                                    </a>
+                                    <a class="nav-link py-2 ps-2" href="{{ route('settings') }}">
+                                        <i class="bi bi-gear me-2"></i> Settings
+                                    </a>
+                                @endif
+                                
+                                <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                                    @csrf
+                                    <button type="submit" class="nav-link text-danger py-2 ps-2 bg-transparent border-0 w-100 text-start">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Log Out
+                                    </button>
+                                </form>
+                            </li>
+
+                        @endguest
+                    </ul>
+                </div>
             </div>
+        </nav>
+        
+        {{-- Padding Adjuster when Navbar is present --}}
+        <div style="padding-top: 80px; flex: 1;">
+            @yield('content')
         </div>
-    </nav>
-
-    <div style="padding-top: 80px; flex: 1;">
-        @yield('content')
-    </div>
+    @else
+        {{-- No Navbar Padding for Login/Register --}}
+        <div style="flex: 1;">
+            @yield('content')
+        </div>
+    @endif
 
     <footer>
         <div class="container text-center">
