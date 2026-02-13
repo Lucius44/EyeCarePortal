@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
-use App\Models\DaySetting;
 use App\Enums\AppointmentStatus;
-use App\Services\AppointmentService; // Import the new Service
+use App\Services\AppointmentService; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -14,7 +13,6 @@ class AppointmentController extends Controller
 {
     protected $appointmentService;
 
-    // Inject the Service
     public function __construct(AppointmentService $appointmentService)
     {
         $this->appointmentService = $appointmentService;
@@ -24,12 +22,10 @@ class AppointmentController extends Controller
     {
         $userId = Auth::id();
 
-        // Active Appointment Check
         $activeAppointment = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
 
-        // Delegate heavy lifting to Service
         $calendarData = $this->appointmentService->getCalendarData();
 
         $services = Appointment::getServices();
@@ -47,7 +43,7 @@ class AppointmentController extends Controller
     {
         $userId = Auth::id();
 
-        // 1. Check for active
+        // 1. Patient-Specific Rule: One active appointment at a time
         $hasActive = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->exists();
@@ -56,43 +52,17 @@ class AppointmentController extends Controller
             return redirect()->back()->withErrors(['error' => 'You already have an active appointment.']);
         }
 
-        // 2. Check Settings
-        $date = $request->appointment_date;
-        $setting = DaySetting::where('date', $date)->first();
+        // 2. Prepare Data
+        $data = $request->validated();
+        $data['user_id'] = $userId; // Attach the logged-in user
 
-        if ($setting && $setting->is_closed) {
-            return redirect()->back()->withErrors(['error' => 'The clinic is closed on this date.']);
+        // 3. Delegate to Service
+        $result = $this->appointmentService->createAppointment($data, 'patient');
+
+        // 4. Handle Result
+        if (is_array($result) && isset($result['error'])) {
+            return redirect()->back()->withErrors(['error' => $result['error']])->withInput();
         }
-
-        $limit = $setting ? $setting->max_appointments : 5;
-
-        $countOnDate = Appointment::where('appointment_date', $date)
-            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
-            ->count();
-
-        if ($countOnDate >= $limit) {
-            return redirect()->back()->withErrors(['error' => 'This date is fully booked.']);
-        }
-
-        // 3. Check Double Booking
-        $isTaken = Appointment::where('appointment_date', $request->appointment_date)
-            ->where('appointment_time', $request->appointment_time)
-            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
-            ->exists();
-
-        if ($isTaken) {
-            return redirect()->back()->withErrors(['error' => 'The selected time slot is already taken.']);
-        }
-
-        // 4. Create
-        Appointment::create([
-            'user_id' => $userId,
-            'service' => $request->service,
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
-            'description' => $request->description,
-            'status' => AppointmentStatus::Pending
-        ]);
 
         return redirect()->route('appointments.index')->with('success', 'Appointment request submitted successfully!');
     }

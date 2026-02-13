@@ -9,12 +9,22 @@ use App\Models\DaySetting;
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Http\Resources\CalendarEventResource;
+use App\Services\AppointmentService;
+use App\Http\Requests\StoreAdminAppointmentRequest;
+use App\Http\Requests\UpdateDaySettingRequest;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    protected $appointmentService;
+
+    public function __construct(AppointmentService $appointmentService)
+    {
+        $this->appointmentService = $appointmentService;
+    }
+
     public function dashboard()
     {
         $today = Carbon::now('Asia/Manila')->startOfDay();
@@ -61,15 +71,10 @@ class AdminController extends Controller
         return view('admin.calendar', compact('events', 'daySettings'));
     }
 
-    public function updateDaySetting(Request $request) 
+    // Refactored: Uses FormRequest
+    public function updateDaySetting(UpdateDaySettingRequest $request) 
     {
-        $request->validate([
-            'date' => 'required|date',
-            'max_appointments' => 'required|integer|min:0',
-            'is_closed' => 'required|boolean'
-        ]);
-
-        // --- FIX: Force strict Date format to prevent "Duplicate Entry" with timestamps ---
+        // Fix: Force strict Date format to prevent "Duplicate Entry" with timestamps
         $cleanDate = Carbon::parse($request->date)->format('Y-m-d');
 
         DaySetting::updateOrCreate(
@@ -83,68 +88,18 @@ class AdminController extends Controller
         return back()->with('success', 'Day settings updated successfully.');
     }
 
-    public function storeAppointment(Request $request)
+    // Refactored: Uses Service & FormRequest
+    public function storeAppointment(StoreAdminAppointmentRequest $request)
     {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required',
-            'service' => 'required|string',
-            'description' => 'nullable|string'
-        ]);
+        // 1. Delegate to Service
+        // We pass 'admin' as the origin so the service knows to auto-confirm it.
+        $result = $this->appointmentService->createAppointment($request->validated(), 'admin');
 
-        $date = $request->appointment_date;
-        $setting = DaySetting::where('date', $date)->first();
-
-        if ($setting && $setting->is_closed) {
-             return back()->withErrors(['appointment_date' => 'The clinic is marked as CLOSED on this day.'])->withInput();
+        // 2. Handle Errors
+        if (is_array($result) && isset($result['error'])) {
+            // We map the generic error to the 'appointment_date' field or global error bag
+            return back()->withErrors(['appointment_date' => $result['error']])->withInput();
         }
-
-        $limit = $setting ? $setting->max_appointments : 5;
-
-        $countOnDate = Appointment::where('appointment_date', $request->appointment_date)
-            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
-            ->count();
-
-        if ($countOnDate >= $limit) {
-            return back()->withErrors(['appointment_date' => "This date is fully booked ({$countOnDate}/{$limit})."])->withInput();
-        }
-
-        $isTaken = Appointment::where('appointment_date', $request->appointment_date)
-            ->where('appointment_time', $request->appointment_time)
-            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
-            ->exists();
-
-        if ($isTaken) {
-            return back()->withErrors(['appointment_time' => 'The selected time slot is already taken.'])->withInput();
-        }
-
-        $user = User::where('email', $request->email)->first();
-
-        $data = [
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
-            'service' => $request->service,
-            'description' => $request->description,
-            'status' => AppointmentStatus::Confirmed,
-        ];
-
-        if ($user) {
-            $data['user_id'] = $user->id;
-        } else {
-            $data['user_id'] = null;
-            $data['patient_first_name'] = $request->first_name;
-            $data['patient_middle_name'] = $request->middle_name;
-            $data['patient_last_name'] = $request->last_name;
-            $data['patient_email'] = $request->email;
-            $data['patient_phone'] = $request->phone;
-        }
-
-        Appointment::create($data);
 
         return back()->with('success', 'Appointment booked successfully.');
     }
