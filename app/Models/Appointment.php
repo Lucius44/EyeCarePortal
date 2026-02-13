@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\AppointmentStatus;
+use Carbon\Carbon; // Added Carbon for time formatting
 
 class Appointment extends Model
 {
@@ -35,6 +36,13 @@ class Appointment extends Model
         return $this->belongsTo(User::class);
     }
 
+    // --- NEW: Time Mutator (The Safety Fix) ---
+    // This ensures that '9:00 am', '09:00 am', or '9:00 AM' all become '09:00 AM'
+    public function setAppointmentTimeAttribute($value)
+    {
+        $this->attributes['appointment_time'] = Carbon::parse($value)->format('h:i A');
+    }
+
     // --- Helpers to get Patient Info (User OR Guest) ---
 
     public function getPatientNameAttribute()
@@ -58,7 +66,6 @@ class Appointment extends Model
         if ($this->user) {
             return $this->user->email;
         }
-        // FIX: Access the raw attribute directly to prevent infinite loop
         return $this->attributes['patient_email'] ?? null;
     }
 

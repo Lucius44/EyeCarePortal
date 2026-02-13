@@ -24,9 +24,18 @@ class StoreAppointmentRequest extends FormRequest
     {
         return [
             'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required|string',
+            // NEW: Strict validation to match frontend format (e.g. 09:00 AM)
+            'appointment_time' => 'required|date_format:h:i A', 
             'service' => 'required|string',
             'description' => 'nullable|string',
+        ];
+    }
+
+    // Optional: Custom error message to help future developers/API users
+    public function messages(): array
+    {
+        return [
+            'appointment_time.date_format' => 'The time must be in the format HH:MM AM/PM (e.g., 09:00 AM).',
         ];
     }
 }
