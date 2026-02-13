@@ -12,6 +12,8 @@
         color: #94a3b8; 
         flex-shrink: 0; 
         transition: all 0.3s;
+        display: flex; /* Flex to push support line down */
+        flex-direction: column;
         display: none; /* Default hidden on mobile */
     }
     
@@ -20,12 +22,12 @@
         flex-grow: 1; 
         background: #F1F5F9; 
         padding: 1.5rem; 
-        min-width: 0; /* CRITICAL FIX: Prevents flex children from overflowing screen */
+        min-width: 0; 
     }
 
     /* Desktop View Media Query */
     @media (min-width: 992px) {
-        .admin-sidebar { display: block; } /* Show on large screens */
+        .admin-sidebar { display: flex; } /* Flex for sidebar layout */
         .admin-content { padding: 2rem; }
     }
     
@@ -58,12 +60,18 @@
     <div class="admin-wrapper">
         
         {{-- DESKTOP SIDEBAR --}}
-        <div class="admin-sidebar p-3 d-none d-lg-block">
+        <div class="admin-sidebar p-3 d-none d-lg-flex">
             <div class="mb-4 px-2 py-3">
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
             {{-- LOAD THE SHARED NAV LINKS --}}
             @include('admin.partials.nav_links')
+
+            {{-- Support Line --}}
+            <div class="mt-auto p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+                <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+            </div>
         </div>
 
         {{-- MAIN CONTENT --}}

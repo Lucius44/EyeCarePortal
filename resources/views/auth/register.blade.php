@@ -23,16 +23,17 @@
         overflow: hidden;
     }
 
-    /* Back Button Styling */
+    /* Back Button Styling (Top Right) */
     .btn-back-home {
         position: absolute;
         top: 2rem;
-        left: 2rem;
+        right: 2rem; /* Moved to Right */
+        left: auto;
         text-decoration: none;
         color: #64748B;
         font-weight: 600;
         font-size: 0.9rem;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         transition: all 0.2s;
@@ -145,7 +146,7 @@
     }
 
     @media (max-width: 991px) {
-        .btn-back-home { top: 1rem; left: 1rem; }
+        .btn-back-home { top: 1rem; right: 1rem; }
     }
 </style>
 

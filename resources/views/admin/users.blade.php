@@ -11,6 +11,8 @@
         color: #94a3b8; 
         flex-shrink: 0; 
         transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
         display: none; 
     }
 
@@ -22,7 +24,7 @@
     }
 
     @media (min-width: 992px) {
-        .admin-sidebar { display: block; }
+        .admin-sidebar { display: flex; }
         .admin-content { padding: 2rem; }
     }
     
@@ -36,21 +38,47 @@
     .admin-nav-link i { font-size: 1.1rem; margin-right: 12px; }
 
     .table-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+
+    /* --- CUSTOM PILLS: Fix Drowning Contrast (Admin) --- */
+    .custom-pills .nav-link {
+        color: var(--primary-color);
+        background-color: #fff; /* White background for admin contrast */
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    .custom-pills .nav-link:hover {
+        background-color: #e2e8f0;
+    }
+    .custom-pills .nav-link.active {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
+    }
 </style>
 
 <div class="container-fluid p-0">
     <div class="admin-wrapper">
         
-        <div class="admin-sidebar p-3 d-none d-lg-block">
+        {{-- DESKTOP SIDEBAR --}}
+        <div class="admin-sidebar p-3 d-none d-lg-flex">
             <div class="mb-4 px-2 py-3">
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
+            
             @include('admin.partials.nav_links')
+
+            {{-- Support Line --}}
+            <div class="mt-auto p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+                <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+            </div>
         </div>
 
         <div class="admin-content">
             {{-- HEADER --}}
             <div class="d-flex align-items-center gap-3 mb-4">
+                {{-- Mobile Toggle Button --}}
                 <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
                     <i class="bi bi-list fs-5 text-primary"></i>
                 </button>
@@ -113,8 +141,8 @@
                 </div>
             @endif
 
-            {{-- Tabs --}}
-            <ul class="nav nav-pills mb-4" id="usersTab" role="tablist">
+            {{-- Tabs (Updated Class: custom-pills) --}}
+            <ul class="nav nav-pills custom-pills mb-4" id="usersTab" role="tablist">
                 <li class="nav-item">
                     <button class="nav-link active rounded-pill px-4 fw-bold me-2" id="registered-tab" data-bs-toggle="tab" data-bs-target="#registered" type="button">Registered Patients</button>
                 </li>

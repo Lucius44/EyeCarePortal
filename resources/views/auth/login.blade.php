@@ -42,24 +42,30 @@
         position: relative;
     }
 
-    /* Back Button Styling */
+    /* Back Button Styling (Top Right) */
     .btn-back-home {
         position: absolute;
         top: 2rem;
-        left: 2rem;
+        right: 2rem; /* Moved to Right */
+        left: auto;
         text-decoration: none;
         color: #64748B;
         font-weight: 600;
         font-size: 0.9rem;
-        display: flex;
+        display: inline-flex; /* Fix: Minimizes clickable width */
         align-items: center;
         gap: 0.5rem;
         transition: all 0.2s;
         z-index: 10;
+        background: white; /* Optional: adds background */
+        padding: 8px 16px;
+        border-radius: 50px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .btn-back-home:hover {
         color: var(--primary-color);
         transform: translateX(-3px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     /* Input Styling */
@@ -93,7 +99,7 @@
     @media (max-width: 991px) {
         .login-image-side { display: none; }
         .login-form-side { padding: 2rem; }
-        .btn-back-home { top: 1.5rem; left: 1.5rem; }
+        .btn-back-home { top: 1.5rem; right: 1.5rem; }
     }
 </style>
 
@@ -102,7 +108,7 @@
         
         {{-- BACK BUTTON --}}
         <a href="{{ route('home') }}" class="btn-back-home">
-            <i class="bi bi-arrow-left"></i> Back to Home
+            <i class="bi bi-arrow-left"></i> Home
         </a>
 
         <div class="col-lg-6 login-image-side">

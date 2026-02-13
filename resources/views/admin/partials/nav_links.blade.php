@@ -14,4 +14,11 @@
     <a href="{{ route('admin.users') }}" class="admin-nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
         <i class="bi bi-people"></i> Users & Patients
     </a>
+    
+    <form action="{{ route('logout') }}" method="POST" class="mt-3">
+        @csrf
+        <button type="submit" class="admin-nav-link w-100 text-start text-danger border-0 bg-transparent">
+            <i class="bi bi-box-arrow-right"></i> Log Out
+        </button>
+    </form>
 </nav>

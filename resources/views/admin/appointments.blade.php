@@ -11,6 +11,8 @@
         color: #94a3b8; 
         flex-shrink: 0; 
         transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
         display: none; 
     }
 
@@ -22,7 +24,7 @@
     }
 
     @media (min-width: 992px) {
-        .admin-sidebar { display: block; }
+        .admin-sidebar { display: flex; }
         .admin-content { padding: 2rem; }
     }
     
@@ -48,11 +50,17 @@
 <div class="container-fluid p-0">
     <div class="admin-wrapper">
         
-        <div class="admin-sidebar p-3 d-none d-lg-block">
+        <div class="admin-sidebar p-3 d-none d-lg-flex">
             <div class="mb-4 px-2 py-3">
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
             @include('admin.partials.nav_links')
+
+            {{-- Support Line --}}
+            <div class="mt-auto p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+                <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+            </div>
         </div>
 
         <div class="admin-content">

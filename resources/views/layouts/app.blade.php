@@ -127,8 +127,8 @@
 </head>
 <body>
 
-    {{-- CONDITIONAL NAVBAR: Hidden on Login/Register and Admin Pages (Mobile) --}}
-    @if(!request()->routeIs('login') && !request()->routeIs('register'))
+    {{-- CONDITIONAL NAVBAR: Hidden on Login/Register AND Admin Pages --}}
+    @if(!request()->routeIs('login') && !request()->routeIs('register') && !request()->is('admin*'))
         <nav class="navbar navbar-expand-lg fixed-top">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
@@ -254,7 +254,7 @@
             @yield('content')
         </div>
     @else
-        {{-- No Navbar Padding for Login/Register --}}
+        {{-- No Navbar Padding for Login/Register/Admin --}}
         <div style="flex: 1;">
             @yield('content')
         </div>
