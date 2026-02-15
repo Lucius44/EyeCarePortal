@@ -57,7 +57,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!stripContainer) return;
 
         const today = new Date();
-        const daysToRender = 30;
+        // 32 items total: 1 for Today + 31 Future bookable days
+        const daysToRender = 32;
         const standardTimes = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
 
         for (let i = 0; i < daysToRender; i++) {
@@ -193,12 +194,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        // Setup strictly exclusive end date (midnight of the 32nd future day)
+        let fcEndDate = new Date();
+        fcEndDate.setDate(fcEndDate.getDate() + 32);
+        fcEndDate.setHours(0, 0, 0, 0);
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'standard',
             headerToolbar: { left: 'title', right: 'today prev,next' },
             events: events,
-            validRange: { start: new Date(), end: new Date(new Date().setDate(new Date().getDate() + 31)) },
+            validRange: { 
+                start: new Date(), 
+                end: fcEndDate // Excludes the 32nd future day strictly
+            },
             
             // Time Grid Settings
             slotMinTime: '09:00:00', 
