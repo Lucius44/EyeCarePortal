@@ -141,12 +141,19 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Service Required</label>
-                        <select name="service" class="form-select form-select-lg bg-light border-0" required>
+                        <select name="service" class="form-select form-select-lg bg-light border-0" required id="serviceSelect">
                             <option value="">-- Select Service --</option>
                             @foreach($services as $service)
+                                {{-- FIX: $service is a string, NOT an object --}}
                                 <option value="{{ $service }}">{{ $service }}</option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- "Other" Service Input --}}
+                    <div class="mb-3 d-none" id="otherServiceDiv">
+                        <label class="form-label fw-bold">Please Specify Service</label>
+                        <input type="text" name="service_other" id="serviceInput" class="form-control bg-light border-0" placeholder="Type your required service...">
                     </div>
 
                     <div class="mb-3" id="desktopTimeSelectWrapper">
@@ -189,7 +196,7 @@
             </div>
             <div class="modal-body p-4 text-center">
                 <h4 class="fw-bold mb-3" style="color: var(--primary-color);" id="todayDateDisplay"></h4>
-                <p class="text-muted mb-4">We do not accept same-day appointments online.<br>Please call us at <strong>(123) 456-7890</strong> for urgent inquiries.</p>
+                <p class="text-muted mb-4">We do not accept same-day appointments online.<br>Please call us at <strong>+63 945 826 4969</strong> for urgent inquiries.</p>
                 <div class="card bg-light border-0 p-3 rounded-4">
                     <h6 class="fw-bold text-uppercase small text-muted mb-3">Booked Slots Today</h6>
                     <div id="todaySlotsList" class="d-flex flex-wrap justify-content-center gap-2"></div>
@@ -280,7 +287,6 @@
 @endif
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-{{-- Note: We keep the CDN link for FullCalendar here, or you could move it to your app.js via NPM if you prefer full build step --}}
 
 <style>
     /* HERO SECTION */

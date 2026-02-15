@@ -80,13 +80,12 @@
                                         <i class="bi bi-pencil-fill"></i>
                                     </button>
                                     
-                                    <form action="{{ route('services.destroy', $service->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure? Removing this service will not affect past appointments.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-white border shadow-sm text-danger">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    </form>
+                                    {{-- Delete Button Triggers Modal --}}
+                                    <button type="button" class="btn btn-sm btn-white border shadow-sm text-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteServiceModal{{ $service->id }}">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
                                 </td>
                             </tr>
 
@@ -119,6 +118,33 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- Delete Modal --}}
+                            <div class="modal fade" id="deleteServiceModal{{ $service->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-4 border-0 shadow">
+                                        <div class="modal-body p-4 text-center">
+                                            <div class="mb-3">
+                                                <i class="bi bi-exclamation-triangle-fill text-warning display-1"></i>
+                                            </div>
+                                            <h5 class="fw-bold text-dark">Delete Service?</h5>
+                                            <p class="text-muted mb-4">
+                                                Are you sure you want to delete <strong>{{ $service->name }}</strong>? 
+                                                <br>This action cannot be undone.
+                                            </p>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ route('services.destroy', $service->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Yes, Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             @empty
                             <tr>
                                 <td colspan="3" class="text-center py-5 text-muted">

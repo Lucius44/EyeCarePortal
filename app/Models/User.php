@@ -30,6 +30,7 @@ class User extends Authenticatable
         'role',
         'id_photo_path',
         'is_verified',
+        'rejection_reason', // <--- ADDED THIS LINE
     ];
 
     /**
@@ -48,11 +49,11 @@ class User extends Authenticatable
      * @return array<string, string>
      */
     protected function casts(): array
-{
-    return [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'role' => UserRole::class, // <--- Add this line
-    ];
-}
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'role' => UserRole::class, 
+        ];
+    }
 }
