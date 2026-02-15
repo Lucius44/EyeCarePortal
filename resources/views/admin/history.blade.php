@@ -48,8 +48,6 @@
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
             @include('admin.partials.nav_links')
-
-            {{-- Support Line --}}
             <div class="mt-auto p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
                 <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
                 <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
@@ -57,7 +55,6 @@
         </div>
 
         <div class="admin-content">
-            {{-- HEADER --}}
             <div class="d-flex align-items-center gap-3 mb-4">
                 <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
                     <i class="bi bi-list fs-5 text-primary"></i>
@@ -108,7 +105,14 @@
                         <tbody>
                             @forelse($history as $appt)
                             <tr>
-                                <td class="ps-4 fw-bold text-dark">{{ $appt->patient_name }}</td>
+                                <td class="ps-4 fw-bold text-dark">
+                                    {{-- Handle User vs Guest Middle Name Logic --}}
+                                    @if($appt->user)
+                                        {{ $appt->user->first_name }} {{ $appt->user->middle_name }} {{ $appt->user->last_name }}
+                                    @else
+                                        {{ $appt->patient_first_name }} {{ $appt->patient_middle_name }} {{ $appt->patient_last_name }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($appt->user_id)
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 rounded-pill px-2">Registered</span>
@@ -161,9 +165,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">No history records found matching criteria.</td>
-                            </tr>
+                            <tr><td colspan="5" class="text-center py-5 text-muted">No history records found matching criteria.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -173,7 +175,6 @@
     </div>
 </div>
 
-{{-- MOBILE MENU --}}
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileAdminMenu" style="background: #0F172A; width: 280px;">
     <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
         <h5 class="offcanvas-title text-white fw-bold">Admin Console</h5>
@@ -181,7 +182,6 @@
     </div>
     <div class="offcanvas-body p-3">
         @include('admin.partials.nav_links')
-        
         <div class="mt-5 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
             <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
             <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>

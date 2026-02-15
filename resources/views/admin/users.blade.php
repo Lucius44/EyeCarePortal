@@ -39,16 +39,13 @@
 
     .table-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
 
-    /* --- CUSTOM PILLS: Fix Drowning Contrast (Admin) --- */
     .custom-pills .nav-link {
         color: var(--primary-color);
-        background-color: #fff; /* White background for admin contrast */
+        background-color: #fff;
         border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
-    .custom-pills .nav-link:hover {
-        background-color: #e2e8f0;
-    }
+    .custom-pills .nav-link:hover { background-color: #e2e8f0; }
     .custom-pills .nav-link.active {
         background-color: var(--primary-color) !important;
         color: white !important;
@@ -60,15 +57,11 @@
 <div class="container-fluid p-0">
     <div class="admin-wrapper">
         
-        {{-- DESKTOP SIDEBAR --}}
         <div class="admin-sidebar p-3 d-none d-lg-flex">
             <div class="mb-4 px-2 py-3">
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
-            
             @include('admin.partials.nav_links')
-
-            {{-- Support Line --}}
             <div class="mt-auto p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
                 <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
                 <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
@@ -76,9 +69,7 @@
         </div>
 
         <div class="admin-content">
-            {{-- HEADER --}}
             <div class="d-flex align-items-center gap-3 mb-4">
-                {{-- Mobile Toggle Button --}}
                 <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
                     <i class="bi bi-list fs-5 text-primary"></i>
                 </button>
@@ -117,7 +108,7 @@
                                 <tbody>
                                     @foreach($pendingUsers as $user)
                                     <tr>
-                                        <td class="fw-bold">{{ $user->first_name }} {{ $user->last_name }}</td>
+                                        <td class="fw-bold">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
                                             <a href="{{ asset('storage/' . $user->id_photo_path) }}" target="_blank" class="text-decoration-none">
@@ -126,13 +117,42 @@
                                             </a>
                                         </td>
                                         <td>
-                                            <form action="{{ route('admin.users.verify', $user->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" name="action" value="approve" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">Approve</button>
-                                                <button type="submit" name="action" value="reject" class="btn btn-outline-danger btn-sm rounded-pill px-3 ms-1">Reject</button>
-                                            </form>
+                                            <div class="d-flex gap-2">
+                                                <form action="{{ route('admin.users.verify', $user->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" name="action" value="approve" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">Approve</button>
+                                                </form>
+                                                
+                                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#rejectModal-{{ $user->id }}">
+                                                    Reject
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
+
+                                    {{-- REJECT REASON MODAL --}}
+                                    <div class="modal fade" id="rejectModal-{{ $user->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <form action="{{ route('admin.users.verify', $user->id) }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="action" value="reject">
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-danger">Reject ID Verification</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4">
+                                                        <p class="text-muted mb-3">Why are you rejecting <strong>{{ $user->first_name }}</strong>'s ID?</p>
+                                                        <textarea name="reason" class="form-control" rows="3" placeholder="e.g. ID is blurry, Expired ID, Name mismatch..." required></textarea>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Confirm Reject</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -141,7 +161,6 @@
                 </div>
             @endif
 
-            {{-- Tabs (Updated Class: custom-pills) --}}
             <ul class="nav nav-pills custom-pills mb-4" id="usersTab" role="tablist">
                 <li class="nav-item">
                     <button class="nav-link active rounded-pill px-4 fw-bold me-2" id="registered-tab" data-bs-toggle="tab" data-bs-target="#registered" type="button">Registered Patients</button>
@@ -152,8 +171,6 @@
             </ul>
 
             <div class="tab-content" id="usersTabContent">
-                
-                {{-- REGISTERED USERS --}}
                 <div class="tab-pane fade show active" id="registered">
                     <div class="table-card shadow-sm">
                         <div class="p-4 border-bottom bg-light bg-opacity-50">
@@ -189,7 +206,7 @@
                                 <tbody>
                                     @forelse($allUsers as $user)
                                     <tr>
-                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->last_name }}</td>
+                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
                                             @if($user->is_verified)
@@ -201,9 +218,7 @@
                                         <td>{{ $user->created_at->format('M d, Y') }}</td>
                                     </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">No users found.</td>
-                                    </tr>
+                                    <tr><td colspan="4" class="text-center py-5 text-muted">No users found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -211,7 +226,6 @@
                     </div>
                 </div>
 
-                {{-- GUESTS TAB --}}
                 <div class="tab-pane fade" id="guests">
                     <div class="table-card shadow-sm">
                         <div class="p-4 bg-light border-bottom">
@@ -243,9 +257,7 @@
                                         <td>{{ $guest->created_at->format('M d, Y') }}</td>
                                     </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">No guest records found.</td>
-                                    </tr>
+                                    <tr><td colspan="4" class="text-center py-5 text-muted">No guest records found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -258,7 +270,6 @@
     </div>
 </div>
 
-{{-- MOBILE MENU --}}
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileAdminMenu" style="background: #0F172A; width: 280px;">
     <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
         <h5 class="offcanvas-title text-white fw-bold">Admin Console</h5>
@@ -266,7 +277,6 @@
     </div>
     <div class="offcanvas-body p-3">
         @include('admin.partials.nav_links')
-        
         <div class="mt-5 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
             <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
             <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>

@@ -131,11 +131,12 @@
                     </p>
                     
                     @if(!Auth::user()->is_verified)
-                        <div class="d-inline-flex align-items-center bg-warning bg-opacity-25 border border-warning text-warning-emphasis px-4 py-3 rounded-4 backdrop-blur">
+                        {{-- UPDATED ALERT TEXT COLOR: text-dark for better contrast on yellow --}}
+                        <div class="d-inline-flex align-items-center bg-warning border border-warning text-dark px-4 py-3 rounded-4 backdrop-blur shadow-sm">
                             <i class="bi bi-shield-exclamation fs-4 me-3"></i>
                             <div>
                                 <h6 class="fw-bold mb-0">Action Required: Verify Account</h6>
-                                <a href="{{ route('settings') }}" class="small text-warning-emphasis text-decoration-underline fw-bold">Upload ID Now &rarr;</a>
+                                <a href="{{ route('settings') }}" class="small text-dark text-decoration-underline fw-bold">Upload ID Now &rarr;</a>
                             </div>
                         </div>
                     @endif

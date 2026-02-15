@@ -7,14 +7,21 @@ use App\Models\Service;
 
 class ServiceSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         $services = [
-            'General Checkup',
-            'Prescription Eye Glasses',
-            'Glasses/ Contact Lens Fitting',
-            'Pediatric Eye Care',
-            'Vision Therapy',
+            'Comprehensive Eye Exam',
+            'Pediatric Eye Exam',
+            'Contact Lens Fitting',
+            'Dry Eye Treatment',
+            'Glaucoma Screening',
+            'Diabetic Eye Care',
+            'Laser Eye Surgery Consultation',
+            'Emergency Eye Care',
+            'Other', // Added at the end
         ];
 
         foreach ($services as $service) {

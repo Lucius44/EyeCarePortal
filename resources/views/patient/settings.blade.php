@@ -59,6 +59,20 @@
                             </div>
                         @endif
                     @else
+                        
+                        {{-- REJECTION ALERT --}}
+                        @if(Auth::user()->rejection_reason)
+                            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3 mb-3">
+                                <div class="d-flex">
+                                    <i class="bi bi-exclamation-circle-fill fs-5 me-3"></i>
+                                    <div>
+                                        <strong>Verification Rejected</strong><br>
+                                        <span class="small">{{ Auth::user()->rejection_reason }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <form action="{{ route('settings.upload') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
@@ -69,7 +83,8 @@
                                 Upload for Verification
                             </button>
                         </form>
-                        @if(Auth::user()->id_photo_path)
+                        
+                        @if(Auth::user()->id_photo_path && !Auth::user()->rejection_reason)
                             <div class="mt-3 text-center">
                                 <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Review Pending</span>
                             </div>
@@ -80,7 +95,7 @@
         </div>
 
         <div class="col-lg-6">
-            
+            {{-- Contact & Password Cards remain unchanged --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center mb-2">

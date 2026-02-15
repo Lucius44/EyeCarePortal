@@ -125,6 +125,7 @@ class AdminController extends Controller
             $query->where(function($q) use ($search) {
                 $q->whereHas('user', function($u) use ($search) {
                     $u->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('middle_name', 'like', "%{$search}%") // Added Middle Name Search
                       ->orWhere('last_name', 'like', "%{$search}%");
                 })
                 ->orWhere('patient_first_name', 'like', "%{$search}%")
@@ -148,19 +149,16 @@ class AdminController extends Controller
         $request->validate([
             'status' => ['required', Rule::enum(AppointmentStatus::class)],
             'cancellation_reason' => 'nullable|string|max:500',
-            // New validations for medical data
             'diagnosis' => 'nullable|string|max:1000',
             'prescription' => 'nullable|string|max:1000',
         ]);
 
         $data = ['status' => $request->status];
 
-        // Handle Rejections
         if ($request->status === AppointmentStatus::Rejected->value) {
             $data['cancellation_reason'] = $request->input('cancellation_reason', 'No reason provided.');
         }
 
-        // Handle Completions (Save Medical Data)
         if ($request->status === AppointmentStatus::Completed->value) {
             $data['diagnosis'] = $request->input('diagnosis');
             $data['prescription'] = $request->input('prescription');
@@ -176,6 +174,7 @@ class AdminController extends Controller
         $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
                             ->where('is_verified', false)
+                            ->whereNull('rejection_reason') // Only show those not yet rejected
                             ->get();
 
         $query = User::where('role', UserRole::Patient);
@@ -197,7 +196,7 @@ class AdminController extends Controller
         $allUsers = $query->orderBy('created_at', 'desc')->get();
 
         $guests = Appointment::whereNull('user_id')
-            ->select('patient_first_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
+            ->select('patient_first_name', 'patient_middle_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->unique('patient_email'); 
@@ -211,16 +210,22 @@ class AdminController extends Controller
         $action = $request->input('action'); 
 
         if ($action === 'approve') {
-            $user->update(['is_verified' => true]);
+            $user->update([
+                'is_verified' => true,
+                'rejection_reason' => null
+            ]);
             return back()->with('success', 'User verified successfully!');
         } 
         
         if ($action === 'reject') {
+            $request->validate(['reason' => 'required|string|max:255']);
+            
             $user->update([
                 'id_photo_path' => null, 
-                'is_verified' => false
+                'is_verified' => false,
+                'rejection_reason' => $request->input('reason')
             ]);
-            return back()->with('success', 'User verification rejected. They can upload a new ID.');
+            return back()->with('success', 'User verification rejected. They will see the reason.');
         }
 
         return back()->with('error', 'Invalid action.');
