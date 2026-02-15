@@ -206,18 +206,67 @@
                                         </td>
                                         <td>{{ $appt->service }}</td>
                                         <td class="text-end pe-4">
-                                            <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <input type="hidden" name="status" value="completed">
-                                                <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">Mark Complete</button>
-                                            </form>
+                                            {{-- Mark Complete Button Triggers Modal --}}
+                                            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#completeModal-{{ $appt->id }}">
+                                                Mark Complete
+                                            </button>
+                                            
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="no-show">
-                                                <button class="btn btn-light text-warning-emphasis btn-sm rounded-pill px-3 fw-bold border">No-Show</button>
+                                                <button class="btn btn-light text-warning-emphasis btn-sm rounded-pill px-3 fw-bold border ms-1">No-Show</button>
                                             </form>
                                         </td>
                                     </tr>
+
+                                    {{-- COMPLETE & PRESCRIBE MODAL --}}
+                                    <div class="modal fade" id="completeModal-{{ $appt->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="status" value="completed">
+                                                
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-primary">Complete Appointment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4">
+                                                        <div class="alert alert-light border mb-4">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div>
+                                                                    <small class="text-uppercase text-muted fw-bold">Patient</small>
+                                                                    <div class="fw-bold">{{ $appt->patient_name }}</div>
+                                                                </div>
+                                                                <div class="text-end">
+                                                                    <small class="text-uppercase text-muted fw-bold">Service</small>
+                                                                    <div class="fw-bold">{{ $appt->service }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-file-medical me-2"></i>Medical Record Entry</h6>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold small text-secondary">Diagnosis / Findings</label>
+                                                            <textarea name="diagnosis" class="form-control" rows="3" placeholder="e.g. Myopia, Astigmatism, Healthy eyes..." required></textarea>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold small text-secondary">Prescription / Treatment Plan</label>
+                                                            <textarea name="prescription" class="form-control" rows="3" placeholder="e.g. OD: -1.50, OS: -1.75, Eye drops daily..."></textarea>
+                                                            <div class="form-text">This information will be visible to the patient in their portal.</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save & Complete</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
                                     @empty
                                     <tr><td colspan="4" class="text-center py-5 text-muted">No upcoming appointments found.</td></tr>
                                     @endforelse

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Models\DaySetting;
-use App\Models\Service; // <--- Import this
+use App\Models\Service; 
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Http\Resources\CalendarEventResource;
@@ -69,7 +69,6 @@ class AdminController extends Controller
             return $item->date->format('Y-m-d');
         });
         
-        // --- NEW: Fetch services for the manual booking modal ---
         $services = Service::orderBy('name')->get();
         
         return view('admin.calendar', compact('events', 'daySettings', 'services'));
@@ -148,18 +147,28 @@ class AdminController extends Controller
         
         $request->validate([
             'status' => ['required', Rule::enum(AppointmentStatus::class)],
-            'cancellation_reason' => 'nullable|string|max:500', 
+            'cancellation_reason' => 'nullable|string|max:500',
+            // New validations for medical data
+            'diagnosis' => 'nullable|string|max:1000',
+            'prescription' => 'nullable|string|max:1000',
         ]);
 
         $data = ['status' => $request->status];
 
+        // Handle Rejections
         if ($request->status === AppointmentStatus::Rejected->value) {
             $data['cancellation_reason'] = $request->input('cancellation_reason', 'No reason provided.');
         }
 
+        // Handle Completions (Save Medical Data)
+        if ($request->status === AppointmentStatus::Completed->value) {
+            $data['diagnosis'] = $request->input('diagnosis');
+            $data['prescription'] = $request->input('prescription');
+        }
+
         $appointment->update($data);
 
-        return back()->with('success', 'Appointment status updated successfully.');
+        return back()->with('success', 'Appointment updated successfully.');
     }
 
     public function users(Request $request)

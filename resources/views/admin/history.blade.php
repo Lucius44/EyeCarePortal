@@ -102,7 +102,7 @@
                                 <th class="py-3 text-secondary small text-uppercase">Type</th>
                                 <th class="py-3 text-secondary small text-uppercase">Date</th>
                                 <th class="py-3 text-secondary small text-uppercase">Status</th>
-                                <th class="py-3 text-secondary small text-uppercase">Notes</th>
+                                <th class="py-3 text-secondary small text-uppercase">Actions / Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,7 +129,35 @@
                                     @endif
                                 </td>
                                 <td class="small text-muted">
-                                    {{ $appt->cancellation_reason ?? '-' }}
+                                    @if($appt->status->value === 'completed')
+                                        <button class="btn btn-link p-0 text-primary fw-bold text-decoration-none small" data-bs-toggle="modal" data-bs-target="#recordModal-{{ $appt->id }}">
+                                            View Results <i class="bi bi-arrow-right"></i>
+                                        </button>
+
+                                        {{-- Medical Record Modal --}}
+                                        <div class="modal fade" id="recordModal-{{ $appt->id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-primary">Medical Record</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4">
+                                                        <div class="mb-3">
+                                                            <small class="text-uppercase text-muted fw-bold">Diagnosis</small>
+                                                            <div class="p-3 bg-light rounded mt-1">{{ $appt->diagnosis ?? 'No diagnosis recorded.' }}</div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <small class="text-uppercase text-muted fw-bold">Prescription</small>
+                                                            <div class="p-3 bg-light rounded mt-1">{{ $appt->prescription ?? 'No prescription recorded.' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{ $appt->cancellation_reason ?? '-' }}
+                                    @endif
                                 </td>
                             </tr>
                             @empty

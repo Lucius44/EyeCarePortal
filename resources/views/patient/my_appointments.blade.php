@@ -114,7 +114,7 @@
                                 <th class="py-3 ps-4 text-secondary small text-uppercase">Date</th>
                                 <th class="py-3 text-secondary small text-uppercase">Service</th>
                                 <th class="py-3 text-secondary small text-uppercase">Status</th>
-                                <th class="py-3 text-secondary small text-uppercase text-end pe-4">Notes</th>
+                                <th class="py-3 text-secondary small text-uppercase text-end pe-4">Notes / Results</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,7 +135,39 @@
                                         @endif
                                     </td>
                                     <td class="text-end pe-4 text-muted small">
-                                        {{ $app->cancellation_reason ?? '-' }}
+                                        @if($app->status->value === 'completed')
+                                            <button class="btn btn-link p-0 fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#resultModal-{{ $app->id }}">
+                                                View Results <i class="bi bi-file-medical"></i>
+                                            </button>
+
+                                            {{-- PATIENT RESULT MODAL --}}
+                                            <div class="modal fade text-start" id="resultModal-{{ $app->id }}" tabindex="-1">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                        <div class="modal-header border-0 pb-0">
+                                                            <h5 class="modal-title fw-bold text-primary">Appointment Results</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <div class="mb-3">
+                                                                <small class="text-uppercase text-muted fw-bold">Diagnosis</small>
+                                                                <div class="p-3 bg-light rounded mt-1">{{ $app->diagnosis ?? 'No diagnosis available.' }}</div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <small class="text-uppercase text-muted fw-bold">Prescription</small>
+                                                                <div class="p-3 bg-light rounded mt-1">{{ $app->prescription ?? 'No prescription available.' }}</div>
+                                                            </div>
+                                                            <div class="alert alert-info border-0 d-flex align-items-center mb-0">
+                                                                <i class="bi bi-info-circle-fill me-2"></i> 
+                                                                <small>Please visit the clinic if you have questions about these results.</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            {{ $app->cancellation_reason ?? '-' }}
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
