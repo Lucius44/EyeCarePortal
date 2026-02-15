@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\AppointmentStatus;
-use Carbon\Carbon; // Added Carbon for time formatting
+use Carbon\Carbon;
 
 class Appointment extends Model
 {
@@ -36,22 +36,19 @@ class Appointment extends Model
         return $this->belongsTo(User::class);
     }
 
-    // --- NEW: Time Mutator (The Safety Fix) ---
-    // This ensures that '9:00 am', '09:00 am', or '9:00 AM' all become '09:00 AM'
+    // --- Time Mutator ---
     public function setAppointmentTimeAttribute($value)
     {
         $this->attributes['appointment_time'] = Carbon::parse($value)->format('h:i A');
     }
 
     // --- Helpers to get Patient Info (User OR Guest) ---
-
     public function getPatientNameAttribute()
     {
         if ($this->user) {
             return $this->user->first_name . ' ' . $this->user->last_name;
         }
         
-        // Handle Guest Name with Middle Name support
         $name = $this->patient_first_name;
         if ($this->patient_middle_name) {
             $name .= ' ' . $this->patient_middle_name;
@@ -69,13 +66,10 @@ class Appointment extends Model
         return $this->attributes['patient_email'] ?? null;
     }
 
-    // --- Define Available Services ---
+    // --- REFACTORED: Fetch Services from DB ---
     public static function getServices()
     {
-        return [
-            'General Checkup',
-            'Laser Treatment',
-            'Glasses/Contacts Fitting',
-        ];
+        // Pluck 'name' so it returns a simple array of strings: ['General Checkup', ...]
+        return Service::orderBy('name')->pluck('name')->toArray();
     }
 }

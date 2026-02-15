@@ -29,6 +29,10 @@
     <a href="{{ route('admin.users') }}" class="admin-nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
         <i class="bi bi-people"></i> Users & Patients
     </a>
+    {{-- NEW Services Link --}}
+    <a href="{{ route('services.index') }}" class="admin-nav-link {{ request()->routeIs('services.index') ? 'active' : '' }}">
+        <i class="bi bi-briefcase-medical"></i> Services
+    </a>
     
     <form action="{{ route('logout') }}" method="POST" class="mt-3">
         @csrf

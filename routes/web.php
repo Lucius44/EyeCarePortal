@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminServiceController; // <--- Import
 
 // -- Public Routes --
 Route::get('/', function () {
@@ -55,13 +56,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // Appointment Actions
     Route::post('/calendar/store', [AdminController::class, 'storeAppointment'])->name('admin.calendar.store');
-    
-    // --- NEW: Route for Day Settings ---
     Route::post('/calendar/settings', [AdminController::class, 'updateDaySetting'])->name('admin.calendar.settings');
     
     Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
     Route::get('/appointments-history', [AdminController::class, 'history'])->name('admin.history');
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
+    
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
+
+    // --- NEW: Services Management ---
+    // We use 'except' show because we list them in index and don't need a standalone detail page
+    Route::resource('services', AdminServiceController::class)->except(['show', 'create', 'edit']);
 });

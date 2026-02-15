@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Models\DaySetting;
+use App\Models\Service; // <--- Import this
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Http\Resources\CalendarEventResource;
@@ -68,13 +69,14 @@ class AdminController extends Controller
             return $item->date->format('Y-m-d');
         });
         
-        return view('admin.calendar', compact('events', 'daySettings'));
+        // --- NEW: Fetch services for the manual booking modal ---
+        $services = Service::orderBy('name')->get();
+        
+        return view('admin.calendar', compact('events', 'daySettings', 'services'));
     }
 
-    // Refactored: Uses FormRequest
     public function updateDaySetting(UpdateDaySettingRequest $request) 
     {
-        // Fix: Force strict Date format to prevent "Duplicate Entry" with timestamps
         $cleanDate = Carbon::parse($request->date)->format('Y-m-d');
 
         DaySetting::updateOrCreate(
@@ -88,16 +90,11 @@ class AdminController extends Controller
         return back()->with('success', 'Day settings updated successfully.');
     }
 
-    // Refactored: Uses Service & FormRequest
     public function storeAppointment(StoreAdminAppointmentRequest $request)
     {
-        // 1. Delegate to Service
-        // We pass 'admin' as the origin so the service knows to auto-confirm it.
         $result = $this->appointmentService->createAppointment($request->validated(), 'admin');
 
-        // 2. Handle Errors
         if (is_array($result) && isset($result['error'])) {
-            // We map the generic error to the 'appointment_date' field or global error bag
             return back()->withErrors(['appointment_date' => $result['error']])->withInput();
         }
 

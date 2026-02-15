@@ -282,9 +282,11 @@
                             </div>
                             <div class="col-md-6">
                                 <select name="service" class="form-select" required>
-                                    <option value="General Checkup">General Checkup</option>
-                                    <option value="Laser Treatment">Laser Treatment</option>
-                                    <option value="Glasses/Contacts">Glasses/Contacts Fitting</option>
+                                    <option value="" disabled selected>Select Service...</option>
+                                    {{-- DYNAMIC SERVICES LOOP --}}
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->name }}">{{ $service->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
