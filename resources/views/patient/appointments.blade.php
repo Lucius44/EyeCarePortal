@@ -139,23 +139,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Service Required</label>
-                        <select name="service" class="form-select form-select-lg bg-light border-0" required id="serviceSelect">
-                            <option value="">-- Select Service --</option>
-                            @foreach($services as $service)
-                                {{-- FIX: $service is a string, NOT an object --}}
-                                <option value="{{ $service }}">{{ $service }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- "Other" Service Input --}}
-                    <div class="mb-3 d-none" id="otherServiceDiv">
-                        <label class="form-label fw-bold">Please Specify Service</label>
-                        <input type="text" name="service_other" id="serviceInput" class="form-control bg-light border-0" placeholder="Type your required service...">
-                    </div>
-
+                    {{-- 1. Time Selection (Moved UP) --}}
                     <div class="mb-3" id="desktopTimeSelectWrapper">
                         <label class="form-label fw-bold">Select Time</label>
                         <select id="desktopTimeSelect" class="form-select form-select-lg" onchange="document.getElementById('modalTimeInput').value = this.value; updateSummaryTime(this.value);">
@@ -172,9 +156,21 @@
                         </div>
                     </div>
 
+                    {{-- 2. Service Selection (Moved DOWN) --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Service Required</label>
+                        <select name="service" class="form-select form-select-lg bg-light border-0" required id="serviceSelect">
+                            <option value="">-- Select Service --</option>
+                            @foreach($services as $service)
+                                <option value="{{ $service }}">{{ $service }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- 3. Notes / Symptoms (Dynamic Required for 'Others') --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Notes / Symptoms</label>
-                        <textarea name="description" class="form-control bg-light border-0" rows="3" placeholder="Optional notes..."></textarea>
+                        <textarea name="description" id="notesTextarea" class="form-control bg-light border-0" rows="3" placeholder="Optional notes..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 px-4 pb-4">

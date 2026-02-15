@@ -6,21 +6,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const isVerified = dataEl.getAttribute('data-verified') == '1';
     const hasActive = dataEl.getAttribute('data-has-active') == '1';
     
-    // --- 0. SERVICE DROPDOWN LOGIC (Restore this) ---
+    // --- 0. SERVICE DROPDOWN LOGIC (UPDATED) ---
     const serviceSelect = document.getElementById('serviceSelect');
-    const serviceInput = document.getElementById('serviceInput');
-    const serviceDiv = document.getElementById('otherServiceDiv');
+    const notesField = document.getElementById('notesTextarea');
 
-    if(serviceSelect) {
+    if(serviceSelect && notesField) {
         serviceSelect.addEventListener('change', function() {
-            if (this.value === 'Other') {
-                serviceDiv.classList.remove('d-none');
-                serviceInput.required = true;
-                serviceInput.value = '';
+            if (this.value === 'Others') {
+                notesField.required = true;
+                notesField.placeholder = "Please describe your required service or symptoms...";
             } else {
-                serviceDiv.classList.add('d-none');
-                serviceInput.required = false;
-                serviceInput.value = this.value; // Store selected value in hidden input logic if needed
+                notesField.required = false;
+                notesField.placeholder = "Optional notes...";
             }
         });
     }

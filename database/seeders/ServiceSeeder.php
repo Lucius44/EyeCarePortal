@@ -14,14 +14,11 @@ class ServiceSeeder extends Seeder
     {
         $services = [
             'Comprehensive Eye Exam',
-            'Pediatric Eye Exam',
+            'Prescription Eyeglasses',
             'Contact Lens Fitting',
+            'Pediatric Eye Exam',
             'Dry Eye Treatment',
-            'Glaucoma Screening',
-            'Diabetic Eye Care',
-            'Laser Eye Surgery Consultation',
-            'Emergency Eye Care',
-            'Other', // Added at the end
+            'Others', 
         ];
 
         foreach ($services as $service) {

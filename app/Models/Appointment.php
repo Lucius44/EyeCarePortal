@@ -19,8 +19,8 @@ class Appointment extends Model
         'description',
         'status',
         'cancellation_reason',
-        'diagnosis',      // <--- Added
-        'prescription',   // <--- Added
+        'diagnosis',
+        'prescription',
         'patient_first_name',
         'patient_middle_name',
         'patient_last_name',
@@ -71,6 +71,15 @@ class Appointment extends Model
     // --- REFACTORED: Fetch Services from DB ---
     public static function getServices()
     {
-        return Service::orderBy('name')->pluck('name')->toArray();
+        // 1. Get all services EXCEPT 'Others', sorted alphabetically
+        $services = Service::where('name', '!=', 'Others')
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+        
+        // 2. Append 'Others' at the very end
+        $services[] = 'Others';
+        
+        return $services;
     }
 }

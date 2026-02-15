@@ -69,7 +69,10 @@ class AdminController extends Controller
             return $item->date->format('Y-m-d');
         });
         
-        $services = Service::orderBy('name')->get();
+        // Fetch Services and sort so 'Others' is always last
+        $services = Service::all()->sortBy(function($service) {
+            return $service->name === 'Others' ? 'ZZZZ' : $service->name;
+        });
         
         return view('admin.calendar', compact('events', 'daySettings', 'services'));
     }
@@ -125,7 +128,7 @@ class AdminController extends Controller
             $query->where(function($q) use ($search) {
                 $q->whereHas('user', function($u) use ($search) {
                     $u->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('middle_name', 'like', "%{$search}%") // Added Middle Name Search
+                      ->orWhere('middle_name', 'like', "%{$search}%")
                       ->orWhere('last_name', 'like', "%{$search}%");
                 })
                 ->orWhere('patient_first_name', 'like', "%{$search}%")
@@ -174,7 +177,7 @@ class AdminController extends Controller
         $pendingUsers = User::where('role', UserRole::Patient)
                             ->whereNotNull('id_photo_path')
                             ->where('is_verified', false)
-                            ->whereNull('rejection_reason') // Only show those not yet rejected
+                            ->whereNull('rejection_reason')
                             ->get();
 
         $query = User::where('role', UserRole::Patient);
