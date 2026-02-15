@@ -67,6 +67,11 @@
         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3); transform: translateY(-2px);
     }
     .date-card.closed-day { background: #fff5f5; border-color: #ffe0e3; color: #e11d48; }
+    
+    /* Past Day Style (Unclickable Visual) */
+    .date-card.past-day { background: #f1f5f9; border-color: #e2e8f0; color: #94a3b8; cursor: default; }
+    .date-card.past-day .day-name, .date-card.past-day .day-num { opacity: 0.6; }
+
     .day-name { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
     .day-num { font-size: 1.25rem; font-weight: 800; line-height: 1; margin-top: 2px; }
 
@@ -149,17 +154,46 @@
                 </div>
             @endif
 
-            {{-- MOBILE VIEW: DATE STRIP --}}
+            {{-- MOBILE VIEW: NAVIGATOR + DATE STRIP --}}
             <div class="d-md-none mb-4">
-                <h6 class="text-uppercase text-muted small fw-bold mb-2">Select Date to Manage</h6>
+                {{-- New Navigation Header --}}
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-3 rounded-4 shadow-sm">
+                    <button class="btn btn-sm btn-light rounded-circle border" id="mobilePrevMonth">
+                        <i class="bi bi-chevron-left text-dark"></i>
+                    </button>
+                    
+                    <div class="text-center">
+                        <h6 class="mb-0 fw-bold text-dark" id="mobileMonthDisplay">Loading...</h6>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-light rounded-circle border" id="mobileNextMonth">
+                            <i class="bi bi-chevron-right text-dark"></i>
+                        </button>
+                        
+                        {{-- Today Button --}}
+                        <button class="btn btn-sm btn-outline-primary fw-bold rounded-3" id="mobileTodayBtn" style="font-size: 0.7rem;">
+                            Today
+                        </button>
+
+                        <div style="position: relative;">
+                            <input type="date" id="mobileDatePicker" style="position: absolute; opacity: 0; width: 100%; height: 100%; top:0; left:0; z-index: 10;">
+                            <button class="btn btn-sm btn-primary rounded-circle shadow-sm">
+                                <i class="bi bi-calendar-date"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="date-strip-wrapper">
                     <div class="d-flex gap-2" id="mobileDateStrip">
                         {{-- JS Populated --}}
                     </div>
                 </div>
-                <div class="text-center py-4 text-muted small">
-                    <i class="bi bi-hand-index-thumb mb-2 d-block fs-4"></i>
-                    Tap a date above to open Master Controls
+                
+                {{-- Footer Instruction --}}
+                <div class="text-center mt-3 text-muted small opacity-75">
+                    <small>Tap a date to manage schedule</small>
                 </div>
             </div>
 
@@ -191,7 +225,7 @@
 
             <div class="modal-body p-4">
                 <div class="row g-3 mb-4">
-                    <div class="col-4">
+                    <div class="col-4" id="col-book-btn">
                         <div class="selection-btn text-center" onclick="toggleSection('book')" id="btn-book">
                             <i class="bi bi-plus-circle-fill text-success"></i>
                             <div class="small fw-bold">Book</div>
@@ -327,6 +361,7 @@
         var today = new Date(); 
         today.setHours(0,0,0,0);
 
+        // --- DESKTOP: FULLCALENDAR INITIALIZATION (UNTOUCHED) ---
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             themeSystem: 'standard',
@@ -334,12 +369,11 @@
             height: 'auto',
             events: eventsData,
             
-            // --- TIME GRID SETTINGS (FIXED FOR 9AM - 6PM) ---
             allDaySlot: false,
             slotMinTime: '09:00:00',
-            slotMaxTime: '18:00:00', // Shows up to 17:00-18:00 slot
-            slotDuration: '01:00:00', // 1 Hour Row
-            expandRows: true, // Fill height logic
+            slotMaxTime: '18:00:00', 
+            slotDuration: '01:00:00', 
+            expandRows: true, 
 
             dayCellClassNames: function(arg) {
                 var d = new Date(arg.date); d.setHours(0,0,0,0);
@@ -355,7 +389,6 @@
                 d.setHours(0,0,0,0);
                 if (d < today) return;
                 
-                // IMPORTANT: Extract just the date part for lookups to fix Day View bug
                 var safeDateStr = info.dateStr.split('T')[0];
                 openMasterModal(safeDateStr);
             },
@@ -387,13 +420,28 @@
             });
         }
 
-        // --- MOBILE STRIP ---
-        function initMobileStrip() {
+        // --- MOBILE STRIP LOGIC ---
+        var currentMobileDate = new Date(); // State for current view
+
+        function renderMobileStrip(startDate) {
             var container = document.getElementById('mobileDateStrip');
+            var monthDisplay = document.getElementById('mobileMonthDisplay');
             if(!container) return; 
-            for(let i=0; i<30; i++) {
-                let d = new Date();
-                d.setDate(today.getDate() + i);
+            
+            container.innerHTML = ''; // Clear previous
+
+            // Update Header Display (e.g., "February 2026")
+            monthDisplay.textContent = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            // Render 31 days starting from the selected date
+            for(let i=0; i<31; i++) {
+                let d = new Date(startDate);
+                d.setDate(startDate.getDate() + i);
+                
+                // Determine if past date
+                let dCheck = new Date(d); dCheck.setHours(0,0,0,0);
+                let isPast = dCheck < today;
+
                 let iso = formatDate(d);
                 let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
                 let dayNum = d.getDate();
@@ -401,23 +449,60 @@
                 let isClosed = settings ? settings.is_closed : false;
                 
                 let card = document.createElement('div');
-                card.className = 'date-card ' + (isClosed ? 'closed-day' : '');
+                // Apply 'past-day' class if past
+                card.className = 'date-card ' + (isClosed ? 'closed-day ' : '') + (isPast ? 'past-day' : '');
+                
                 card.innerHTML = `<div class="day-name">${dayName}</div><div class="day-num">${dayNum}</div>${isClosed ? '<small class="fw-bold mt-1" style="font-size:0.6rem">CLOSED</small>' : ''}`;
-                card.onclick = function() { openMasterModal(iso); };
+                
+                // Only attach onclick if NOT past
+                if (!isPast) {
+                    card.onclick = function() { openMasterModal(iso); };
+                }
+                
                 container.appendChild(card);
             }
         }
-        initMobileStrip();
 
-        // --- MODAL LOGIC ---
+        // Initialize Mobile Strip
+        renderMobileStrip(currentMobileDate);
+
+        // Mobile Navigation Events
+        document.getElementById('mobilePrevMonth').addEventListener('click', function() {
+            currentMobileDate.setDate(1); 
+            currentMobileDate.setMonth(currentMobileDate.getMonth() - 1);
+            renderMobileStrip(currentMobileDate);
+        });
+
+        document.getElementById('mobileNextMonth').addEventListener('click', function() {
+            currentMobileDate.setDate(1); 
+            currentMobileDate.setMonth(currentMobileDate.getMonth() + 1);
+            renderMobileStrip(currentMobileDate);
+        });
+
+        // Today Button Logic
+        document.getElementById('mobileTodayBtn').addEventListener('click', function() {
+            currentMobileDate = new Date(); // Reset to actual today
+            renderMobileStrip(currentMobileDate);
+        });
+
+        document.getElementById('mobileDatePicker').addEventListener('change', function(e) {
+            if(e.target.value) {
+                currentMobileDate = new Date(e.target.value);
+                renderMobileStrip(currentMobileDate);
+            }
+        });
+
+        // --- SHARED MODAL LOGIC ---
         var masterModal = null;
         
         function openMasterModal(dateStr, defaultTab = 'book') {
             if (!masterModal) masterModal = new bootstrap.Modal(document.getElementById('masterModal'));
             
-            // Fix "Invalid Date" by forcing standard string format
             var parts = dateStr.split('-');
             var displayDate = new Date(parts[0], parts[1]-1, parts[2]);
+            
+            var modalToday = new Date(); modalToday.setHours(0,0,0,0);
+            var isPast = displayDate < modalToday;
 
             document.getElementById('masterDateDisplay').textContent = displayDate.toLocaleDateString('en-US', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
@@ -426,20 +511,32 @@
             document.getElementById('bookDateInput').value = dateStr;
             document.getElementById('settingDateInput').value = dateStr;
 
-            var settings = daySettings[dateStr];
-            var isClosed = settings ? settings.is_closed : false;
-            var maxLimit = settings ? settings.max_appointments : 5;
-            
-            document.getElementById('isClosedCheck').checked = isClosed;
-            document.getElementById('maxApptInput').value = maxLimit;
-            
+            var btnBook = document.getElementById('btn-book');
+            var colBook = document.getElementById('col-book-btn');
             var badge = document.getElementById('masterDateStatus');
-            if(isClosed) {
-                badge.className = 'badge bg-danger text-white mt-2';
-                badge.textContent = 'Clinic Closed';
+
+            if (isPast) {
+                colBook.classList.add('d-none');
+                defaultTab = 'view';
+                badge.className = 'badge bg-secondary text-white mt-2';
+                badge.textContent = 'Past Date';
             } else {
-                badge.className = 'badge bg-success text-white mt-2';
-                badge.textContent = 'Open for Booking';
+                colBook.classList.remove('d-none');
+                
+                var settings = daySettings[dateStr];
+                var isClosed = settings ? settings.is_closed : false;
+                var maxLimit = settings ? settings.max_appointments : 5;
+                
+                document.getElementById('isClosedCheck').checked = isClosed;
+                document.getElementById('maxApptInput').value = maxLimit;
+                
+                if(isClosed) {
+                    badge.className = 'badge bg-danger text-white mt-2';
+                    badge.textContent = 'Clinic Closed';
+                } else {
+                    badge.className = 'badge bg-success text-white mt-2';
+                    badge.textContent = 'Open for Booking';
+                }
             }
 
             var dayEvents = eventsData.filter(e => e.start.startsWith(dateStr));
