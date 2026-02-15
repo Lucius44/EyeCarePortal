@@ -4,7 +4,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!dataEl) return; 
 
     const isVerified = dataEl.getAttribute('data-verified') == '1';
-    const hasActive = dataEl.getAttribute('data-has-active') == '1'; 
+    const hasActive = dataEl.getAttribute('data-has-active') == '1';
+    
+    // --- 0. SERVICE DROPDOWN LOGIC (Restore this) ---
+    const serviceSelect = document.getElementById('serviceSelect');
+    const serviceInput = document.getElementById('serviceInput');
+    const serviceDiv = document.getElementById('otherServiceDiv');
+
+    if(serviceSelect) {
+        serviceSelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+                serviceDiv.classList.remove('d-none');
+                serviceInput.required = true;
+                serviceInput.value = '';
+            } else {
+                serviceDiv.classList.add('d-none');
+                serviceInput.required = false;
+                serviceInput.value = this.value; // Store selected value in hidden input logic if needed
+            }
+        });
+    }
     
     // NEW: Get Server Time Logic
     const currentHour = parseInt(dataEl.getAttribute('data-server-hour') || '0');
