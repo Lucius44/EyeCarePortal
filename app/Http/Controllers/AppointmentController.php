@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
+use App\Models\User;
 use App\Enums\AppointmentStatus;
 use App\Services\AppointmentService; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
@@ -41,10 +43,36 @@ class AppointmentController extends Controller
 
     public function store(StoreAppointmentRequest $request)
     {
-        $userId = Auth::id();
+        $user = Auth::user();
 
-        // 1. Patient-Specific Rule: One active appointment at a time
-        $hasActive = Appointment::where('user_id', $userId)
+        // --- RULE 1: Permanent Restriction (3 Strikes) ---
+        if ($user->account_status === 'restricted') {
+             return redirect()->back()->withErrors(['error' => 'Your account is restricted due to multiple violations. Please contact the clinic for assistance.']);
+        }
+
+        // --- RULE 2: Temporary Timeout (Anti-Spam) ---
+        // Check if the user is currently in a "Timeout"
+        if ($user->restricted_until && now()->lessThan($user->restricted_until)) {
+            $minutes = now()->diffInMinutes($user->restricted_until);
+            return redirect()->back()->withErrors(['error' => "You are temporarily blocked from booking due to excessive rescheduling. Please try again in {$minutes} minutes."]);
+        }
+
+        // --- RULE 3: Detect Spam Behavior (The "Indecision" Check) ---
+        // Count how many 'Pending' appointments this user cancelled (soft deleted) in the last 60 minutes
+        $spamCount = Appointment::onlyTrashed() 
+            ->where('user_id', $user->id)
+            ->where('status', AppointmentStatus::Pending) // Only count Pending (Confirmed cancels are handled differently)
+            ->where('deleted_at', '>=', now()->subHour())
+            ->count();
+
+        if ($spamCount >= 3) {
+            // Apply 1-Hour Timeout
+            $user->update(['restricted_until' => now()->addHour()]);
+            return redirect()->back()->withErrors(['error' => 'You have cancelled too many requests recently. Please wait 1 hour before booking again.']);
+        }
+
+        // --- RULE 4: One Active Appointment Limit ---
+        $hasActive = Appointment::where('user_id', $user->id)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->exists();
 
@@ -52,14 +80,12 @@ class AppointmentController extends Controller
             return redirect()->back()->withErrors(['error' => 'You already have an active appointment.']);
         }
 
-        // 2. Prepare Data
+        // Proceed with booking
         $data = $request->validated();
-        $data['user_id'] = $userId; // Attach the logged-in user
+        $data['user_id'] = $user->id; 
 
-        // 3. Delegate to Service
         $result = $this->appointmentService->createAppointment($data, 'patient');
 
-        // 4. Handle Result
         if (is_array($result) && isset($result['error'])) {
             return redirect()->back()->withErrors(['error' => $result['error']])->withInput();
         }
@@ -70,27 +96,52 @@ class AppointmentController extends Controller
     public function cancel(Request $request, $id)
     {
         $appointment = Appointment::findOrFail($id);
+        $user = Auth::user();
 
-        if ($appointment->user_id !== Auth::id()) {
+        if ($appointment->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
+        // SCENARIO A: PENDING (Indecision)
+        // We Soft Delete it so we can count it towards the "Spam Limit" in store()
         if ($appointment->status === AppointmentStatus::Pending) {
-            $appointment->delete();
+            $appointment->delete(); 
             return back()->with('success', 'Appointment request removed successfully.');
         }
 
+        // SCENARIO B: CONFIRMED (Commitment)
+        // We do NOT delete confirmed appointments; we mark them as 'Cancelled'
         if ($appointment->status === AppointmentStatus::Confirmed) {
             $request->validate([
                 'cancellation_reason' => 'required|string|max:255',
             ]);
+
+            // Calculate time difference
+            $apptDateTime = Carbon::parse($appointment->appointment_date->format('Y-m-d') . ' ' . $appointment->appointment_time);
+            $hoursUntil = now()->diffInHours($apptDateTime, false);
+
+            $message = 'Appointment cancelled successfully.';
+
+            // Check for Late Cancellation (< 24 Hours)
+            if ($hoursUntil < 24) {
+                // Apply Penalty
+                $user->increment('strikes');
+                
+                // Check if Limit Reached
+                if ($user->strikes >= 3) {
+                    $user->update(['account_status' => 'restricted']);
+                    $message = 'Appointment cancelled. WARNING: Your account has been RESTRICTED due to multiple late cancellations.';
+                } else {
+                    $message = 'Appointment cancelled. You received a STRIKE for cancelling less than 24 hours in advance.';
+                }
+            }
 
             $appointment->update([
                 'status' => AppointmentStatus::Cancelled,
                 'cancellation_reason' => $request->cancellation_reason
             ]);
             
-            return back()->with('success', 'Appointment cancelled successfully.');
+            return back()->with('success', $message);
         }
 
         return back()->with('error', 'This appointment cannot be cancelled.');

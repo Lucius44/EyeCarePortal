@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // <--- ADDED IMPORT
 use App\Enums\AppointmentStatus;
 use Carbon\Carbon;
 
 class Appointment extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // <--- ADDED TRAIT
 
     protected $fillable = [
         'user_id',

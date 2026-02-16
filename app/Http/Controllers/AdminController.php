@@ -69,7 +69,6 @@ class AdminController extends Controller
             return $item->date->format('Y-m-d');
         });
         
-        // Fetch Services and sort so 'Others' is always last
         $services = Service::all()->sortBy(function($service) {
             return $service->name === 'Others' ? 'ZZZZ' : $service->name;
         });
@@ -77,7 +76,6 @@ class AdminController extends Controller
         return view('admin.calendar', compact('events', 'daySettings', 'services'));
     }
 
-    // --- UPDATED METHOD START ---
     public function updateDaySetting(UpdateDaySettingRequest $request) 
     {
         $cleanDate = Carbon::parse($request->date)->format('Y-m-d');
@@ -85,7 +83,6 @@ class AdminController extends Controller
 
         DB::transaction(function () use ($cleanDate, $request, $isClosed) {
             
-            // 1. Update or Create the Day Setting
             DaySetting::updateOrCreate(
                 ['date' => $cleanDate],
                 [
@@ -94,9 +91,8 @@ class AdminController extends Controller
                 ]
             );
 
-            // 2. If Closing, Auto-Reject Pending Requests
             if ($isClosed) {
-                $affectedRows = Appointment::where('appointment_date', $cleanDate)
+                Appointment::where('appointment_date', $cleanDate)
                     ->where('status', AppointmentStatus::Pending)
                     ->update([
                         'status' => AppointmentStatus::Rejected,
@@ -112,7 +108,6 @@ class AdminController extends Controller
 
         return back()->with('success', $message);
     }
-    // --- UPDATED METHOD END ---
 
     public function storeAppointment(StoreAdminAppointmentRequest $request)
     {
@@ -180,6 +175,7 @@ class AdminController extends Controller
 
         $data = ['status' => $request->status];
 
+        // Specific Logic for different statuses
         if ($request->status === AppointmentStatus::Rejected->value) {
             $data['cancellation_reason'] = $request->input('cancellation_reason', 'No reason provided.');
         }
@@ -190,6 +186,18 @@ class AdminController extends Controller
         }
 
         $appointment->update($data);
+
+        // --- NEW: NO-SHOW PENALTY LOGIC ---
+        // If Admin marks as "No Show" and it is a registered user, give a Strike.
+        if ($request->status === AppointmentStatus::NoShow->value && $appointment->user_id) {
+            $user = $appointment->user;
+            $user->increment('strikes');
+
+            // Check if limit reached
+            if ($user->strikes >= 3) {
+                $user->update(['account_status' => 'restricted']);
+            }
+        }
 
         return back()->with('success', 'Appointment updated successfully.');
     }
@@ -250,7 +258,7 @@ class AdminController extends Controller
                 'is_verified' => false,
                 'rejection_reason' => $request->input('reason')
             ]);
-            return back()->with('success', 'User verification rejected. They will see the reason.');
+            return back()->with('success', 'User verification rejected.');
         }
 
         return back()->with('error', 'Invalid action.');

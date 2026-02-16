@@ -30,7 +30,11 @@ class User extends Authenticatable
         'role',
         'id_photo_path',
         'is_verified',
-        'rejection_reason', // <--- ADDED THIS LINE
+        'rejection_reason',
+        // -- NEW PENALTY FIELDS --
+        'account_status',   // active, restricted, banned
+        'strikes',          // Count of offenses
+        'restricted_until', // Timestamp for temporary timeouts
     ];
 
     /**
@@ -53,7 +57,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class, 
+            'role' => UserRole::class,
+            'restricted_until' => 'datetime', // Auto-converts to Carbon instance
         ];
     }
 }
