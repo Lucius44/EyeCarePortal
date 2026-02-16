@@ -5,7 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AdminServiceController; // <--- Import
+use App\Http\Controllers\AdminServiceController; 
 
 // -- Public Routes --
 Route::get('/', function () {
@@ -41,6 +41,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Settings & Upload
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
+    
+    // --- NEW: Profile Update Route ---
+    Route::post('/settings/profile', [PatientController::class, 'updateProfile'])->name('settings.profile');
+    
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');
@@ -65,7 +69,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
 
-    // --- NEW: Services Management ---
-    // We use 'except' show because we list them in index and don't need a standalone detail page
     Route::resource('services', AdminServiceController::class)->except(['show', 'create', 'edit']);
 });

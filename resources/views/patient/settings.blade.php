@@ -16,6 +16,13 @@
             <div>{{ session('success') }}</div>
         </div>
     @endif
+    
+    @if (session('error'))
+        <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-danger"></i>
+            <div>{{ session('error') }}</div>
+        </div>
+    @endif
 
     @if ($errors->any())
         <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4">
@@ -27,8 +34,85 @@
 
     <div class="row g-4">
         
+        {{-- LEFT COLUMN --}}
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
+            
+            {{-- 1. PERSONAL INFORMATION CARD --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-indigo-50 text-dark bg-secondary bg-opacity-10 p-2 rounded-3 me-3">
+                            <i class="bi bi-person-lines-fill fs-5"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Personal Information</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    @if(Auth::user()->is_verified)
+                        {{-- READ ONLY VIEW --}}
+                        <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success d-flex align-items-center rounded-3 mb-3">
+                            <i class="bi bi-lock-fill me-2"></i>
+                            <small class="fw-bold">Locked: Identity Verified</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold">Full Name</label>
+                            <div class="form-control bg-light">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="small text-muted fw-bold">Birthday</label>
+                                <div class="form-control bg-light">{{ Auth::user()->birthday }}</div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="small text-muted fw-bold">Gender</label>
+                                <div class="form-control bg-light">{{ ucfirst(Auth::user()->gender) }}</div>
+                            </div>
+                        </div>
+                    @else
+                        {{-- EDIT FORM (UNVERIFIED) --}}
+                        <p class="text-muted small mb-3">
+                            Ensure your details match your ID <strong>exactly</strong>. 
+                        </p>
+                        <form action="{{ route('settings.profile') }}" method="POST">
+                            @csrf
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-5">
+                                    <label class="small text-muted">First Name</label>
+                                    <input type="text" name="first_name" class="form-control" value="{{ Auth::user()->first_name }}" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="small text-muted">M.I.</label>
+                                    <input type="text" name="middle_name" class="form-control" value="{{ Auth::user()->middle_name }}">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="small text-muted">Last Name</label>
+                                    <input type="text" name="last_name" class="form-control" value="{{ Auth::user()->last_name }}" required>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Birthday</label>
+                                    <input type="date" name="birthday" class="form-control" value="{{ Auth::user()->birthday }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Gender</label>
+                                    <select name="gender" class="form-select" required>
+                                        <option value="Male" {{ Auth::user()->gender == 'Male' ? 'selected' : '' }}>Male</option>
+                                        <option value="Female" {{ Auth::user()->gender == 'Female' ? 'selected' : '' }}>Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline-dark rounded-pill w-100 fw-bold btn-sm">
+                                Save Changes
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+
+            {{-- 2. IDENTITY VERIFICATION CARD --}}
+            {{-- FIX: Removed 'h-100' to prevent overflow issues --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center mb-2">
                         <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
@@ -94,8 +178,9 @@
             </div>
         </div>
 
+        {{-- RIGHT COLUMN --}}
         <div class="col-lg-6">
-            {{-- Contact & Password Cards remain unchanged --}}
+            {{-- Contact Card --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center mb-2">
@@ -128,6 +213,7 @@
                 </div>
             </div>
 
+            {{-- Password Card --}}
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center mb-2">

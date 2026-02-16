@@ -42,6 +42,37 @@ class PatientController extends Controller
         return view('patient.settings');
     }
 
+    // --- NEW: Update Personal Info (For Unverified Users) ---
+    public function updateProfile(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Security Gate: Verified users cannot change core identity details
+        if ($user->is_verified) {
+            return back()->with('error', 'Your identity is verified. You cannot change your details.');
+        }
+
+        $validated = $request->validate([
+            // Regex allows letters, spaces, dots, and dashes. NO NUMBERS.
+            'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
+            'middle_name' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
+            'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
+            // Enforce 18+ years old
+            'birthday' => ['required', 'date', 'before:-18 years'],
+            'gender' => 'required|string|in:Male,Female,Other',
+        ], [
+            'first_name.regex' => 'First name cannot contain numbers or special characters.',
+            'last_name.regex' => 'Last name cannot contain numbers or special characters.',
+            'middle_name.regex' => 'Middle name cannot contain numbers or special characters.',
+            'birthday.before' => 'You must be at least 18 years old to register.',
+        ]);
+
+        $user->update($validated);
+
+        return back()->with('success', 'Personal information updated successfully.');
+    }
+
     // 5. Handle ID Upload
     public function uploadId(Request $request)
     {
@@ -90,7 +121,6 @@ class PatientController extends Controller
     // 7. Update Phone Number
     public function updatePhone(Request $request)
     {
-        // CHANGED: Added Regex for PH Phone Number (09xxxxxxxxx)
         $request->validate([
             'phone_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
         ], [
