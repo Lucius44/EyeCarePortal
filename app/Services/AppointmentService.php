@@ -73,30 +73,93 @@ class AppointmentService
     }
 
     /**
+     * Check if a patient is allowed to book.
+     * Returns TRUE if allowed, or an ARRAY ['error' => message] if blocked.
+     */
+    public function checkPatientEligibility(User $user)
+    {
+        // --- RULE 1: Permanent Restriction (3 Strikes) ---
+        if ($user->account_status === 'restricted') {
+            
+            // Auto-Unrestrict Logic
+            if ($user->restricted_until && now()->greaterThanOrEqualTo($user->restricted_until)) {
+                $user->update([
+                    'account_status' => 'active',
+                    'strikes' => 0,
+                    'restricted_until' => null
+                ]);
+            } else {
+                $dateStr = $user->restricted_until ? $user->restricted_until->format('F d, Y') : 'indefinitely';
+                return ['error' => "Your account is restricted until {$dateStr} due to multiple violations."];
+            }
+        }
+
+        // --- RULE 2: Temporary Timeout (Anti-Spam) ---
+        if ($user->restricted_until && now()->lessThan($user->restricted_until)) {
+            $minutes = (int) ceil(now()->floatDiffInMinutes($user->restricted_until));
+            return ['error' => "You are temporarily blocked from booking due to excessive rescheduling. Please try again in {$minutes} minutes."];
+        }
+
+        // --- RULE 3: Detect Spam Behavior ---
+        $spamCount = Appointment::onlyTrashed() 
+            ->where('user_id', $user->id)
+            ->where('status', AppointmentStatus::Pending)
+            ->where('deleted_at', '>=', now()->subHour())
+            ->count();
+
+        if ($spamCount >= 3) {
+            $user->update(['restricted_until' => now()->addHour()]);
+            return ['error' => 'You have cancelled too many requests recently. Please wait 1 hour before booking again.'];
+        }
+
+        // --- RULE 4: One Active Appointment Limit ---
+        $hasActive = Appointment::where('user_id', $user->id)
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->exists();
+
+        if ($hasActive) {
+            return ['error' => 'You already have an active appointment.'];
+        }
+
+        return true;
+    }
+
+    /**
+     * Apply a strike to a user and check for restriction thresholds.
+     * Returns TRUE if the user was just restricted, FALSE otherwise.
+     */
+    public function penalizeUser(User $user)
+    {
+        $user->increment('strikes');
+
+        // Check if Limit Reached (3 Strikes)
+        if ($user->strikes >= 3) {
+            $user->update([
+                'account_status' => 'restricted',
+                'restricted_until' => now()->addMonths(6)
+            ]);
+            return true; // User was Restricted
+        }
+
+        return false; // User was just Warned
+    }
+
+    /**
      * Handle the core logic for creating an appointment.
-     * Returns the created Appointment object or throws an exception/error array.
      */
     public function createAppointment(array $data, string $origin = 'patient')
     {
         $date = $data['appointment_date'];
         
-        // --- RACE CONDITION PROTECTION ---
-        // We lock the specific DATE. This prevents two issues:
-        // 1. Double Booking: Two people grabbing 10:00 AM at the exact same moment.
-        // 2. Limit Breach: Two people booking DIFFERENT slots, pushing the daily count over the limit.
-        // The lock waits 5 seconds to acquire, then releases.
         $lock = Cache::lock("booking_lock_{$date}", 10);
 
         try {
             return $lock->block(5, function () use ($data, $origin) {
                 
-                // NOTE: We must perform all checks INSIDE the lock to ensure we are reading
-                // the most up-to-date data after the previous person finished.
-
                 $date = $data['appointment_date'];
                 $time = $data['appointment_time'];
 
-                // 1. Check Day Settings (Closed / Limits)
+                // 1. Check Day Settings
                 $setting = DaySetting::where('date', $date)->first();
 
                 if ($setting && $setting->is_closed) {
@@ -113,7 +176,7 @@ class AppointmentService
                     return ['error' => "This date is fully booked ({$countOnDate}/{$limit})."];
                 }
 
-                // 2. Check Double Booking (Time Slot)
+                // 2. Check Double Booking
                 $isTaken = Appointment::where('appointment_date', $date)
                     ->where('appointment_time', $time)
                     ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
@@ -123,28 +186,24 @@ class AppointmentService
                     return ['error' => 'The selected time slot is already taken.'];
                 }
 
-                // 3. Prepare Data for Insertion
+                // 3. Prepare Data
                 $appointmentData = [
                     'appointment_date' => $date,
                     'appointment_time' => $time,
                     'service' => $data['service'],
                     'description' => $data['description'] ?? null,
-                    // Admin bookings are Confirmed immediately; Patients are Pending
                     'status' => ($origin === 'admin') ? AppointmentStatus::Confirmed : AppointmentStatus::Pending,
                 ];
 
-                // 4. Handle User Linking vs Guest
+                // 4. Handle User Linking
                 if (isset($data['user_id'])) {
-                    // Logic for Authenticated User (Patient Dashboard)
                     $appointmentData['user_id'] = $data['user_id'];
                 } elseif (isset($data['email'])) {
-                    // Logic for Admin entering an email (Check if user exists)
                     $existingUser = User::where('email', $data['email'])->first();
                     
                     if ($existingUser) {
                         $appointmentData['user_id'] = $existingUser->id;
                     } else {
-                        // Guest / Walk-in
                         $appointmentData['user_id'] = null;
                         $appointmentData['patient_first_name'] = $data['first_name'] ?? null;
                         $appointmentData['patient_middle_name'] = $data['middle_name'] ?? null;
@@ -154,12 +213,10 @@ class AppointmentService
                     }
                 }
 
-                // 5. Create
                 return Appointment::create($appointmentData);
             });
 
         } catch (LockTimeoutException $e) {
-            // This happens if the server is extremely busy and the user couldn't get a lock
             return ['error' => 'The server is currently busy processing other bookings. Please try again in a moment.'];
         }
     }

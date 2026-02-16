@@ -186,18 +186,9 @@ class AdminController extends Controller
 
         $appointment->update($data);
 
-        // PENALTY LOGIC
+        // PENALTY LOGIC: Delegated to Service
         if ($request->status === AppointmentStatus::NoShow->value && $appointment->user_id) {
-            $user = $appointment->user;
-            $user->increment('strikes');
-
-            if ($user->strikes >= 3) {
-                // UPDATED: Set 6 Month Restriction
-                $user->update([
-                    'account_status' => 'restricted',
-                    'restricted_until' => now()->addMonths(6)
-                ]);
-            }
+            $this->appointmentService->penalizeUser($appointment->user);
         }
 
         return back()->with('success', 'Appointment updated successfully.');
@@ -211,7 +202,7 @@ class AdminController extends Controller
                             ->whereNull('rejection_reason')
                             ->get();
 
-        // 1. Fetch ALL Registered Patients (for the main list)
+        // 1. Fetch ALL Registered Patients
         $query = User::where('role', UserRole::Patient);
 
         if ($request->filled('search')) {
@@ -226,12 +217,12 @@ class AdminController extends Controller
         if ($request->filled('filter_status')) {
             if ($request->filter_status === 'verified') $query->where('is_verified', true)->where('account_status', 'active');
             elseif ($request->filter_status === 'unverified') $query->where('is_verified', false);
-            elseif ($request->filter_status === 'restricted') $query->where('account_status', 'restricted'); // Filter support
+            elseif ($request->filter_status === 'restricted') $query->where('account_status', 'restricted'); 
         }
 
         $allUsers = $query->orderBy('created_at', 'desc')->get();
 
-        // 2. Fetch RESTRICTED Users (for the Penalized View)
+        // 2. Fetch RESTRICTED Users
         $restrictedUsers = User::where('role', UserRole::Patient)
                                ->where('account_status', 'restricted')
                                ->get();
@@ -273,7 +264,6 @@ class AdminController extends Controller
         return back()->with('error', 'Invalid action.');
     }
 
-    // --- Undo Restriction ---
     public function unrestrictUser($id)
     {
         $user = User::findOrFail($id);
@@ -284,8 +274,8 @@ class AdminController extends Controller
 
         $user->update([
             'account_status' => 'active',
-            'strikes' => 0, // Reset strikes to give them a clean slate
-            'restricted_until' => null // Clear any temporary timeout
+            'strikes' => 0, 
+            'restricted_until' => null
         ]);
 
         return back()->with('success', 'Restriction lifted. User is now Active.');
