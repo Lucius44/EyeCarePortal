@@ -167,7 +167,37 @@
                         </select>
                     </div>
 
-                    {{-- 3. Notes / Symptoms (Dynamic Required for 'Others') --}}
+                    {{-- 3. NEW: Booking for Someone Else Toggle --}}
+                    <div class="mb-3">
+                        <div class="form-check form-switch p-3 bg-light rounded-3 border border-light-subtle">
+                            <input class="form-check-input" type="checkbox" id="isGuestToggle" name="is_guest" onchange="toggleGuestFields()">
+                            <label class="form-check-label fw-bold" for="isGuestToggle">
+                                I am booking for someone else
+                            </label>
+                            <div class="small text-muted mt-1">Select this if you are booking for a child or family member.</div>
+                        </div>
+                    </div>
+
+                    {{-- 4. NEW: Hidden Dependent Fields --}}
+                    <div id="guestFields" class="d-none p-3 mb-3 bg-light rounded-3 border border-light-subtle">
+                        <h6 class="fw-bold text-primary mb-3 small text-uppercase">Patient Details</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="small fw-bold text-muted">First Name</label>
+                                <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" placeholder="e.g. Timmy">
+                            </div>
+                            <div class="col-6">
+                                <label class="small fw-bold text-muted">Last Name</label>
+                                <input type="text" name="patient_last_name" id="patientLastName" class="form-control" placeholder="e.g. Doe">
+                            </div>
+                            <div class="col-12 mt-2">
+                                <label class="small fw-bold text-muted">Relationship (Optional)</label>
+                                <input type="text" name="relationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 5. Notes / Symptoms (Dynamic Required for 'Others') --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Notes / Symptoms</label>
                         <textarea name="description" id="notesTextarea" class="form-control bg-light border-0" rows="3" placeholder="Optional notes..."></textarea>
@@ -283,6 +313,28 @@
 @endif
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+    // --- NEW: Toggle Dependent Fields ---
+    function toggleGuestFields() {
+        const checkBox = document.getElementById('isGuestToggle');
+        const fieldsDiv = document.getElementById('guestFields');
+        const fName = document.getElementById('patientFirstName');
+        const lName = document.getElementById('patientLastName');
+
+        if (checkBox.checked) {
+            fieldsDiv.classList.remove('d-none');
+            // Make them required on frontend for UX
+            fName.required = true;
+            lName.required = true;
+        } else {
+            fieldsDiv.classList.add('d-none');
+            fName.required = false;
+            lName.required = false;
+            fName.value = '';
+            lName.value = '';
+        }
+    }
+</script>
 
 <style>
     /* HERO SECTION */

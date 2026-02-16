@@ -112,7 +112,13 @@
                                 <tbody>
                                     @forelse($pending as $appt)
                                     <tr>
-                                        <td class="ps-4 fw-bold text-dark">{{ $appt->patient_name }}</td>
+                                        {{-- UPDATED: Stacked Name Display --}}
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
+                                            @if($appt->patient_first_name)
+                                                <div class="small text-muted"><i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}</div>
+                                            @endif
+                                        </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-light rounded p-2 text-center me-3" style="min-width: 50px;">
@@ -199,7 +205,13 @@
                                 <tbody>
                                     @forelse($confirmed as $appt)
                                     <tr>
-                                        <td class="ps-4 fw-bold text-dark">{{ $appt->patient_name }}</td>
+                                        {{-- UPDATED: Stacked Name Display --}}
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
+                                            @if($appt->patient_first_name)
+                                                <div class="small text-muted"><i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}</div>
+                                            @endif
+                                        </td>
                                         <td>
                                             <span class="text-dark fw-bold">{{ $appt->appointment_date->format('M d, Y') }}</span>
                                             <span class="text-muted small ms-2">{{ $appt->appointment_time }}</span>

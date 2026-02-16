@@ -12,7 +12,6 @@ class StoreAppointmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Return true because we already check authentication in the middleware/routes
         return true;
     }
 
@@ -41,10 +40,15 @@ class StoreAppointmentRequest extends FormRequest
                     }
                 },
             ],
-            // Strict validation to match frontend format (e.g. 09:00 AM)
             'appointment_time' => 'required|date_format:h:i A', 
             'service' => 'required|string',
             'description' => 'nullable|string',
+
+            // --- NEW: Dependent Booking Validation ---
+            'is_guest' => 'sometimes|accepted', // The checkbox
+            'patient_first_name' => 'required_if:is_guest,on|nullable|string|max:255',
+            'patient_last_name' => 'required_if:is_guest,on|nullable|string|max:255',
+            'relationship' => 'nullable|string|max:255',
         ];
     }
 
@@ -52,6 +56,8 @@ class StoreAppointmentRequest extends FormRequest
     {
         return [
             'appointment_time.date_format' => 'The time must be in the format HH:MM AM/PM (e.g., 09:00 AM).',
+            'patient_first_name.required_if' => 'Patient First Name is required when booking for someone else.',
+            'patient_last_name.required_if' => 'Patient Last Name is required when booking for someone else.',
         ];
     }
 }

@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // <--- ADDED IMPORT
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\AppointmentStatus;
 use Carbon\Carbon;
 
 class Appointment extends Model
 {
-    use HasFactory, SoftDeletes; // <--- ADDED TRAIT
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -27,6 +27,7 @@ class Appointment extends Model
         'patient_last_name',
         'patient_email',
         'patient_phone',
+        'relationship', // Ensure this is in your migration or fillable if you added it
     ];
 
     protected $casts = [
@@ -45,24 +46,37 @@ class Appointment extends Model
         $this->attributes['appointment_time'] = Carbon::parse($value)->format('h:i A');
     }
 
-    // --- Helpers to get Patient Info (User OR Guest) ---
+    // --- Helpers to get Patient Info (User OR Guest/Dependent) ---
     public function getPatientNameAttribute()
     {
+        // 1. Priority: Specific Patient Fields (Booking for child/other)
+        // If these columns are filled, it means the user booked for someone else.
+        if (!empty($this->attributes['patient_first_name'])) {
+            $name = $this->attributes['patient_first_name'];
+            if (!empty($this->attributes['patient_middle_name'])) {
+                $name .= ' ' . $this->attributes['patient_middle_name'];
+            }
+            $name .= ' ' . $this->attributes['patient_last_name'];
+            return $name;
+        }
+
+        // 2. Fallback: Account Holder (Booking for self)
         if ($this->user) {
             return $this->user->first_name . ' ' . $this->user->last_name;
         }
         
-        $name = $this->patient_first_name;
-        if ($this->patient_middle_name) {
-            $name .= ' ' . $this->patient_middle_name;
-        }
-        $name .= ' ' . $this->patient_last_name;
-        
-        return $name;
+        // 3. Fallback: Legacy/Guest
+        return $this->attributes['patient_first_name'] ?? 'Guest Patient';
     }
 
     public function getPatientEmailAttribute()
     {
+        // If specific email provided for dependent, use it (optional)
+        if (!empty($this->attributes['patient_email'])) {
+            return $this->attributes['patient_email'];
+        }
+
+        // Otherwise default to account email
         if ($this->user) {
             return $this->user->email;
         }

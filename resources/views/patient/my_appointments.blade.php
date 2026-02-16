@@ -76,7 +76,16 @@
                                         <small class="text-muted fw-bold">#{{ str_pad($app->id, 5, '0', STR_PAD_LEFT) }}</small>
                                     </div>
                                     
-                                    <h5 class="fw-bold mb-1">{{ $app->service }}</h5>
+                                    {{-- UPDATED: Service Name + Dependent Badge --}}
+                                    <h5 class="fw-bold mb-1">
+                                        {{ $app->service }}
+                                        @if($app->patient_first_name)
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill ms-2" style="font-size: 0.65rem; vertical-align: middle;">
+                                                <i class="bi bi-person-fill me-1"></i> {{ $app->patient_name }}
+                                            </span>
+                                        @endif
+                                    </h5>
+                                    
                                     <div class="d-flex align-items-center text-muted mb-4">
                                         <i class="bi bi-clock me-2"></i> {{ $app->appointment_date->format('F d, Y') }} at {{ $app->appointment_time }}
                                     </div>
@@ -124,7 +133,17 @@
                                         {{ $app->appointment_date->format('M d, Y') }}
                                         <div class="small text-muted fw-normal">{{ $app->appointment_time }}</div>
                                     </td>
-                                    <td>{{ $app->service }}</td>
+                                    {{-- UPDATED: Service + Dependent Badge --}}
+                                    <td>
+                                        {{ $app->service }}
+                                        @if($app->patient_first_name)
+                                            <div class="mt-1">
+                                                <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill" style="font-size: 0.65rem;">
+                                                    <i class="bi bi-person-fill me-1"></i> {{ $app->patient_name }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if($app->status->value == 'completed')
                                             <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">Completed</span>
