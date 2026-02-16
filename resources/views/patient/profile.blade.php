@@ -69,13 +69,21 @@
                                     <span class="fw-bold text-dark fs-5">{{ ucfirst(Auth::user()->gender) }}</span>
                                 </div>
 
-                                {{-- [NEW] Account Status Field --}}
+                                {{-- Account Status Field --}}
                                 <div class="mb-3">
                                     <label class="small text-muted d-block mb-1">Account Status</label>
                                     @if(Auth::user()->account_status === 'restricted')
-                                        <span class="fw-bold text-danger fs-5">
-                                            <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Restricted
-                                        </span>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold text-danger fs-5">
+                                                <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Restricted
+                                            </span>
+                                            {{-- Display End Date Below --}}
+                                            @if(Auth::user()->restricted_until)
+                                                <small class="text-danger fw-bold mt-1">
+                                                    Ends: {{ Auth::user()->restricted_until->format('F d, Y') }}
+                                                </small>
+                                            @endif
+                                        </div>
                                     @elseif(Auth::user()->account_status === 'banned')
                                         <span class="fw-bold text-dark fs-5">Banned</span>
                                     @else

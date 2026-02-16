@@ -186,12 +186,17 @@ class AdminController extends Controller
 
         $appointment->update($data);
 
+        // PENALTY LOGIC
         if ($request->status === AppointmentStatus::NoShow->value && $appointment->user_id) {
             $user = $appointment->user;
             $user->increment('strikes');
 
             if ($user->strikes >= 3) {
-                $user->update(['account_status' => 'restricted']);
+                // UPDATED: Set 6 Month Restriction
+                $user->update([
+                    'account_status' => 'restricted',
+                    'restricted_until' => now()->addMonths(6)
+                ]);
             }
         }
 
@@ -268,7 +273,7 @@ class AdminController extends Controller
         return back()->with('error', 'Invalid action.');
     }
 
-    // --- NEW: Undo Restriction ---
+    // --- Undo Restriction ---
     public function unrestrictUser($id)
     {
         $user = User::findOrFail($id);

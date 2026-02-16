@@ -48,13 +48,28 @@ class AppointmentController extends Controller
 
         // --- RULE 1: Permanent Restriction (3 Strikes) ---
         if ($user->account_status === 'restricted') {
-             return redirect()->back()->withErrors(['error' => 'Your account is restricted due to multiple violations. Please contact the clinic for assistance.']);
+            
+            // NEW: Auto-Unrestrict Logic
+            // If the user served their time (now > restricted_until), lift the ban.
+            if ($user->restricted_until && now()->greaterThanOrEqualTo($user->restricted_until)) {
+                $user->update([
+                    'account_status' => 'active',
+                    'strikes' => 0,
+                    'restricted_until' => null
+                ]);
+                // Allow them to proceed...
+            } else {
+                // Still restricted? Show the specific date.
+                $dateStr = $user->restricted_until ? $user->restricted_until->format('F d, Y') : 'indefinitely';
+                return redirect()->back()->withErrors(['error' => "Your account is restricted until {$dateStr} due to multiple violations."]);
+            }
         }
 
         // --- RULE 2: Temporary Timeout (Anti-Spam) ---
         // Check if the user is currently in a "Timeout"
         if ($user->restricted_until && now()->lessThan($user->restricted_until)) {
-            $minutes = now()->diffInMinutes($user->restricted_until);
+            // FIX: Use floatDiffInMinutes and ceil() to get a nice whole number (e.g., 4.1 mins -> 5 mins)
+            $minutes = (int) ceil(now()->floatDiffInMinutes($user->restricted_until));
             return redirect()->back()->withErrors(['error' => "You are temporarily blocked from booking due to excessive rescheduling. Please try again in {$minutes} minutes."]);
         }
 
@@ -106,14 +121,12 @@ class AppointmentController extends Controller
         }
 
         // SCENARIO A: PENDING (Indecision)
-        // We Soft Delete it so we can count it towards the "Spam Limit" in store()
         if ($appointment->status === AppointmentStatus::Pending) {
             $appointment->delete(); 
             return back()->with('success', 'Appointment request removed successfully.');
         }
 
         // SCENARIO B: CONFIRMED (Commitment)
-        // We do NOT delete confirmed appointments; we mark them as 'Cancelled'
         if ($appointment->status === AppointmentStatus::Confirmed) {
             $request->validate([
                 'cancellation_reason' => 'required|string|max:255',
@@ -132,8 +145,12 @@ class AppointmentController extends Controller
                 
                 // Check if Limit Reached
                 if ($user->strikes >= 3) {
-                    $user->update(['account_status' => 'restricted']);
-                    $message = 'Appointment cancelled. WARNING: Your account has been RESTRICTED due to multiple late cancellations.';
+                    // UPDATED: Set 6 Month Restriction
+                    $user->update([
+                        'account_status' => 'restricted',
+                        'restricted_until' => now()->addMonths(6)
+                    ]);
+                    $message = 'Appointment cancelled. WARNING: Your account has been RESTRICTED for 6 months due to multiple late cancellations.';
                 } else {
                     $message = 'Appointment cancelled. You received a STRIKE for cancelling less than 24 hours in advance.';
                 }
