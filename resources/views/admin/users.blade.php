@@ -52,6 +52,12 @@
         border-color: var(--primary-color);
         box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
     }
+    
+    /* Specific style for Restricted Tab */
+    .custom-pills .nav-link.text-danger.active {
+        background-color: #dc3545 !important;
+        border-color: #dc3545;
+    }
 </style>
 
 <div class="container-fluid p-0">
@@ -82,7 +88,7 @@
                 </div>
             @endif
 
-            @if($pendingUsers->isNotEmpty())
+            @if(isset($pendingUsers) && $pendingUsers->isNotEmpty())
                 <div class="card border-0 shadow-sm rounded-4 mb-5 border-start border-5 border-warning overflow-hidden">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
@@ -166,11 +172,21 @@
                     <button class="nav-link active rounded-pill px-4 fw-bold me-2" id="registered-tab" data-bs-toggle="tab" data-bs-target="#registered" type="button">Registered Patients</button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link text-danger rounded-pill px-4 fw-bold me-2" id="restricted-tab" data-bs-toggle="tab" data-bs-target="#restricted" type="button">
+                        <i class="bi bi-slash-circle me-1"></i> Restricted
+                        @if(isset($restrictedUsers) && $restrictedUsers->count() > 0)
+                            <span class="badge bg-danger text-white ms-1">{{ $restrictedUsers->count() }}</span>
+                        @endif
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link rounded-pill px-4 fw-bold" id="guests-tab" data-bs-toggle="tab" data-bs-target="#guests" type="button">Walk-in Guests</button>
                 </li>
             </ul>
 
             <div class="tab-content" id="usersTabContent">
+                
+                {{-- TAB 1: REGISTERED --}}
                 <div class="tab-pane fade show active" id="registered">
                     <div class="table-card shadow-sm">
                         <div class="p-4 border-bottom bg-light bg-opacity-50">
@@ -183,6 +199,8 @@
                                         <option value="">All Users</option>
                                         <option value="verified" {{ request('filter_status') == 'verified' ? 'selected' : '' }}>Verified</option>
                                         <option value="unverified" {{ request('filter_status') == 'unverified' ? 'selected' : '' }}>Unverified</option>
+                                        {{-- ADDED FILTER OPTION --}}
+                                        <option value="restricted" {{ request('filter_status') == 'restricted' ? 'selected' : '' }}>Restricted</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
@@ -199,7 +217,7 @@
                                     <tr>
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">User</th>
                                         <th class="py-3 text-secondary small text-uppercase">Email</th>
-                                        <th class="py-3 text-secondary small text-uppercase">Phone</th> {{-- Added Phone Column Header --}}
+                                        <th class="py-3 text-secondary small text-uppercase">Phone</th>
                                         <th class="py-3 text-secondary small text-uppercase">Status</th>
                                         <th class="py-3 text-secondary small text-uppercase">Joined</th>
                                     </tr>
@@ -209,9 +227,13 @@
                                     <tr>
                                         <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</td>
                                         <td>{{ $user->email }}</td>
-                                        <td>{{ $user->phone_number ?? '-' }}</td> {{-- Added Phone Data --}}
+                                        <td>{{ $user->phone_number ?? '-' }}</td>
                                         <td>
-                                            @if($user->is_verified)
+                                            @if($user->account_status === 'restricted')
+                                                <span class="badge bg-danger rounded-pill px-3">Restricted</span>
+                                            @elseif($user->account_status === 'banned')
+                                                <span class="badge bg-dark rounded-pill px-3">Banned</span>
+                                            @elseif($user->is_verified)
                                                 <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified</span>
                                             @else
                                                 <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">Unverified</span>
@@ -220,7 +242,7 @@
                                         <td>{{ $user->created_at->format('M d, Y') }}</td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="5" class="text-center py-5 text-muted">No users found.</td></tr> {{-- Updated colspan to 5 --}}
+                                    <tr><td colspan="5" class="text-center py-5 text-muted">No users found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -228,6 +250,62 @@
                     </div>
                 </div>
 
+                {{-- TAB 2: RESTRICTED ACCOUNTS (NEW) --}}
+                <div class="tab-pane fade" id="restricted">
+                    <div class="table-card shadow-sm border border-danger">
+                        <div class="p-4 bg-danger bg-opacity-10 border-bottom border-danger">
+                            <div class="d-flex align-items-center text-danger small fw-bold">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                These accounts have been penalized for multiple No-Shows or Late Cancellations.
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th class="py-3 ps-4 text-secondary small text-uppercase">Patient Name</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Strikes</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Violation Reason</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Restriction Date</th>
+                                        <th class="py-3 text-secondary small text-uppercase text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($restrictedUsers as $user)
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->last_name }}</td>
+                                        <td>
+                                            <span class="badge bg-danger rounded-pill">{{ $user->strikes }} / 3</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-danger fw-bold">Multiple Violations</small>
+                                            <br><span class="small text-muted">(Late Cancellations / No Shows)</span>
+                                        </td>
+                                        <td>{{ $user->updated_at->format('M d, Y h:i A') }}</td>
+                                        <td class="text-end pe-4">
+                                            <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill fw-bold" onclick="return confirm('Lift restriction for this user? Strikes will be reset.')">
+                                                    <i class="bi bi-unlock-fill me-1"></i> Undo Restriction
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="bi bi-shield-check display-4 text-success d-block mb-2"></i>
+                                            No restricted accounts found.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- TAB 3: GUESTS --}}
                 <div class="tab-pane fade" id="guests">
                     <div class="table-card shadow-sm">
                         <div class="p-4 bg-light border-bottom">

@@ -41,10 +41,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Settings & Upload
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
-    
-    // --- NEW: Profile Update Route ---
     Route::post('/settings/profile', [PatientController::class, 'updateProfile'])->name('settings.profile');
-    
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');
@@ -68,6 +65,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
+    
+    // --- NEW: Unrestrict User Route ---
+    Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');
 
     Route::resource('services', AdminServiceController::class)->except(['show', 'create', 'edit']);
 });

@@ -42,10 +42,16 @@
         justify-content: space-between;
     }
     
-    .action-card:hover {
+    .action-card:hover:not(.disabled) {
         transform: translateY(-5px);
         box-shadow: 0 15px 30px rgba(0,0,0,0.08);
         border-color: transparent;
+    }
+
+    .action-card.disabled {
+        background: #f8fafc;
+        opacity: 0.7;
+        cursor: not-allowed;
     }
 
     .action-icon {
@@ -105,6 +111,7 @@
         padding: 12px 0;
         border-bottom: 1px solid #f1f5f9;
         font-size: 0.95rem;
+        align-items: center;
     }
     .stat-row:last-child { border-bottom: none; }
 
@@ -130,9 +137,20 @@
                         Welcome to your personal vision portal. Manage your appointments and track your eye health journey all in one place.
                     </p>
                     
+                    {{-- [NEW] RESTRICTED ACCOUNT ALERT --}}
+                    @if(Auth::user()->account_status === 'restricted')
+                        <div class="d-inline-flex align-items-center bg-danger border border-danger text-white px-4 py-3 rounded-4 backdrop-blur shadow-sm mb-3 me-2">
+                            <i class="bi bi-exclamation-octagon fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0">Account Restricted</h6>
+                                <span class="small opacity-90">Booking privileges are suspended due to multiple violations.</span>
+                            </div>
+                        </div>
+                    @endif
+
                     @if(!Auth::user()->is_verified)
                         {{-- UPDATED ALERT TEXT COLOR: text-dark for better contrast on yellow --}}
-                        <div class="d-inline-flex align-items-center bg-warning border border-warning text-dark px-4 py-3 rounded-4 backdrop-blur shadow-sm">
+                        <div class="d-inline-flex align-items-center bg-warning border border-warning text-dark px-4 py-3 rounded-4 backdrop-blur shadow-sm mb-3">
                             <i class="bi bi-shield-exclamation fs-4 me-3"></i>
                             <div>
                                 <h6 class="fw-bold mb-0">Action Required: Verify Account</h6>
@@ -151,7 +169,7 @@
             
             <h5 class="fw-bold text-dark mb-4 px-1">Upcoming Schedule</h5>
 
-            @if($activeAppointment)
+            @if(isset($activeAppointment) && $activeAppointment)
                 <div class="appointment-ticket mb-5">
                     <div class="ticket-header">
                         <div>
@@ -208,7 +226,12 @@
                             Regular eye exams are key to maintaining good vision. Schedule your next checkup today.
                         </p>
                         
-                        @if(Auth::user()->is_verified)
+                        {{-- Logic to disable booking button if restricted --}}
+                        @if(Auth::user()->account_status === 'restricted')
+                            <button class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-lg" disabled>
+                                <i class="bi bi-slash-circle me-2"></i> Account Restricted
+                            </button>
+                        @elseif(Auth::user()->is_verified)
                             <a href="{{ route('appointments.index') }}" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg">
                                 <i class="bi bi-plus-lg me-2"></i> Book Appointment
                             </a>
@@ -223,20 +246,33 @@
             <h5 class="fw-bold text-dark mb-4 px-1">Quick Actions</h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <a href="{{ route('appointments.index') }}" class="text-decoration-none">
-                        <div class="action-card">
+                    @if(Auth::user()->account_status === 'restricted')
+                        {{-- Disabled Card for Restricted Users --}}
+                        <div class="action-card disabled">
                             <div>
-                                <div class="action-icon bg-blue-50 text-primary bg-primary bg-opacity-10">
-                                    <i class="bi bi-calendar-plus-fill"></i>
+                                <div class="action-icon bg-secondary text-white bg-opacity-50">
+                                    <i class="bi bi-calendar-x-fill"></i>
                                 </div>
-                                <h6 class="fw-bold text-dark mb-1">Book New Visit</h6>
-                                <p class="text-muted small mb-0">Schedule a checkup or consultation.</p>
-                            </div>
-                            <div class="mt-3 text-end">
-                                <span class="btn btn-sm btn-light rounded-pill fw-bold"><i class="bi bi-arrow-right"></i></span>
+                                <h6 class="fw-bold text-muted mb-1">Booking Unavailable</h6>
+                                <p class="text-muted small mb-0">Your account is currently restricted.</p>
                             </div>
                         </div>
-                    </a>
+                    @else
+                        <a href="{{ route('appointments.index') }}" class="text-decoration-none">
+                            <div class="action-card">
+                                <div>
+                                    <div class="action-icon bg-blue-50 text-primary bg-primary bg-opacity-10">
+                                        <i class="bi bi-calendar-plus-fill"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">Book New Visit</h6>
+                                    <p class="text-muted small mb-0">Schedule a checkup or consultation.</p>
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <span class="btn btn-sm btn-light rounded-pill fw-bold"><i class="bi bi-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                    @endif
                 </div>
 
                 <div class="col-md-6">
@@ -286,8 +322,13 @@
                 
                 <div class="stat-row">
                     <span class="text-muted">Status</span>
-                    @if(Auth::user()->is_verified)
-                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified</span>
+                    {{-- [NEW] STATUS BADGE LOGIC --}}
+                    @if(Auth::user()->account_status === 'restricted')
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Restricted</span>
+                    @elseif(Auth::user()->account_status === 'banned')
+                        <span class="badge bg-dark text-white rounded-pill px-3">Banned</span>
+                    @elseif(Auth::user()->is_verified)
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Active</span>
                     @else
                         <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Unverified</span>
                     @endif
@@ -295,7 +336,7 @@
                 
                 <div class="stat-row">
                     <span class="text-muted">Total Visits</span>
-                    <span class="fw-bold text-dark">{{ $completedVisits }}</span>
+                    <span class="fw-bold text-dark">{{ $completedVisits ?? 0 }}</span>
                 </div>
 
                 <div class="stat-row">

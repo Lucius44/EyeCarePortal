@@ -175,7 +175,6 @@ class AdminController extends Controller
 
         $data = ['status' => $request->status];
 
-        // Specific Logic for different statuses
         if ($request->status === AppointmentStatus::Rejected->value) {
             $data['cancellation_reason'] = $request->input('cancellation_reason', 'No reason provided.');
         }
@@ -187,13 +186,10 @@ class AdminController extends Controller
 
         $appointment->update($data);
 
-        // --- NEW: NO-SHOW PENALTY LOGIC ---
-        // If Admin marks as "No Show" and it is a registered user, give a Strike.
         if ($request->status === AppointmentStatus::NoShow->value && $appointment->user_id) {
             $user = $appointment->user;
             $user->increment('strikes');
 
-            // Check if limit reached
             if ($user->strikes >= 3) {
                 $user->update(['account_status' => 'restricted']);
             }
@@ -210,6 +206,7 @@ class AdminController extends Controller
                             ->whereNull('rejection_reason')
                             ->get();
 
+        // 1. Fetch ALL Registered Patients (for the main list)
         $query = User::where('role', UserRole::Patient);
 
         if ($request->filled('search')) {
@@ -222,19 +219,26 @@ class AdminController extends Controller
         }
 
         if ($request->filled('filter_status')) {
-            if ($request->filter_status === 'verified') $query->where('is_verified', true);
+            if ($request->filter_status === 'verified') $query->where('is_verified', true)->where('account_status', 'active');
             elseif ($request->filter_status === 'unverified') $query->where('is_verified', false);
+            elseif ($request->filter_status === 'restricted') $query->where('account_status', 'restricted'); // Filter support
         }
 
         $allUsers = $query->orderBy('created_at', 'desc')->get();
 
+        // 2. Fetch RESTRICTED Users (for the Penalized View)
+        $restrictedUsers = User::where('role', UserRole::Patient)
+                               ->where('account_status', 'restricted')
+                               ->get();
+
+        // 3. Fetch Walk-in Guests
         $guests = Appointment::whereNull('user_id')
             ->select('patient_first_name', 'patient_middle_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->unique('patient_email'); 
 
-        return view('admin.users', compact('pendingUsers', 'allUsers', 'guests'));
+        return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'guests'));
     }
 
     public function verifyUser(Request $request, $id)
@@ -262,5 +266,23 @@ class AdminController extends Controller
         }
 
         return back()->with('error', 'Invalid action.');
+    }
+
+    // --- NEW: Undo Restriction ---
+    public function unrestrictUser($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->account_status !== 'restricted') {
+            return back()->with('error', 'User is not restricted.');
+        }
+
+        $user->update([
+            'account_status' => 'active',
+            'strikes' => 0, // Reset strikes to give them a clean slate
+            'restricted_until' => null // Clear any temporary timeout
+        ]);
+
+        return back()->with('success', 'Restriction lifted. User is now Active.');
     }
 }

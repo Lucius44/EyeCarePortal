@@ -18,24 +18,38 @@
                 <div class="card-body p-4 p-lg-5 position-relative">
                     <div class="position-absolute top-0 start-50 translate-middle">
                         <div class="p-1 bg-white rounded-circle shadow-sm">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=0F172A&color=fff&size=150" 
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->first_name . ' ' . Auth::user()->last_name) }}&background=0F172A&color=fff&size=150" 
                                  class="rounded-circle" width="100" height="100" alt="Profile">
                         </div>
                     </div>
 
                     <div class="text-center mt-5 mb-5">
-                        <h3 class="fw-bold mb-1">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</h3>
-                        <p class="text-muted mb-2">{{ $user->email }}</p>
+                        <h3 class="fw-bold mb-1">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</h3>
+                        <p class="text-muted mb-2">{{ Auth::user()->email }}</p>
                         
-                        @if($user->is_verified)
-                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold">
-                                <i class="bi bi-check-circle-fill me-1"></i> Verified Patient
-                            </span>
-                        @else
-                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis rounded-pill px-3 py-2 fw-bold">
-                                <i class="bi bi-exclamation-circle-fill me-1"></i> Unverified
-                            </span>
-                        @endif
+                        <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap mt-3">
+                            {{-- [NEW] Account Status Badge (High Visibility) --}}
+                            @if(Auth::user()->account_status === 'restricted')
+                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 fw-bold border border-danger border-opacity-25">
+                                    <i class="bi bi-exclamation-octagon-fill me-1"></i> Restricted Account
+                                </span>
+                            @elseif(Auth::user()->account_status === 'banned')
+                                <span class="badge bg-dark rounded-pill px-3 py-2 fw-bold">
+                                    <i class="bi bi-slash-circle-fill me-1"></i> Banned
+                                </span>
+                            @endif
+
+                            {{-- Verification Badge --}}
+                            @if(Auth::user()->is_verified)
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Verified Patient
+                                </span>
+                            @else
+                                <span class="badge bg-warning bg-opacity-10 text-warning-emphasis rounded-pill px-3 py-2 fw-bold">
+                                    <i class="bi bi-exclamation-circle-fill me-1"></i> Unverified
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="row g-4">
@@ -46,13 +60,27 @@
                                 <div class="mb-3">
                                     <label class="small text-muted d-block mb-1">Date of Birth</label>
                                     <span class="fw-bold text-dark fs-5">
-                                        {{ \Carbon\Carbon::parse($user->birthday)->format('F d, Y') }}
+                                        {{ \Carbon\Carbon::parse(Auth::user()->birthday)->format('F d, Y') }}
                                     </span>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label class="small text-muted d-block mb-1">Gender</label>
-                                    <span class="fw-bold text-dark fs-5">{{ $user->gender }}</span>
+                                    <span class="fw-bold text-dark fs-5">{{ ucfirst(Auth::user()->gender) }}</span>
+                                </div>
+
+                                {{-- [NEW] Account Status Field --}}
+                                <div class="mb-3">
+                                    <label class="small text-muted d-block mb-1">Account Status</label>
+                                    @if(Auth::user()->account_status === 'restricted')
+                                        <span class="fw-bold text-danger fs-5">
+                                            <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Restricted
+                                        </span>
+                                    @elseif(Auth::user()->account_status === 'banned')
+                                        <span class="fw-bold text-dark fs-5">Banned</span>
+                                    @else
+                                        <span class="fw-bold text-success fs-5">Active</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -63,8 +91,8 @@
                                 
                                 <div class="mb-3">
                                     <label class="small text-muted d-block mb-1">Phone Number</label>
-                                    @if($user->phone_number)
-                                        <span class="fw-bold text-dark fs-5">{{ $user->phone_number }}</span>
+                                    @if(Auth::user()->phone_number)
+                                        <span class="fw-bold text-dark fs-5">{{ Auth::user()->phone_number }}</span>
                                     @else
                                         <span class="text-muted fst-italic">Not provided</span>
                                         <a href="{{ route('settings') }}" class="small ms-2 fw-bold text-decoration-none">Add</a>
@@ -73,7 +101,7 @@
                                 
                                 <div class="mb-3">
                                     <label class="small text-muted d-block mb-1">Member Since</label>
-                                    <span class="fw-bold text-dark fs-5">{{ $user->created_at->format('M Y') }}</span>
+                                    <span class="fw-bold text-dark fs-5">{{ Auth::user()->created_at->format('M Y') }}</span>
                                 </div>
                             </div>
                         </div>
