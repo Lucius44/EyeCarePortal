@@ -283,14 +283,43 @@
                                         </td>
                                         <td>{{ $user->updated_at->format('M d, Y h:i A') }}</td>
                                         <td class="text-end pe-4">
-                                            <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill fw-bold" onclick="return confirm('Lift restriction for this user? Strikes will be reset.')">
-                                                    <i class="bi bi-unlock-fill me-1"></i> Undo Restriction
-                                                </button>
-                                            </form>
+                                            {{-- UPDATED: Button Triggers Modal --}}
+                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#unrestrictModal-{{ $user->id }}">
+                                                <i class="bi bi-unlock-fill me-1"></i> Undo Restriction
+                                            </button>
                                         </td>
                                     </tr>
+
+                                    {{-- NEW: LIFT RESTRICTION MODAL --}}
+                                    <div class="modal fade" id="unrestrictModal-{{ $user->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
+                                                @csrf
+                                                
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-success">Lift Restriction</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4 text-center">
+                                                        <div class="mb-3">
+                                                            <i class="bi bi-shield-check text-success display-3"></i>
+                                                        </div>
+                                                        <h5 class="fw-bold text-dark">Restore Account Access?</h5>
+                                                        <p class="text-muted">
+                                                            You are about to lift the restriction for <strong>{{ $user->first_name }}</strong>.
+                                                            <br><br>
+                                                            <span class="text-success small fw-bold">This will RESET their strikes to 0 and allow them to book appointments again.</span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0 justify-content-center">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-success text-white rounded-pill px-4 fw-bold">Yes, Restore Access</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                     @empty
                                     <tr>
                                         <td colspan="5" class="text-center py-5 text-muted">

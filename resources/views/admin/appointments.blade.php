@@ -211,15 +211,14 @@
                                                 Mark Complete
                                             </button>
                                             
-                                            <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <input type="hidden" name="status" value="no-show">
-                                                <button class="btn btn-light text-warning-emphasis btn-sm rounded-pill px-3 fw-bold border ms-1">No-Show</button>
-                                            </form>
+                                            {{-- UPDATED: No-Show Button Triggers Modal --}}
+                                            <button type="button" class="btn btn-light text-warning-emphasis btn-sm rounded-pill px-3 fw-bold border ms-1" data-bs-toggle="modal" data-bs-target="#noShowModal-{{ $appt->id }}">
+                                                No-Show
+                                            </button>
                                         </td>
                                     </tr>
 
-                                    {{-- COMPLETE & PRESCRIBE MODAL --}}
+                                    {{-- COMPLETE MODAL --}}
                                     <div class="modal fade" id="completeModal-{{ $appt->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered modal-lg">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
@@ -261,6 +260,38 @@
                                                     <div class="modal-footer border-0 pt-0">
                                                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                                                         <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save & Complete</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    {{-- NEW: NO-SHOW CONFIRMATION MODAL --}}
+                                    <div class="modal fade" id="noShowModal-{{ $appt->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="status" value="no-show">
+                                                
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-warning">Confirm No-Show</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4 text-center">
+                                                        <div class="mb-3">
+                                                            <i class="bi bi-exclamation-circle-fill text-warning display-3"></i>
+                                                        </div>
+                                                        <h5 class="fw-bold text-dark">Mark as No-Show?</h5>
+                                                        <p class="text-muted">
+                                                            Are you sure <strong>{{ $appt->patient_name }}</strong> did not attend their appointment? 
+                                                            <br><br>
+                                                            <span class="text-danger small fw-bold">Note: This will add a STRIKE to the patient's record.</span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0 justify-content-center">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-warning text-white rounded-pill px-4 fw-bold">Yes, Mark No-Show</button>
                                                     </div>
                                                 </div>
                                             </form>
