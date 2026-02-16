@@ -199,6 +199,7 @@
                                     <tr>
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">User</th>
                                         <th class="py-3 text-secondary small text-uppercase">Email</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Phone</th> {{-- Added Phone Column Header --}}
                                         <th class="py-3 text-secondary small text-uppercase">Status</th>
                                         <th class="py-3 text-secondary small text-uppercase">Joined</th>
                                     </tr>
@@ -208,6 +209,7 @@
                                     <tr>
                                         <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</td>
                                         <td>{{ $user->email }}</td>
+                                        <td>{{ $user->phone_number ?? '-' }}</td> {{-- Added Phone Data --}}
                                         <td>
                                             @if($user->is_verified)
                                                 <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified</span>
@@ -218,7 +220,7 @@
                                         <td>{{ $user->created_at->format('M d, Y') }}</td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="4" class="text-center py-5 text-muted">No users found.</td></tr>
+                                    <tr><td colspan="5" class="text-center py-5 text-muted">No users found.</td></tr> {{-- Updated colspan to 5 --}}
                                     @endforelse
                                 </tbody>
                             </table>

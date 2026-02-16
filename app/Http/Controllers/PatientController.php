@@ -54,8 +54,11 @@ class PatientController extends Controller
 
         $path = $request->file('id_photo')->store('id_photos', 'public');
 
+        // FIX: Clear the rejection reason so it re-appears in Admin Pending List
         $user->update([
-            'id_photo_path' => $path
+            'id_photo_path' => $path,
+            'rejection_reason' => null, 
+            'is_verified' => false 
         ]);
 
         return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
