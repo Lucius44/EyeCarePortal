@@ -134,9 +134,10 @@ class AppointmentService
 
         // Check if Limit Reached (3 Strikes)
         if ($user->strikes >= 3) {
+            // UPDATED: Changed from 6 months to 30 days
             $user->update([
                 'account_status' => 'restricted',
-                'restricted_until' => now()->addMonths(6)
+                'restricted_until' => now()->addDays(30)
             ]);
             return true; // User was Restricted
         }

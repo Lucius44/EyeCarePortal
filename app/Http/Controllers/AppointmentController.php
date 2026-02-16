@@ -101,7 +101,8 @@ class AppointmentController extends Controller
                 $isRestricted = $this->appointmentService->penalizeUser($user);
                 
                 if ($isRestricted) {
-                    $message = 'Appointment cancelled. WARNING: Your account has been RESTRICTED for 6 months due to multiple late cancellations.';
+                    // UPDATED: Changed message to reflect 30 days
+                    $message = 'Appointment cancelled. WARNING: Your account has been RESTRICTED for 30 days due to multiple late cancellations.';
                 } else {
                     $message = 'Appointment cancelled. You received a STRIKE for cancelling less than 24 hours in advance.';
                 }
