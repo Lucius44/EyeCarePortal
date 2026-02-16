@@ -4,9 +4,23 @@
 <style>
     /* Reuse Admin Layout Styles */
     .admin-wrapper { display: flex; min-height: calc(100vh - 80px); overflow-x: hidden; }
-    .admin-sidebar { width: 260px; background: #0F172A; color: #94a3b8; flex-shrink: 0; display: none; flex-direction: column; }
+    
+    .admin-sidebar { 
+        width: 260px; 
+        background: #0F172A; 
+        color: #94a3b8; 
+        flex-shrink: 0; 
+        display: none; 
+        flex-direction: column; /* Ensure vertical stacking for Support Line */
+    }
+
     .admin-content { flex-grow: 1; background: #F1F5F9; padding: 1.5rem; }
-    @media (min-width: 992px) { .admin-sidebar { display: flex; } .admin-content { padding: 2rem; } }
+    
+    @media (min-width: 992px) { 
+        .admin-sidebar { display: flex; } 
+        .admin-content { padding: 2rem; } 
+    }
+    
     .admin-nav-link { display: flex; align-items: center; padding: 12px 20px; color: #94a3b8; text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 5px; transition: all 0.2s; }
     .admin-nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
     .admin-nav-link.active { background: #3B82F6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
@@ -22,14 +36,28 @@
                 <small class="text-uppercase fw-bold text-white opacity-50 ls-1">Admin Console</small>
             </div>
             @include('admin.partials.nav_links')
+            
+            {{-- ADDED: Support Line (Just like Users Page) --}}
+            <div class="mt-auto p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+                <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
+            </div>
         </div>
 
         {{-- MAIN CONTENT --}}
         <div class="admin-content">
+            {{-- MODIFIED: Header to include Hamburger Menu --}}
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold text-dark mb-1">Clinic Services</h2>
-                    <p class="text-secondary mb-0 small">Manage the list of services available for booking.</p>
+                <div class="d-flex align-items-center gap-3">
+                    {{-- ADDED: Mobile Toggle Button --}}
+                    <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
+                        <i class="bi bi-list fs-5 text-primary"></i>
+                    </button>
+                    
+                    <div>
+                        <h2 class="fw-bold text-dark mb-1">Clinic Services</h2>
+                        <p class="text-secondary mb-0 small">Manage the list of services available for booking.</p>
+                    </div>
                 </div>
                 
                 {{-- Add New Button --}}
@@ -186,6 +214,21 @@
                     <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add Service</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{{-- ADDED: Mobile Offcanvas Menu (Required for Hamburger to work) --}}
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileAdminMenu" style="background: #0F172A; width: 280px;">
+    <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
+        <h5 class="offcanvas-title text-white fw-bold">Admin Console</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        @include('admin.partials.nav_links')
+        <div class="mt-5 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+            <small class="text-warning fw-bold d-block mb-1"><i class="bi bi-headset me-1"></i> Support Line</small>
+            <small class="text-white opacity-75" style="font-size: 0.75rem;">Tech issues? Contact developers.</small>
         </div>
     </div>
 </div>

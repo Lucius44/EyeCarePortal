@@ -92,7 +92,14 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-md-6">
                                     <label class="small text-muted">Birthday</label>
-                                    <input type="date" name="birthday" class="form-control" value="{{ Auth::user()->birthday }}" required>
+                                    {{-- UPDATED: Added max attribute to disable dates younger than 18 years --}}
+                                    <input type="date" 
+                                           name="birthday" 
+                                           class="form-control" 
+                                           value="{{ Auth::user()->birthday }}" 
+                                           max="{{ date('Y-m-d', strtotime('-18 years')) }}"
+                                           required>
+                                    <div class="form-text small">Must be 18+ years old.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Gender</label>
@@ -111,7 +118,6 @@
             </div>
 
             {{-- 2. IDENTITY VERIFICATION CARD --}}
-            {{-- FIX: Removed 'h-100' to prevent overflow issues --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center mb-2">
