@@ -322,10 +322,17 @@
                             <div class="small text-muted mt-1">Prevents patients from booking this date.</div>
                         </div>
 
+                        {{-- NEW: Reason Field (Toggled by JS) --}}
+                        <div class="mb-3 d-none" id="closeReasonContainer">
+                            <label class="form-label fw-bold small text-uppercase text-danger">Reason for Closing <span class="text-danger">*</span></label>
+                            <textarea name="close_reason" id="daySettingsReason" class="form-control" rows="2" placeholder="e.g. Doctor is on leave, Holiday, etc."></textarea>
+                            <div class="form-text text-muted">This reason will be sent to patients with Pending requests.</div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-uppercase">Max Capacity</label>
-                            <input type="number" name="max_appointments" id="maxApptInput" class="form-control" value="5" min="0" max="20">
-                            <div class="form-text">Limit bookings for this specific date.</div>
+                            <input type="number" name="max_appointments" id="maxApptInput" class="form-control" value="5" min="1" max="9">
+                            <div class="form-text">Limit bookings for this specific date (1-9).</div>
                         </div>
 
                         <div class="d-grid">
@@ -497,6 +504,29 @@
         // --- SHARED MODAL LOGIC ---
         var masterModal = null;
         
+        // NEW: Toggle Logic for Reason Field
+        function toggleReasonField(isClosed) {
+            var container = document.getElementById('closeReasonContainer');
+            var input = document.getElementById('daySettingsReason');
+            
+            if (isClosed) {
+                container.classList.remove('d-none');
+                input.setAttribute('required', 'required');
+            } else {
+                container.classList.add('d-none');
+                input.removeAttribute('required');
+                input.value = ''; 
+            }
+        }
+
+        // NEW: Event Listener for Checkbox
+        var closeCheck = document.getElementById('isClosedCheck');
+        if(closeCheck) {
+            closeCheck.addEventListener('change', function() {
+                toggleReasonField(this.checked);
+            });
+        }
+        
         function openMasterModal(dateStr, defaultTab = 'book') {
             if (!masterModal) masterModal = new bootstrap.Modal(document.getElementById('masterModal'));
             
@@ -531,6 +561,9 @@
                 
                 document.getElementById('isClosedCheck').checked = isClosed;
                 document.getElementById('maxApptInput').value = maxLimit;
+                
+                // NEW: Sync visibility when opening modal
+                toggleReasonField(isClosed);
                 
                 if(isClosed) {
                     badge.className = 'badge bg-danger text-white mt-2';

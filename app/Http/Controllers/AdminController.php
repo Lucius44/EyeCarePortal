@@ -77,20 +77,42 @@ class AdminController extends Controller
         return view('admin.calendar', compact('events', 'daySettings', 'services'));
     }
 
+    // --- UPDATED METHOD START ---
     public function updateDaySetting(UpdateDaySettingRequest $request) 
     {
         $cleanDate = Carbon::parse($request->date)->format('Y-m-d');
+        $isClosed = $request->boolean('is_closed');
 
-        DaySetting::updateOrCreate(
-            ['date' => $cleanDate],
-            [
-                'max_appointments' => $request->max_appointments,
-                'is_closed' => $request->is_closed
-            ]
-        );
+        DB::transaction(function () use ($cleanDate, $request, $isClosed) {
+            
+            // 1. Update or Create the Day Setting
+            DaySetting::updateOrCreate(
+                ['date' => $cleanDate],
+                [
+                    'max_appointments' => $request->max_appointments,
+                    'is_closed' => $isClosed
+                ]
+            );
 
-        return back()->with('success', 'Day settings updated successfully.');
+            // 2. If Closing, Auto-Reject Pending Requests
+            if ($isClosed) {
+                $affectedRows = Appointment::where('appointment_date', $cleanDate)
+                    ->where('status', AppointmentStatus::Pending)
+                    ->update([
+                        'status' => AppointmentStatus::Rejected,
+                        'cancellation_reason' => $request->close_reason ?? 'Clinic closed for the day.'
+                    ]);
+            }
+        });
+
+        $message = 'Day settings updated successfully.';
+        if ($isClosed) {
+            $message .= ' Any pending requests for this date have been rejected.';
+        }
+
+        return back()->with('success', $message);
     }
+    // --- UPDATED METHOD END ---
 
     public function storeAppointment(StoreAdminAppointmentRequest $request)
     {
