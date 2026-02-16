@@ -64,27 +64,38 @@
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <form action="{{ route('admin.history') }}" method="GET" class="row g-3 align-items-center">
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                                <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search Patient Name..." value="{{ request('search') }}">
-                            </div>
-                        </div>
+                    <form action="{{ route('admin.history') }}" method="GET" class="row g-3 align-items-end">
+                        {{-- Search --}}
                         <div class="col-md-3">
+                            <label class="small text-muted fw-bold mb-1">Search Patient</label>
+                            <input type="text" name="search" class="form-control" placeholder="Name..." value="{{ request('search') }}">
+                        </div>
+                        
+                        {{-- Status Filter --}}
+                        <div class="col-md-2">
+                            <label class="small text-muted fw-bold mb-1">Status</label>
                             <select name="status" class="form-select">
-                                <option value="">Filter by Status</option>
+                                <option value="">All Statuses</option>
                                 <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                                 <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                                 <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                                 <option value="no-show" {{ request('status') == 'no-show' ? 'selected' : '' }}>No-Show</option>
                             </select>
                         </div>
+
+                        {{-- Date Filters --}}
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100 fw-bold">Apply Filter</button>
+                            <label class="small text-muted fw-bold mb-1">From Date</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ route('admin.history') }}" class="btn btn-light w-100 text-muted border">Clear</a>
+                            <label class="small text-muted fw-bold mb-1">To Date</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                        </div>
+
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+                            <a href="{{ route('admin.history') }}" class="btn btn-light w-100 text-muted border">Reset</a>
                         </div>
                     </form>
                 </div>
@@ -105,12 +116,19 @@
                         <tbody>
                             @forelse($history as $appt)
                             <tr>
-                                <td class="ps-4 fw-bold text-dark">
-                                    {{-- Handle User vs Guest Middle Name Logic --}}
-                                    @if($appt->user)
-                                        {{ $appt->user->first_name }} {{ $appt->user->middle_name }} {{ $appt->user->last_name }}
-                                    @else
-                                        {{ $appt->patient_first_name }} {{ $appt->patient_middle_name }} {{ $appt->patient_last_name }}
+                                <td class="ps-4">
+                                    {{-- CORRECT NAME LOGIC --}}
+                                    <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
+                                    
+                                    {{-- Show "Booked By" if it's a dependent booking --}}
+                                    @if($appt->patient_first_name && $appt->user)
+                                        <div class="small text-muted">
+                                            <i class="bi bi-person-badge me-1"></i>
+                                            Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}
+                                            @if($appt->relationship)
+                                                <span class="text-primary">({{ $appt->relationship }})</span>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                                 <td>
@@ -120,7 +138,10 @@
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 rounded-pill px-2">Guest</span>
                                     @endif
                                 </td>
-                                <td>{{ $appt->appointment_date->format('M d, Y') }}</td>
+                                <td>
+                                    <span class="d-block fw-bold text-dark">{{ $appt->appointment_date->format('M d, Y') }}</span>
+                                    <small class="text-muted">{{ $appt->appointment_time }}</small>
+                                </td>
                                 <td>
                                     @if($appt->status->value === 'completed') 
                                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Completed</span>
@@ -169,6 +190,21 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                
+                {{-- PAGINATION: HISTORY --}}
+                <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                    <div class="flex-grow-1"></div>
+                    <div class="text-muted small flex-grow-1 text-center">
+                        @if($history->total() > 0)
+                            Showing {{ $history->firstItem() }} to {{ $history->lastItem() }} of {{ $history->total() }} results
+                        @else
+                            No results
+                        @endif
+                    </div>
+                    <div class="flex-grow-1 text-end">
+                        {{ $history->links() }}
+                    </div>
                 </div>
             </div>
         </div>

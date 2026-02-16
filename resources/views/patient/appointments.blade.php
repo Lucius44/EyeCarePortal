@@ -124,7 +124,8 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" name="appointment_date" id="modalDateInput">
-                    
+
+                    {{-- 1. Date/Time Summary --}}
                     <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-4 border border-light-subtle">
                         <div class="me-3">
                             <div class="bg-white p-2 rounded shadow-sm text-center" style="min-width: 60px;">
@@ -139,7 +140,43 @@
                         </div>
                     </div>
 
-                    {{-- 1. Time Selection (Moved UP) --}}
+                    {{-- 2. NEW LOCATION: Booking for Someone Else Toggle --}}
+                    <div class="mb-4 bg-light rounded-3 border border-light-subtle overflow-hidden">
+                        {{-- Header (Always Visible) --}}
+                        <div class="p-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <label class="fw-bold mb-0 text-dark" for="isGuestToggle" style="cursor: pointer;">
+                                    I am booking for someone else
+                                </label>
+                                <div class="small text-muted mt-1" style="font-size: 0.8rem;">
+                                    Select this if you are booking for a child or family member.
+                                </div>
+                            </div>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" id="isGuestToggle" name="is_guest" onchange="toggleGuestFields()" style="width: 3em; height: 1.5em; cursor: pointer;">
+                            </div>
+                        </div>
+
+                        {{-- Hidden Fields (Slides Down Inside) --}}
+                        <div id="guestFields" class="d-none border-top px-3 pb-3 pt-3 bg-white">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="small fw-bold text-muted">First Name</label>
+                                    <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" placeholder="e.g. Timmy">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small fw-bold text-muted">Last Name</label>
+                                    <input type="text" name="patient_last_name" id="patientLastName" class="form-control" placeholder="e.g. Doe">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="small fw-bold text-muted">Relationship (Optional)</label>
+                                    <input type="text" name="relationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 3. Time Selection --}}
                     <div class="mb-3" id="desktopTimeSelectWrapper">
                         <label class="form-label fw-bold">Select Time</label>
                         <select id="desktopTimeSelect" class="form-select form-select-lg" onchange="document.getElementById('modalTimeInput').value = this.value; updateSummaryTime(this.value);">
@@ -156,7 +193,7 @@
                         </div>
                     </div>
 
-                    {{-- 2. Service Selection (Moved DOWN) --}}
+                    {{-- 4. Service Selection --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Service Required</label>
                         <select name="service" class="form-select form-select-lg bg-light border-0" required id="serviceSelect">
@@ -167,37 +204,7 @@
                         </select>
                     </div>
 
-                    {{-- 3. NEW: Booking for Someone Else Toggle --}}
-                    <div class="mb-3">
-                        <div class="form-check form-switch p-3 bg-light rounded-3 border border-light-subtle">
-                            <input class="form-check-input" type="checkbox" id="isGuestToggle" name="is_guest" onchange="toggleGuestFields()">
-                            <label class="form-check-label fw-bold" for="isGuestToggle">
-                                I am booking for someone else
-                            </label>
-                            <div class="small text-muted mt-1">Select this if you are booking for a child or family member.</div>
-                        </div>
-                    </div>
-
-                    {{-- 4. NEW: Hidden Dependent Fields --}}
-                    <div id="guestFields" class="d-none p-3 mb-3 bg-light rounded-3 border border-light-subtle">
-                        <h6 class="fw-bold text-primary mb-3 small text-uppercase">Patient Details</h6>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="small fw-bold text-muted">First Name</label>
-                                <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" placeholder="e.g. Timmy">
-                            </div>
-                            <div class="col-6">
-                                <label class="small fw-bold text-muted">Last Name</label>
-                                <input type="text" name="patient_last_name" id="patientLastName" class="form-control" placeholder="e.g. Doe">
-                            </div>
-                            <div class="col-12 mt-2">
-                                <label class="small fw-bold text-muted">Relationship (Optional)</label>
-                                <input type="text" name="relationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- 5. Notes / Symptoms (Dynamic Required for 'Others') --}}
+                    {{-- 5. Notes --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Notes / Symptoms</label>
                         <textarea name="description" id="notesTextarea" class="form-control bg-light border-0" rows="3" placeholder="Optional notes..."></textarea>

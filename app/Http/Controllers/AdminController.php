@@ -122,15 +122,16 @@ class AdminController extends Controller
 
     public function appointments()
     {
+        // Pagination: 10 per page, distinct page parameter names to avoid conflict
         $pending = Appointment::where('status', AppointmentStatus::Pending)
                               ->with('user')
                               ->orderBy('appointment_date')
-                              ->get();
+                              ->paginate(10, ['*'], 'pending_page');
 
         $confirmed = Appointment::where('status', AppointmentStatus::Confirmed)
                                 ->with('user')
                                 ->orderBy('appointment_date')
-                                ->get();
+                                ->paginate(10, ['*'], 'confirmed_page');
                                 
         return view('admin.appointments', compact('pending', 'confirmed'));
     }
@@ -140,6 +141,7 @@ class AdminController extends Controller
         $query = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::Rejected, AppointmentStatus::NoShow]);
 
+        // Search Filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -153,11 +155,21 @@ class AdminController extends Controller
             });
         }
 
+        // Status Filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        $history = $query->orderByDesc('appointment_date')->get();
+        // Date Range Filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('appointment_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('appointment_date', '<=', $request->date_to);
+        }
+
+        // Pagination: 15 per page, append query params so filters stay active
+        $history = $query->orderByDesc('appointment_date')->paginate(15)->withQueryString();
 
         return view('admin.history', compact('history'));
     }
@@ -202,7 +214,7 @@ class AdminController extends Controller
                             ->whereNull('rejection_reason')
                             ->get();
 
-        // 1. Fetch ALL Registered Patients
+        // 1. Fetch ALL Registered Patients (Paginated)
         $query = User::where('role', UserRole::Patient);
 
         if ($request->filled('search')) {
@@ -220,19 +232,21 @@ class AdminController extends Controller
             elseif ($request->filter_status === 'restricted') $query->where('account_status', 'restricted'); 
         }
 
-        $allUsers = $query->orderBy('created_at', 'desc')->get();
+        $allUsers = $query->orderBy('created_at', 'desc')->paginate(10, ['*'], 'users_page')->withQueryString();
 
-        // 2. Fetch RESTRICTED Users
+        // 2. Fetch RESTRICTED Users (Paginated)
         $restrictedUsers = User::where('role', UserRole::Patient)
                                ->where('account_status', 'restricted')
-                               ->get();
+                               ->paginate(10, ['*'], 'restricted_page');
 
-        // 3. Fetch Walk-in Guests
+        // 3. Fetch Walk-in Guests (Keep as Collection for unique logic, or implement custom group-by pagination later)
+        // For now, we will limit it to recent 50 to avoid overflow, as distinct pagination is complex
         $guests = Appointment::whereNull('user_id')
             ->select('patient_first_name', 'patient_middle_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->unique('patient_email'); 
+            ->unique('patient_email')
+            ->take(50); 
 
         return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'guests'));
     }

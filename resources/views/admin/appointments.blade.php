@@ -82,7 +82,7 @@
                 <ul class="nav nav-pills bg-white p-2 rounded-pill shadow-sm" id="myTab" role="tablist">
                     <li class="nav-item">
                         <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
-                            Pending <span class="badge bg-danger ms-2 rounded-circle">{{ $pending->count() }}</span>
+                            Pending <span class="badge bg-danger ms-2 rounded-circle">{{ $pending->total() }}</span>
                         </button>
                     </li>
                     <li class="nav-item">
@@ -115,8 +115,13 @@
                                         {{-- UPDATED: Stacked Name Display --}}
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
-                                            @if($appt->patient_first_name)
-                                                <div class="small text-muted"><i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}</div>
+                                            @if($appt->patient_first_name && $appt->user)
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}
+                                                    @if($appt->relationship)
+                                                        <span class="text-primary">({{ $appt->relationship }})</span>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
                                         <td>
@@ -186,6 +191,22 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        {{-- PAGINATION: PENDING --}}
+                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1"></div>
+                            <div class="text-muted small flex-grow-1 text-center">
+                                @if($pending->total() > 0)
+                                    Showing {{ $pending->firstItem() }} to {{ $pending->lastItem() }} of {{ $pending->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="flex-grow-1 text-end">
+                                {{ $pending->links() }}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -208,8 +229,13 @@
                                         {{-- UPDATED: Stacked Name Display --}}
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
-                                            @if($appt->patient_first_name)
-                                                <div class="small text-muted"><i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}</div>
+                                            @if($appt->patient_first_name && $appt->user)
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}
+                                                    @if($appt->relationship)
+                                                        <span class="text-primary">({{ $appt->relationship }})</span>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
                                         <td>
@@ -316,6 +342,22 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        {{-- PAGINATION: CONFIRMED --}}
+                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1"></div>
+                            <div class="text-muted small flex-grow-1 text-center">
+                                @if($confirmed->total() > 0)
+                                    Showing {{ $confirmed->firstItem() }} to {{ $confirmed->lastItem() }} of {{ $confirmed->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="flex-grow-1 text-end">
+                                {{ $confirmed->links() }}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

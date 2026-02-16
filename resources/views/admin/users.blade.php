@@ -174,8 +174,8 @@
                 <li class="nav-item">
                     <button class="nav-link text-danger rounded-pill px-4 fw-bold me-2" id="restricted-tab" data-bs-toggle="tab" data-bs-target="#restricted" type="button">
                         <i class="bi bi-slash-circle me-1"></i> Restricted
-                        @if(isset($restrictedUsers) && $restrictedUsers->count() > 0)
-                            <span class="badge bg-danger text-white ms-1">{{ $restrictedUsers->count() }}</span>
+                        @if(isset($restrictedUsers) && $restrictedUsers->total() > 0)
+                            <span class="badge bg-danger text-white ms-1">{{ $restrictedUsers->total() }}</span>
                         @endif
                     </button>
                 </li>
@@ -199,7 +199,6 @@
                                         <option value="">All Users</option>
                                         <option value="verified" {{ request('filter_status') == 'verified' ? 'selected' : '' }}>Verified</option>
                                         <option value="unverified" {{ request('filter_status') == 'unverified' ? 'selected' : '' }}>Unverified</option>
-                                        {{-- ADDED FILTER OPTION --}}
                                         <option value="restricted" {{ request('filter_status') == 'restricted' ? 'selected' : '' }}>Restricted</option>
                                     </select>
                                 </div>
@@ -246,6 +245,20 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+                        {{-- PAGINATION: USERS --}}
+                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1"></div>
+                            <div class="text-muted small flex-grow-1 text-center">
+                                @if($allUsers->total() > 0)
+                                    Showing {{ $allUsers->firstItem() }} to {{ $allUsers->lastItem() }} of {{ $allUsers->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="flex-grow-1 text-end">
+                                {{ $allUsers->links() }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -331,6 +344,22 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        {{-- PAGINATION: RESTRICTED --}}
+                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1"></div>
+                            <div class="text-muted small flex-grow-1 text-center">
+                                @if($restrictedUsers->total() > 0)
+                                    Showing {{ $restrictedUsers->firstItem() }} to {{ $restrictedUsers->lastItem() }} of {{ $restrictedUsers->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="flex-grow-1 text-end">
+                                {{ $restrictedUsers->links() }}
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
 
@@ -340,7 +369,7 @@
                         <div class="p-4 bg-light border-bottom">
                             <div class="d-flex align-items-center text-muted small">
                                 <i class="bi bi-info-circle-fill me-2"></i>
-                                Walk-in guests who were manually booked by administrators. They do not have login credentials.
+                                Walk-in guests who were manually booked by administrators. Displaying recent 50 records.
                             </div>
                         </div>
                         <div class="table-responsive">

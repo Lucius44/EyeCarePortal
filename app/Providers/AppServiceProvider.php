@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator; // <--- IMPORT THIS
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Fix the "Ugly" Pagination by forcing Bootstrap 5 styles
+        Paginator::useBootstrapFive(); 
     }
 }

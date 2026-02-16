@@ -188,29 +188,37 @@ class AppointmentService
                 }
 
                 // 3. Prepare Data
+                // FIX: We now explicitly map the patient_ fields here so they are not lost.
                 $appointmentData = [
                     'appointment_date' => $date,
                     'appointment_time' => $time,
                     'service' => $data['service'],
                     'description' => $data['description'] ?? null,
                     'status' => ($origin === 'admin') ? AppointmentStatus::Confirmed : AppointmentStatus::Pending,
+                    
+                    // -- Capture Dependent Details (Works for Auth User AND Guests) --
+                    // We check both keys to be safe (StoreAppointmentRequest uses 'patient_first_name')
+                    'patient_first_name' => $data['patient_first_name'] ?? $data['first_name'] ?? null,
+                    'patient_middle_name' => $data['patient_middle_name'] ?? $data['middle_name'] ?? null,
+                    'patient_last_name' => $data['patient_last_name'] ?? $data['last_name'] ?? null,
+                    'patient_email' => $data['patient_email'] ?? $data['email'] ?? null,
+                    'patient_phone' => $data['patient_phone'] ?? $data['phone'] ?? null,
+                    'relationship' => $data['relationship'] ?? null,
                 ];
 
                 // 4. Handle User Linking
                 if (isset($data['user_id'])) {
+                    // Authenticated User
                     $appointmentData['user_id'] = $data['user_id'];
                 } elseif (isset($data['email'])) {
+                    // Guest / Fallback Logic
                     $existingUser = User::where('email', $data['email'])->first();
                     
                     if ($existingUser) {
                         $appointmentData['user_id'] = $existingUser->id;
                     } else {
                         $appointmentData['user_id'] = null;
-                        $appointmentData['patient_first_name'] = $data['first_name'] ?? null;
-                        $appointmentData['patient_middle_name'] = $data['middle_name'] ?? null;
-                        $appointmentData['patient_last_name'] = $data['last_name'] ?? null;
-                        $appointmentData['patient_email'] = $data['email'] ?? null;
-                        $appointmentData['patient_phone'] = $data['phone'] ?? null;
+                        // Data is already mapped in step 3, so we don't need to re-map here
                     }
                 }
 
