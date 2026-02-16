@@ -43,6 +43,7 @@ class AppointmentController extends Controller
 
     public function store(StoreAppointmentRequest $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // --- RULE 1: Permanent Restriction (3 Strikes) ---
@@ -96,6 +97,8 @@ class AppointmentController extends Controller
     public function cancel(Request $request, $id)
     {
         $appointment = Appointment::findOrFail($id);
+        
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($appointment->user_id !== $user->id) {
