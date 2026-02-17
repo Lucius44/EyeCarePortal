@@ -38,15 +38,29 @@
         </div>
     </div>
 
-    {{-- UPDATED CLASS: custom-pills --}}
+    {{-- TAB LOGIC: Check request('tab') to determine active state --}}
+    @php
+        $activeTab = request('tab') ?? 'upcoming'; // Default to 'upcoming'
+    @endphp
+
     <ul class="nav nav-pills custom-pills mb-4" id="pills-tab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active rounded-pill fw-bold px-4 me-2" id="pills-upcoming-tab" data-bs-toggle="pill" data-bs-target="#pills-upcoming" type="button" role="tab">
+            <button class="nav-link {{ $activeTab === 'upcoming' ? 'active' : '' }} rounded-pill fw-bold px-4 me-2" 
+                    id="pills-upcoming-tab" 
+                    data-bs-toggle="pill" 
+                    data-bs-target="#pills-upcoming" 
+                    type="button" 
+                    role="tab">
                 Upcoming <span class="badge bg-white text-primary ms-1 shadow-sm">{{ $upcoming->count() }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-pill fw-bold px-4" id="pills-history-tab" data-bs-toggle="pill" data-bs-target="#pills-history" type="button" role="tab">
+            <button class="nav-link {{ $activeTab === 'history' ? 'active' : '' }} rounded-pill fw-bold px-4" 
+                    id="pills-history-tab" 
+                    data-bs-toggle="pill" 
+                    data-bs-target="#pills-history" 
+                    type="button" 
+                    role="tab">
                 Past History
             </button>
         </li>
@@ -54,7 +68,8 @@
 
     <div class="tab-content" id="pills-tabContent">
         
-        <div class="tab-pane fade show active" id="pills-upcoming" role="tabpanel">
+        {{-- TAB 1: UPCOMING --}}
+        <div class="tab-pane fade {{ $activeTab === 'upcoming' ? 'show active' : '' }}" id="pills-upcoming" role="tabpanel">
             @if($upcoming->isEmpty())
                 <div class="text-center py-5 bg-light rounded-4">
                     <div class="text-muted opacity-50 mb-3"><i class="bi bi-calendar-x" style="font-size: 3rem;"></i></div>
@@ -76,7 +91,6 @@
                                         <small class="text-muted fw-bold">#{{ str_pad($app->id, 5, '0', STR_PAD_LEFT) }}</small>
                                     </div>
                                     
-                                    {{-- UPDATED: Service Name + Dependent Badge --}}
                                     <h5 class="fw-bold mb-1">
                                         {{ $app->service }}
                                         @if($app->patient_first_name)
@@ -114,7 +128,8 @@
             @endif
         </div>
 
-        <div class="tab-pane fade" id="pills-history" role="tabpanel">
+        {{-- TAB 2: HISTORY --}}
+        <div class="tab-pane fade {{ $activeTab === 'history' ? 'show active' : '' }}" id="pills-history" role="tabpanel">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -133,7 +148,6 @@
                                         {{ $app->appointment_date->format('M d, Y') }}
                                         <div class="small text-muted fw-normal">{{ $app->appointment_time }}</div>
                                     </td>
-                                    {{-- UPDATED: Service + Dependent Badge --}}
                                     <td>
                                         {{ $app->service }}
                                         @if($app->patient_first_name)
@@ -199,6 +213,25 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {{-- PAGINATION: PAST HISTORY (With Tab Persistence) --}}
+                <div class="row align-items-center p-3 border-top g-0">
+                    <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+
+                    <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
+                        @if($history->total() > 0)
+                            Showing {{ $history->firstItem() }} to {{ $history->lastItem() }} of {{ $history->total() }} results
+                        @else
+                            No results
+                        @endif
+                    </div>
+
+                    <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                        {{-- Appends 'tab' => 'history' to links --}}
+                        {{ $history->appends(['tab' => 'history'])->links('partials.pagination') }}
+                    </div>
+                </div>
+                
             </div>
         </div>
     </div>

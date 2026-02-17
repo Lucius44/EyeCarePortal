@@ -136,7 +136,6 @@
                                         </td>
                                     </tr>
 
-                                    {{-- REJECT REASON MODAL --}}
                                     <div class="modal fade" id="rejectModal-{{ $user->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <form action="{{ route('admin.users.verify', $user->id) }}" method="POST">
@@ -167,12 +166,29 @@
                 </div>
             @endif
 
+            {{-- TAB PERSISTENCE LOGIC --}}
+            @php
+                $activeTab = request('tab') ?? 'registered';
+                // If the user navigates to a tab that isn't one of ours (e.g. typo), default to registered.
+                if(!in_array($activeTab, ['registered', 'restricted', 'guests'])) {
+                    $activeTab = 'registered';
+                }
+            @endphp
+
             <ul class="nav nav-pills custom-pills mb-4" id="usersTab" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active rounded-pill px-4 fw-bold me-2" id="registered-tab" data-bs-toggle="tab" data-bs-target="#registered" type="button">Registered Patients</button>
+                    <button class="nav-link {{ $activeTab === 'registered' ? 'active' : '' }} rounded-pill px-4 fw-bold me-2" 
+                            id="registered-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#registered" 
+                            type="button">Registered Patients</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link text-danger rounded-pill px-4 fw-bold me-2" id="restricted-tab" data-bs-toggle="tab" data-bs-target="#restricted" type="button">
+                    <button class="nav-link {{ $activeTab === 'restricted' ? 'active' : '' }} text-danger rounded-pill px-4 fw-bold me-2" 
+                            id="restricted-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#restricted" 
+                            type="button">
                         <i class="bi bi-slash-circle me-1"></i> Restricted
                         @if(isset($restrictedUsers) && $restrictedUsers->total() > 0)
                             <span class="badge bg-danger text-white ms-1">{{ $restrictedUsers->total() }}</span>
@@ -180,17 +196,23 @@
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link rounded-pill px-4 fw-bold" id="guests-tab" data-bs-toggle="tab" data-bs-target="#guests" type="button">Walk-in Guests</button>
+                    <button class="nav-link {{ $activeTab === 'guests' ? 'active' : '' }} rounded-pill px-4 fw-bold" 
+                            id="guests-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#guests" 
+                            type="button">Walk-in Guests</button>
                 </li>
             </ul>
 
             <div class="tab-content" id="usersTabContent">
                 
                 {{-- TAB 1: REGISTERED --}}
-                <div class="tab-pane fade show active" id="registered">
+                <div class="tab-pane fade {{ $activeTab === 'registered' ? 'show active' : '' }}" id="registered">
                     <div class="table-card shadow-sm">
                         <div class="p-4 border-bottom bg-light bg-opacity-50">
+                            {{-- Ensure search form retains current tab if needed, though search usually resets to page 1 --}}
                             <form action="{{ route('admin.users') }}" method="GET" class="row g-2">
+                                <input type="hidden" name="tab" value="registered">
                                 <div class="col-md-5">
                                     <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="{{ request('search') }}">
                                 </div>
@@ -246,27 +268,25 @@
                                 </tbody>
                             </table>
                         </div>
-                        {{-- PAGINATION: USERS (UPDATED) --}}
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
-                            
-                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
+                        {{-- PAGINATION: USERS --}}
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($allUsers->total() > 0)
                                     Showing {{ $allUsers->firstItem() }} to {{ $allUsers->lastItem() }} of {{ $allUsers->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-
-                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
-                                {{ $allUsers->links('partials.pagination') }}
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                {{ $allUsers->appends(['tab' => 'registered'])->links('partials.pagination') }}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- TAB 2: RESTRICTED ACCOUNTS (NEW) --}}
-                <div class="tab-pane fade" id="restricted">
+                {{-- TAB 2: RESTRICTED ACCOUNTS --}}
+                <div class="tab-pane fade {{ $activeTab === 'restricted' ? 'show active' : '' }}" id="restricted">
                     <div class="table-card shadow-sm border border-danger">
                         <div class="p-4 bg-danger bg-opacity-10 border-bottom border-danger">
                             <div class="d-flex align-items-center text-danger small fw-bold">
@@ -298,19 +318,16 @@
                                         </td>
                                         <td>{{ $user->updated_at->format('M d, Y h:i A') }}</td>
                                         <td class="text-end pe-4">
-                                            {{-- UPDATED: Button Triggers Modal --}}
                                             <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#unrestrictModal-{{ $user->id }}">
                                                 <i class="bi bi-unlock-fill me-1"></i> Undo Restriction
                                             </button>
                                         </td>
                                     </tr>
 
-                                    {{-- NEW: LIFT RESTRICTION MODAL --}}
                                     <div class="modal fade" id="unrestrictModal-{{ $user->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
                                                 @csrf
-                                                
                                                 <div class="modal-content rounded-4 border-0 shadow-lg">
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-success">Lift Restriction</h5>
@@ -347,20 +364,18 @@
                             </table>
                         </div>
                         
-                        {{-- PAGINATION: RESTRICTED (UPDATED) --}}
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
-                            
-                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
+                        {{-- PAGINATION: RESTRICTED --}}
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($restrictedUsers->total() > 0)
                                     Showing {{ $restrictedUsers->firstItem() }} to {{ $restrictedUsers->lastItem() }} of {{ $restrictedUsers->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-
-                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
-                                {{ $restrictedUsers->links('partials.pagination') }}
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                {{ $restrictedUsers->appends(['tab' => 'restricted'])->links('partials.pagination') }}
                             </div>
                         </div>
                         
@@ -368,7 +383,7 @@
                 </div>
 
                 {{-- TAB 3: GUESTS --}}
-                <div class="tab-pane fade" id="guests">
+                <div class="tab-pane fade {{ $activeTab === 'guests' ? 'show active' : '' }}" id="guests">
                     <div class="table-card shadow-sm">
                         <div class="p-4 bg-light border-bottom">
                             <div class="d-flex align-items-center text-muted small">

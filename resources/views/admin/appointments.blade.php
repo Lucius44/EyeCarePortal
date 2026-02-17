@@ -78,15 +78,31 @@
                 </div>
             @endif
 
+            {{-- TAB PERSISTENCE LOGIC --}}
+            @php
+                $activeTab = request('tab') ?? 'pending';
+                if(!in_array($activeTab, ['pending', 'ongoing'])) {
+                    $activeTab = 'pending';
+                }
+            @endphp
+
             <div class="d-flex mb-4">
                 <ul class="nav nav-pills bg-white p-2 rounded-pill shadow-sm" id="myTab" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+                        <button class="nav-link {{ $activeTab === 'pending' ? 'active' : '' }}" 
+                                id="pending-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#pending" 
+                                type="button">
                             Pending <span class="badge bg-danger ms-2 rounded-circle">{{ $pending->total() }}</span>
                         </button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="ongoing-tab" data-bs-toggle="tab" data-bs-target="#ongoing" type="button">
+                        <button class="nav-link {{ $activeTab === 'ongoing' ? 'active' : '' }}" 
+                                id="ongoing-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#ongoing" 
+                                type="button">
                             Confirmed / Ongoing
                         </button>
                     </li>
@@ -96,7 +112,7 @@
             <div class="tab-content" id="myTabContent">
                 
                 {{-- PENDING TAB --}}
-                <div class="tab-pane fade show active" id="pending">
+                <div class="tab-pane fade {{ $activeTab === 'pending' ? 'show active' : '' }}" id="pending">
                     <div class="table-card shadow-sm">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
@@ -112,7 +128,7 @@
                                 <tbody>
                                     @forelse($pending as $appt)
                                     <tr>
-                                        {{-- UPDATED: Stacked Name Display --}}
+                                        {{-- Stacked Name Display --}}
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
                                             @if($appt->patient_first_name && $appt->user)
@@ -192,20 +208,18 @@
                             </table>
                         </div>
                         
-                        {{-- PAGINATION: PENDING (UPDATED) --}}
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
-                            
-                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
+                        {{-- PAGINATION: PENDING --}}
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($pending->total() > 0)
                                     Showing {{ $pending->firstItem() }} to {{ $pending->lastItem() }} of {{ $pending->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-
-                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
-                                {{ $pending->links('partials.pagination') }}
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                {{ $pending->appends(['tab' => 'pending'])->links('partials.pagination') }}
                             </div>
                         </div>
 
@@ -213,7 +227,7 @@
                 </div>
 
                 {{-- ONGOING TAB --}}
-                <div class="tab-pane fade" id="ongoing">
+                <div class="tab-pane fade {{ $activeTab === 'ongoing' ? 'show active' : '' }}" id="ongoing">
                     <div class="table-card shadow-sm">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
@@ -228,7 +242,7 @@
                                 <tbody>
                                     @forelse($confirmed as $appt)
                                     <tr>
-                                        {{-- UPDATED: Stacked Name Display --}}
+                                        {{-- Stacked Name Display --}}
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
                                             @if($appt->patient_first_name && $appt->user)
@@ -251,7 +265,7 @@
                                                 Mark Complete
                                             </button>
                                             
-                                            {{-- UPDATED: No-Show Button Triggers Modal --}}
+                                            {{-- No-Show Button Triggers Modal --}}
                                             <button type="button" class="btn btn-light text-warning-emphasis btn-sm rounded-pill px-3 fw-bold border ms-1" data-bs-toggle="modal" data-bs-target="#noShowModal-{{ $appt->id }}">
                                                 No-Show
                                             </button>
@@ -306,7 +320,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- NEW: NO-SHOW CONFIRMATION MODAL --}}
+                                    {{-- NO-SHOW CONFIRMATION MODAL --}}
                                     <div class="modal fade" id="noShowModal-{{ $appt->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST">
@@ -345,20 +359,18 @@
                             </table>
                         </div>
                         
-                        {{-- PAGINATION: CONFIRMED (UPDATED) --}}
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
-                            
-                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
+                        {{-- PAGINATION: ONGOING --}}
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($confirmed->total() > 0)
                                     Showing {{ $confirmed->firstItem() }} to {{ $confirmed->lastItem() }} of {{ $confirmed->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-
-                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
-                                {{ $confirmed->links('partials.pagination') }}
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                {{ $confirmed->appends(['tab' => 'ongoing'])->links('partials.pagination') }}
                             </div>
                         </div>
 

@@ -100,11 +100,13 @@ class PatientController extends Controller
     {
         $user_id = Auth::id();
 
+        // Upcoming remains a collection (get) as requested
         $upcoming = Appointment::where('user_id', $user_id)
                                ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
                                ->orderBy('appointment_date')
                                ->get();
 
+        // History is now paginated (15 per page)
         $history = Appointment::where('user_id', $user_id)
                               ->whereIn('status', [
                                   AppointmentStatus::Completed, 
@@ -113,7 +115,7 @@ class PatientController extends Controller
                                   AppointmentStatus::Rejected
                               ])
                               ->orderByDesc('appointment_date')
-                              ->get();
+                              ->paginate(15);
 
         return view('patient.my_appointments', compact('upcoming', 'history'));
     }
