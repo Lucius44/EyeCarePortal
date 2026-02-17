@@ -140,7 +140,7 @@
                         </div>
                     </div>
 
-                    {{-- 2. NEW LOCATION: Booking for Someone Else Toggle --}}
+                    {{-- 2. Booking for Someone Else Toggle --}}
                     <div class="mb-4 bg-light rounded-3 border border-light-subtle overflow-hidden">
                         {{-- Header (Always Visible) --}}
                         <div class="p-3 d-flex align-items-center justify-content-between">
@@ -162,12 +162,35 @@
                             <div class="row g-2">
                                 <div class="col-6">
                                     <label class="small fw-bold text-muted">First Name</label>
-                                    <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" placeholder="e.g. Timmy">
+                                    <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" 
+                                           oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                                 </div>
+                                
                                 <div class="col-6">
-                                    <label class="small fw-bold text-muted">Last Name</label>
-                                    <input type="text" name="patient_last_name" id="patientLastName" class="form-control" placeholder="e.g. Doe">
+                                    <label class="small fw-bold text-muted">Middle Name (Optional)</label>
+                                    <input type="text" name="patient_middle_name" id="patientMiddleName" class="form-control" 
+                                           oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                                 </div>
+
+                                <div class="col-6 mt-2">
+                                    <label class="small fw-bold text-muted">Last Name</label>
+                                    <input type="text" name="patient_last_name" id="patientLastName" class="form-control" 
+                                           oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
+                                </div>
+
+                                {{-- FIXED: Removed "V" to maintain consistency with registration --}}
+                                <div class="col-6 mt-2">
+                                    <label class="small fw-bold text-muted">Suffix (Optional)</label>
+                                    <select name="patient_suffix" id="patientSuffix" class="form-select">
+                                        <option value="">-- None --</option>
+                                        <option value="Jr.">Jr.</option>
+                                        <option value="Sr.">Sr.</option>
+                                        <option value="II">II</option>
+                                        <option value="III">III</option>
+                                        <option value="IV">IV</option>
+                                    </select>
+                                </div>
+
                                 <div class="col-12 mt-2">
                                     <label class="small fw-bold text-muted">Relationship (Optional)</label>
                                     <input type="text" name="relationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
@@ -321,24 +344,32 @@
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
-    // --- NEW: Toggle Dependent Fields ---
+    // --- UPDATED: Toggle Dependent Fields ---
     function toggleGuestFields() {
         const checkBox = document.getElementById('isGuestToggle');
         const fieldsDiv = document.getElementById('guestFields');
+        
+        // Fields
         const fName = document.getElementById('patientFirstName');
+        const mName = document.getElementById('patientMiddleName'); 
         const lName = document.getElementById('patientLastName');
+        const suffix = document.getElementById('patientSuffix'); 
 
         if (checkBox.checked) {
             fieldsDiv.classList.remove('d-none');
-            // Make them required on frontend for UX
+            // Make core fields required
             fName.required = true;
             lName.required = true;
         } else {
             fieldsDiv.classList.add('d-none');
+            // Remove required & Clear values
             fName.required = false;
             lName.required = false;
+            
             fName.value = '';
+            mName.value = ''; 
             lName.value = '';
+            suffix.value = ''; 
         }
     }
 </script>

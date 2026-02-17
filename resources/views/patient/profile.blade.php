@@ -24,7 +24,8 @@
                     </div>
 
                     <div class="text-center mt-5 mb-5">
-                        <h3 class="fw-bold mb-1">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</h3>
+                        {{-- FIXED: Added Suffix to Full Name --}}
+                        <h3 class="fw-bold mb-1">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }} {{ Auth::user()->suffix }}</h3>
                         <p class="text-muted mb-2">{{ Auth::user()->email }}</p>
                         
                         <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap mt-3">

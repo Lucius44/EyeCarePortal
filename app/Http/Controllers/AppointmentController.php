@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\User;
+use App\Models\Service; // <--- Imported Service Model
 use App\Enums\AppointmentStatus;
 use App\Services\AppointmentService; 
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,8 @@ class AppointmentController extends Controller
 
         $calendarData = $this->appointmentService->getCalendarData();
 
-        $services = Appointment::getServices();
+        // FIXED: Fetch service names from the Service model instead of the Appointment model
+        $services = Service::pluck('name');
         
         return view('patient.appointments', array_merge(
             [

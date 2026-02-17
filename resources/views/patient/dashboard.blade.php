@@ -309,7 +309,10 @@
                     @endif
                 </div>
                 
-                <h5 class="fw-bold mb-1">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h5>
+                {{-- FIXED: Added Suffix, Removed Middle Name for space --}}
+                <h5 class="fw-bold mb-1">
+                    {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} {{ Auth::user()->suffix }}
+                </h5>
                 <p class="text-muted small mb-4">{{ Auth::user()->email }}</p>
                 
                 <div class="d-grid">
