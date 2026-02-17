@@ -246,18 +246,20 @@
                                 </tbody>
                             </table>
                         </div>
-                        {{-- PAGINATION: USERS --}}
-                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1"></div>
-                            <div class="text-muted small flex-grow-1 text-center">
+                        {{-- PAGINATION: USERS (UPDATED) --}}
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
+                            
+                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($allUsers->total() > 0)
                                     Showing {{ $allUsers->firstItem() }} to {{ $allUsers->lastItem() }} of {{ $allUsers->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-                            <div class="flex-grow-1 text-end">
-                                {{ $allUsers->links() }}
+
+                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
+                                {{ $allUsers->links('partials.pagination') }}
                             </div>
                         </div>
                     </div>
@@ -345,18 +347,20 @@
                             </table>
                         </div>
                         
-                        {{-- PAGINATION: RESTRICTED --}}
-                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1"></div>
-                            <div class="text-muted small flex-grow-1 text-center">
+                        {{-- PAGINATION: RESTRICTED (UPDATED) --}}
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
+                            
+                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($restrictedUsers->total() > 0)
                                     Showing {{ $restrictedUsers->firstItem() }} to {{ $restrictedUsers->lastItem() }} of {{ $restrictedUsers->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-                            <div class="flex-grow-1 text-end">
-                                {{ $restrictedUsers->links() }}
+
+                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
+                                {{ $restrictedUsers->links('partials.pagination') }}
                             </div>
                         </div>
                         

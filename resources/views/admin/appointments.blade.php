@@ -192,18 +192,20 @@
                             </table>
                         </div>
                         
-                        {{-- PAGINATION: PENDING --}}
-                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1"></div>
-                            <div class="text-muted small flex-grow-1 text-center">
+                        {{-- PAGINATION: PENDING (UPDATED) --}}
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
+                            
+                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($pending->total() > 0)
                                     Showing {{ $pending->firstItem() }} to {{ $pending->lastItem() }} of {{ $pending->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-                            <div class="flex-grow-1 text-end">
-                                {{ $pending->links() }}
+
+                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
+                                {{ $pending->links('partials.pagination') }}
                             </div>
                         </div>
 
@@ -343,18 +345,20 @@
                             </table>
                         </div>
                         
-                        {{-- PAGINATION: CONFIRMED --}}
-                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                            <div class="flex-grow-1"></div>
-                            <div class="text-muted small flex-grow-1 text-center">
+                        {{-- PAGINATION: CONFIRMED (UPDATED) --}}
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
+                            <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
+                            
+                            <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
                                 @if($confirmed->total() > 0)
                                     Showing {{ $confirmed->firstItem() }} to {{ $confirmed->lastItem() }} of {{ $confirmed->total() }} results
                                 @else
                                     No results
                                 @endif
                             </div>
-                            <div class="flex-grow-1 text-end">
-                                {{ $confirmed->links() }}
+
+                            <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
+                                {{ $confirmed->links('partials.pagination') }}
                             </div>
                         </div>
 

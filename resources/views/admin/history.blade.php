@@ -192,18 +192,23 @@
                     </table>
                 </div>
                 
-                {{-- PAGINATION: HISTORY --}}
-                <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                    <div class="flex-grow-1"></div>
-                    <div class="text-muted small flex-grow-1 text-center">
+                {{-- PAGINATION: HISTORY (UPDATED) --}}
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center p-3 border-top">
+                    {{-- 1. Spacer for Desktop (Keeps Text Centered) --}}
+                    <div class="flex-grow-1 d-none d-lg-block order-lg-1"></div>
+
+                    {{-- 2. Summary Text (Center on Desktop, Bottom on Mobile) --}}
+                    <div class="text-muted small flex-grow-1 text-center order-2 order-lg-2 mt-2 mt-lg-0">
                         @if($history->total() > 0)
                             Showing {{ $history->firstItem() }} to {{ $history->lastItem() }} of {{ $history->total() }} results
                         @else
                             No results
                         @endif
                     </div>
-                    <div class="flex-grow-1 text-end">
-                        {{ $history->links() }}
+
+                    {{-- 3. Links (Right on Desktop, Top on Mobile) --}}
+                    <div class="flex-grow-1 text-end order-1 order-lg-3 w-100 w-lg-auto">
+                        {{ $history->links('partials.pagination') }}
                     </div>
                 </div>
             </div>
