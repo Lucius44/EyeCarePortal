@@ -247,18 +247,31 @@
                 <div class="card-body p-4">
                     <form action="{{ route('settings.password') }}" method="POST">
                         @csrf
-                        <div class="form-floating mb-3">
-                            <input type="password" name="current_password" class="form-control" id="curPass" placeholder="Current" required>
+                        
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" name="current_password" class="form-control" id="curPass" placeholder="Current" style="padding-right: 45px;" required>
                             <label for="curPass">Current Password</label>
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-secondary" 
+                               style="cursor: pointer; z-index: 10;" 
+                               onclick="togglePassword('curPass', this)"></i>
                         </div>
-                        <div class="form-floating mb-3">
-                            <input type="password" name="password" class="form-control" id="newPass" placeholder="New" required>
+
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" name="password" class="form-control" id="newPass" placeholder="New" style="padding-right: 45px;" required>
                             <label for="newPass">New Password</label>
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-secondary" 
+                               style="cursor: pointer; z-index: 10;" 
+                               onclick="togglePassword('newPass', this)"></i>
                         </div>
-                        <div class="form-floating mb-3">
-                            <input type="password" name="password_confirmation" class="form-control" id="conPass" placeholder="Confirm" required>
+
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" name="password_confirmation" class="form-control" id="conPass" placeholder="Confirm" style="padding-right: 45px;" required>
                             <label for="conPass">Confirm New Password</label>
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-secondary" 
+                               style="cursor: pointer; z-index: 10;" 
+                               onclick="togglePassword('conPass', this)"></i>
                         </div>
+
                         <button type="submit" class="btn btn-dark rounded-pill w-100 fw-bold">Update Password</button>
                     </form>
                 </div>
@@ -267,4 +280,19 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        }
+    }
+</script>
 @endsection
