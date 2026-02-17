@@ -201,6 +201,7 @@ class AppointmentService
                     'patient_first_name' => $data['patient_first_name'] ?? $data['first_name'] ?? null,
                     'patient_middle_name' => $data['patient_middle_name'] ?? $data['middle_name'] ?? null,
                     'patient_last_name' => $data['patient_last_name'] ?? $data['last_name'] ?? null,
+                    'patient_suffix' => $data['patient_suffix'] ?? $data['suffix'] ?? null, // <--- THE FIX
                     'patient_email' => $data['patient_email'] ?? $data['email'] ?? null,
                     'patient_phone' => $data['patient_phone'] ?? $data['phone'] ?? null,
                     'relationship' => $data['relationship'] ?? null,

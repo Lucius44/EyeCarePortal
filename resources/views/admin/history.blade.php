@@ -123,9 +123,13 @@
                                     {{-- Show "Booked By" if it's a dependent booking --}}
                                     @if($appt->patient_first_name && $appt->user)
                                         <div class="small text-muted">
-                                            {{-- UPDATED: Added suffix to 'Booked by' --}}
+                                            {{-- UPDATED: Added Middle Name + Suffix to 'Booked by' --}}
                                             <i class="bi bi-person-badge me-1"></i>
-                                            Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }} {{ $appt->user->suffix }}
+                                            Booked by: 
+                                            {{ $appt->user->first_name }} 
+                                            {{ $appt->user->middle_name }} 
+                                            {{ $appt->user->last_name }} 
+                                            {{ $appt->user->suffix }}
                                             @if($appt->relationship)
                                                 <span class="text-primary">({{ $appt->relationship }})</span>
                                             @endif

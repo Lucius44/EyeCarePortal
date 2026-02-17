@@ -93,9 +93,11 @@
                                     
                                     <h5 class="fw-bold mb-1">
                                         {{ $app->service }}
+                                        {{-- FIXED: Explicitly displaying Full Name + Suffix for accuracy --}}
                                         @if($app->patient_first_name)
                                             <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill ms-2" style="font-size: 0.65rem; vertical-align: middle;">
-                                                <i class="bi bi-person-fill me-1"></i> {{ $app->patient_name }}
+                                                <i class="bi bi-person-fill me-1"></i> 
+                                                {{ $app->patient_first_name }} {{ $app->patient_middle_name }} {{ $app->patient_last_name }} {{ $app->patient_suffix }}
                                             </span>
                                         @endif
                                     </h5>
@@ -150,10 +152,12 @@
                                     </td>
                                     <td>
                                         {{ $app->service }}
+                                        {{-- FIXED: Explicitly displaying Full Name + Suffix for accuracy --}}
                                         @if($app->patient_first_name)
                                             <div class="mt-1">
                                                 <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill" style="font-size: 0.65rem;">
-                                                    <i class="bi bi-person-fill me-1"></i> {{ $app->patient_name }}
+                                                    <i class="bi bi-person-fill me-1"></i> 
+                                                    {{ $app->patient_first_name }} {{ $app->patient_middle_name }} {{ $app->patient_last_name }} {{ $app->patient_suffix }}
                                                 </span>
                                             </div>
                                         @endif

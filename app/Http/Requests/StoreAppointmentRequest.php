@@ -47,7 +47,9 @@ class StoreAppointmentRequest extends FormRequest
             // --- NEW: Dependent Booking Validation ---
             'is_guest' => 'sometimes|accepted', // The checkbox
             'patient_first_name' => 'required_if:is_guest,on|nullable|string|max:255',
+            'patient_middle_name' => 'nullable|string|max:255', // <--- ADDED
             'patient_last_name' => 'required_if:is_guest,on|nullable|string|max:255',
+            'patient_suffix' => 'nullable|string|max:255',      // <--- ADDED
             'relationship' => 'nullable|string|max:255',
         ];
     }
