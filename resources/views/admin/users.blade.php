@@ -388,7 +388,7 @@
                         <div class="p-4 bg-light border-bottom">
                             <div class="d-flex align-items-center text-muted small">
                                 <i class="bi bi-info-circle-fill me-2"></i>
-                                Walk-in guests who were manually booked by administrators. Displaying recent 50 records.
+                                Walk-in guests who were manually booked by administrators.
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -418,6 +418,21 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- PAGINATION: GUESTS --}}
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
+                                @if($guests->total() > 0)
+                                    Showing {{ $guests->firstItem() }} to {{ $guests->lastItem() }} of {{ $guests->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                {{ $guests->appends(['tab' => 'guests'])->links('partials.pagination') }}
+                            </div>
                         </div>
                     </div>
                 </div>

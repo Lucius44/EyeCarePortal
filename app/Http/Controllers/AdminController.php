@@ -239,14 +239,17 @@ class AdminController extends Controller
                                ->where('account_status', 'restricted')
                                ->paginate(10, ['*'], 'restricted_page');
 
-        // 3. Fetch Walk-in Guests (Keep as Collection for unique logic, or implement custom group-by pagination later)
-        // For now, we will limit it to recent 50 to avoid overflow, as distinct pagination is complex
+        // 3. Fetch Walk-in Guests (Paginated via Subquery)
+        // This gets the LATEST appointment record for each unique guest email
         $guests = Appointment::whereNull('user_id')
-            ->select('patient_first_name', 'patient_middle_name', 'patient_last_name', 'patient_email', 'patient_phone', 'created_at')
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MAX(id)'))
+                  ->from('appointments')
+                  ->whereNull('user_id')
+                  ->groupBy('patient_email');
+            })
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->unique('patient_email')
-            ->take(50); 
+            ->paginate(10, ['*'], 'guests_page'); 
 
         return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'guests'));
     }
