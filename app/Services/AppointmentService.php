@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Str;
 
 class AppointmentService
 {
@@ -134,7 +135,6 @@ class AppointmentService
 
         // Check if Limit Reached (3 Strikes)
         if ($user->strikes >= 3) {
-            // UPDATED: Changed from 6 months to 30 days
             $user->update([
                 'account_status' => 'restricted',
                 'restricted_until' => now()->addDays(30)
@@ -187,8 +187,19 @@ class AppointmentService
                     return ['error' => 'The selected time slot is already taken.'];
                 }
 
+                // --- NEW: Handle Missing Email (System-Generated ID) ---
+                // If email is missing, we check for 'email' key OR 'patient_email' key.
+                $inputEmail = $data['email'] ?? $data['patient_email'] ?? null;
+                
+                if (empty($inputEmail)) {
+                    // Fallback: Use Phone or a random string to create a unique ID
+                    $identifier = $data['phone'] ?? $data['patient_phone'] ?? Str::random(8);
+                    // Sanitize identifier to be email-safe
+                    $cleanId = preg_replace('/[^a-zA-Z0-9]/', '', $identifier);
+                    $inputEmail = "guest-{$cleanId}@portal.local";
+                }
+
                 // 3. Prepare Data
-                // FIX: We now explicitly map the patient_ fields here so they are not lost.
                 $appointmentData = [
                     'appointment_date' => $date,
                     'appointment_time' => $time,
@@ -197,12 +208,11 @@ class AppointmentService
                     'status' => ($origin === 'admin') ? AppointmentStatus::Confirmed : AppointmentStatus::Pending,
                     
                     // -- Capture Dependent Details (Works for Auth User AND Guests) --
-                    // We check both keys to be safe (StoreAppointmentRequest uses 'patient_first_name')
                     'patient_first_name' => $data['patient_first_name'] ?? $data['first_name'] ?? null,
                     'patient_middle_name' => $data['patient_middle_name'] ?? $data['middle_name'] ?? null,
                     'patient_last_name' => $data['patient_last_name'] ?? $data['last_name'] ?? null,
-                    'patient_suffix' => $data['patient_suffix'] ?? $data['suffix'] ?? null, // <--- THE FIX
-                    'patient_email' => $data['patient_email'] ?? $data['email'] ?? null,
+                    'patient_suffix' => $data['patient_suffix'] ?? $data['suffix'] ?? null, 
+                    'patient_email' => $inputEmail, // Use the resolved email
                     'patient_phone' => $data['patient_phone'] ?? $data['phone'] ?? null,
                     'relationship' => $data['relationship'] ?? null,
                 ];
@@ -211,15 +221,14 @@ class AppointmentService
                 if (isset($data['user_id'])) {
                     // Authenticated User
                     $appointmentData['user_id'] = $data['user_id'];
-                } elseif (isset($data['email'])) {
-                    // Guest / Fallback Logic
-                    $existingUser = User::where('email', $data['email'])->first();
+                } else {
+                    // Check if this "Guest" is actually a registered user
+                    $existingUser = User::where('email', $inputEmail)->first();
                     
                     if ($existingUser) {
                         $appointmentData['user_id'] = $existingUser->id;
                     } else {
                         $appointmentData['user_id'] = null;
-                        // Data is already mapped in step 3, so we don't need to re-map here
                     }
                 }
 

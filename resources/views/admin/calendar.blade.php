@@ -254,17 +254,14 @@
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
-                                {{-- FIXED: Added regex to prevent numbers --}}
                                 <input type="text" name="first_name" class="form-control" placeholder="First Name" required
                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             <div class="col-md-3">
-                                {{-- FIXED: Added regex to prevent numbers --}}
                                 <input type="text" name="middle_name" class="form-control" placeholder="Middle (Opt)"
                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             <div class="col-md-3">
-                                {{-- FIXED: Added regex to prevent numbers --}}
                                 <input type="text" name="last_name" class="form-control" placeholder="Last Name" required
                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
@@ -282,7 +279,8 @@
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
-                                <input type="email" name="email" class="form-control" placeholder="Email Address" required>
+                                {{-- FIXED: Removed 'required' attribute and updated placeholder --}}
+                                <input type="email" name="email" class="form-control" placeholder="Email">
                             </div>
                             <div class="col-md-6">
                                 {{-- FIXED: Added PH Phone Format restrictions --}}
@@ -343,7 +341,7 @@
                             <div class="small text-muted mt-1">Prevents patients from booking this date.</div>
                         </div>
 
-                        {{-- NEW: Reason Field (Toggled by JS) --}}
+                        {{-- Reason Field (Toggled by JS) --}}
                         <div class="mb-3 d-none" id="closeReasonContainer">
                             <label class="form-label fw-bold small text-uppercase text-danger">Reason for Closing <span class="text-danger">*</span></label>
                             <textarea name="close_reason" id="daySettingsReason" class="form-control" rows="2" placeholder="e.g. Doctor is on leave, Holiday, etc."></textarea>
@@ -525,7 +523,7 @@
         // --- SHARED MODAL LOGIC ---
         var masterModal = null;
         
-        // NEW: Toggle Logic for Reason Field
+        // Toggle Logic for Reason Field
         function toggleReasonField(isClosed) {
             var container = document.getElementById('closeReasonContainer');
             var input = document.getElementById('daySettingsReason');
@@ -540,7 +538,7 @@
             }
         }
 
-        // NEW: Event Listener for Checkbox
+        // Event Listener for Checkbox
         var closeCheck = document.getElementById('isClosedCheck');
         if(closeCheck) {
             closeCheck.addEventListener('change', function() {
@@ -583,7 +581,7 @@
                 document.getElementById('isClosedCheck').checked = isClosed;
                 document.getElementById('maxApptInput').value = maxLimit;
                 
-                // NEW: Sync visibility when opening modal
+                // Sync visibility when opening modal
                 toggleReasonField(isClosed);
                 
                 if(isClosed) {
