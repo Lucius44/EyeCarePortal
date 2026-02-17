@@ -395,10 +395,11 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
+                                        {{-- UPDATED HEADER: "Latest Visit" instead of "First Visit" --}}
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">Guest Name</th>
                                         <th class="py-3 text-secondary small text-uppercase">Email</th>
                                         <th class="py-3 text-secondary small text-uppercase">Phone</th>
-                                        <th class="py-3 text-secondary small text-uppercase">First Visit</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Latest Visit</th>
                                     </tr>
                                 </thead>
                                 <tbody>

@@ -237,7 +237,8 @@ class AdminController extends Controller
         // 2. Fetch RESTRICTED Users (Paginated)
         $restrictedUsers = User::where('role', UserRole::Patient)
                                ->where('account_status', 'restricted')
-                               ->paginate(10, ['*'], 'restricted_page');
+                               ->paginate(10, ['*'], 'restricted_page')
+                               ->withQueryString(); // <--- Added this
 
         // 3. Fetch Walk-in Guests (Paginated via Subquery)
         // This gets the LATEST appointment record for each unique guest email
