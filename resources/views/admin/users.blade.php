@@ -307,8 +307,13 @@
                                 <tbody>
                                     @forelse($restrictedUsers as $user)
                                     <tr>
-                                        {{-- UPDATED: Name + Suffix --}}
-                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
+                                        {{-- FIXED: Added Middle Name + Suffix --}}
+                                        <td class="ps-4 fw-bold text-dark">
+                                            {{ $user->first_name }} 
+                                            {{ $user->middle_name }} 
+                                            {{ $user->last_name }} 
+                                            {{ $user->suffix }}
+                                        </td>
                                         <td>
                                             <span class="badge bg-danger rounded-pill">{{ $user->strikes }} / 3</span>
                                         </td>

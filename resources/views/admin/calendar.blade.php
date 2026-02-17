@@ -254,15 +254,21 @@
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
-                                <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
+                                {{-- FIXED: Added regex to prevent numbers --}}
+                                <input type="text" name="first_name" class="form-control" placeholder="First Name" required
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" name="middle_name" class="form-control" placeholder="Middle (Opt)">
+                                {{-- FIXED: Added regex to prevent numbers --}}
+                                <input type="text" name="middle_name" class="form-control" placeholder="Middle (Opt)"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
+                                {{-- FIXED: Added regex to prevent numbers --}}
+                                <input type="text" name="last_name" class="form-control" placeholder="Last Name" required
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
-                            {{-- NEW SUFFIX FIELD --}}
+                            {{-- SUFFIX FIELD --}}
                             <div class="col-md-2">
                                 <select name="patient_suffix" class="form-select">
                                     <option value="">Suffix</option>
@@ -279,7 +285,12 @@
                                 <input type="email" name="email" class="form-control" placeholder="Email Address" required>
                             </div>
                             <div class="col-md-6">
-                                <input type="text" name="phone" class="form-control" placeholder="Phone Number">
+                                {{-- FIXED: Added PH Phone Format restrictions --}}
+                                <input type="text" name="phone" class="form-control" 
+                                       placeholder="09123456789" 
+                                       maxlength="11" 
+                                       pattern="^09\d{9}$"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
                             </div>
                         </div>
                         <div class="row g-2 mb-3">
