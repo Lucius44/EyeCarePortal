@@ -104,11 +104,11 @@
         text-align: center;
     }
     
-    .form-floating > .form-control {
+    .form-floating > .form-control, .form-floating > .form-select {
         border-radius: 12px;
         border: 1px solid #e2e8f0;
     }
-    .form-floating > .form-control:focus {
+    .form-floating > .form-control:focus, .form-floating > .form-select:focus {
         border-color: var(--accent-color);
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     }
@@ -182,6 +182,7 @@
                         <form action="{{ route('register.post') }}" method="POST" id="signupForm" novalidate>
                             @csrf
 
+                            {{-- STEP 1: NAMES (With Suffix) --}}
                             <div class="step" id="step1">
                                 <h4 class="form-section-title">Let's start with your name</h4>
                                 <div class="row g-3">
@@ -192,18 +193,32 @@
                                             <label for="fn">First Name</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-floating">
                                             <input type="text" name="middle_name" class="form-control" id="mn" placeholder="Middle"
                                                    pattern="[a-zA-Z\s\.\-]+" title="Letters only.">
-                                            <label for="mn">Middle (Optional)</label>
+                                            <label for="mn">Middle (Opt)</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-floating">
                                             <input type="text" name="last_name" class="form-control" id="ln" placeholder="Last" required
                                                    pattern="[a-zA-Z\s\.\-]+" title="Letters only.">
                                             <label for="ln">Last Name</label>
+                                        </div>
+                                    </div>
+                                    {{-- NEW SUFFIX FIELD --}}
+                                    <div class="col-md-2">
+                                        <div class="form-floating">
+                                            <select name="suffix" class="form-select" id="suffix">
+                                                <option value="" selected>None</option>
+                                                <option value="Jr.">Jr.</option>
+                                                <option value="Sr.">Sr.</option>
+                                                <option value="II">II</option>
+                                                <option value="III">III</option>
+                                                <option value="IV">IV</option>
+                                            </select>
+                                            <label for="suffix">Suffix</label>
                                         </div>
                                     </div>
                                 </div>
@@ -243,11 +258,20 @@
                                 </div>
                             </div>
 
+                            {{-- STEP 3: CONTACT & SECURITY (With Phone) --}}
                             <div class="step d-none" id="step3">
-                                <h4 class="form-section-title">Secure your account</h4>
+                                <h4 class="form-section-title">Contact & Security</h4>
                                 
                                 <div class="row justify-content-center">
                                     <div class="col-md-8">
+                                        
+                                        {{-- NEW PHONE NUMBER FIELD --}}
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="phone_number" class="form-control" id="phone" placeholder="09123456789" required
+                                                   pattern="09[0-9]{9}" title="Format: 09123456789 (11 digits starting with 09)">
+                                            <label for="phone">Mobile Number (e.g. 09123456789)</label>
+                                        </div>
+
                                         <div class="form-floating mb-3">
                                             <input type="email" name="email" class="form-control" id="email" placeholder="Email" required
                                                    pattern=".+@gmail\.com" title="Must be a valid Gmail address">

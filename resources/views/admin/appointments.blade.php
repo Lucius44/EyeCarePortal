@@ -133,7 +133,8 @@
                                             <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
                                             @if($appt->patient_first_name && $appt->user)
                                                 <div class="small text-muted">
-                                                    <i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}
+                                                    {{-- UPDATED: Added suffix to 'Booked by' --}}
+                                                    <i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }} {{ $appt->user->suffix }}
                                                     @if($appt->relationship)
                                                         <span class="text-primary">({{ $appt->relationship }})</span>
                                                     @endif
@@ -247,7 +248,8 @@
                                             <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
                                             @if($appt->patient_first_name && $appt->user)
                                                 <div class="small text-muted">
-                                                    <i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}
+                                                    {{-- UPDATED: Added suffix to 'Booked by' --}}
+                                                    <i class="bi bi-person-badge me-1"></i>Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }} {{ $appt->user->suffix }}
                                                     @if($appt->relationship)
                                                         <span class="text-primary">({{ $appt->relationship }})</span>
                                                     @endif

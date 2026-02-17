@@ -256,11 +256,22 @@
                             <div class="col-md-4">
                                 <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="text" name="middle_name" class="form-control" placeholder="Middle (Opt)">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
+                            </div>
+                            {{-- NEW SUFFIX FIELD --}}
+                            <div class="col-md-2">
+                                <select name="patient_suffix" class="form-select">
+                                    <option value="">Suffix</option>
+                                    <option value="Jr.">Jr.</option>
+                                    <option value="Sr.">Sr.</option>
+                                    <option value="II">II</option>
+                                    <option value="III">III</option>
+                                    <option value="IV">IV</option>
+                                </select>
                             </div>
                         </div>
                         <div class="row g-2 mb-3">
@@ -283,7 +294,6 @@
                             <div class="col-md-6">
                                 <select name="service" class="form-select" required>
                                     <option value="" disabled selected>Select Service...</option>
-                                    {{-- DYNAMIC SERVICES LOOP --}}
                                     @foreach($services as $service)
                                         <option value="{{ $service->name }}">{{ $service->name }}</option>
                                     @endforeach

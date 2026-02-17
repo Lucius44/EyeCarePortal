@@ -117,14 +117,15 @@
                             @forelse($history as $appt)
                             <tr>
                                 <td class="ps-4">
-                                    {{-- CORRECT NAME LOGIC --}}
+                                    {{-- CORRECT NAME LOGIC (handled by accessor) --}}
                                     <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
                                     
                                     {{-- Show "Booked By" if it's a dependent booking --}}
                                     @if($appt->patient_first_name && $appt->user)
                                         <div class="small text-muted">
+                                            {{-- UPDATED: Added suffix to 'Booked by' --}}
                                             <i class="bi bi-person-badge me-1"></i>
-                                            Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }}
+                                            Booked by: {{ $appt->user->first_name }} {{ $appt->user->last_name }} {{ $appt->user->suffix }}
                                             @if($appt->relationship)
                                                 <span class="text-primary">({{ $appt->relationship }})</span>
                                             @endif
@@ -192,12 +193,10 @@
                     </table>
                 </div>
                 
-                {{-- PAGINATION: HISTORY (FIXED ALIGNMENT) --}}
+                {{-- PAGINATION: HISTORY --}}
                 <div class="row align-items-center p-3 border-top g-0">
-                    {{-- 1. Spacer for Desktop (Left) --}}
                     <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
 
-                    {{-- 2. Summary Text (Center Desktop, Bottom Mobile) --}}
                     <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
                         @if($history->total() > 0)
                             Showing {{ $history->firstItem() }} to {{ $history->lastItem() }} of {{ $history->total() }} results
@@ -206,7 +205,6 @@
                         @endif
                     </div>
 
-                    {{-- 3. Links (Right Desktop, Top Mobile) --}}
                     <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
                         {{ $history->links('partials.pagination') }}
                     </div>

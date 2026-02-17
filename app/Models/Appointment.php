@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\AppointmentStatus;
-use Carbon\Carbon;
 
 class Appointment extends Model
 {
@@ -14,24 +13,30 @@ class Appointment extends Model
 
     protected $fillable = [
         'user_id',
-        'appointment_date',
-        'appointment_time',
-        'service',
-        'description',
-        'status',
-        'cancellation_reason',
-        'diagnosis',
-        'prescription',
+        // Guest Fields
         'patient_first_name',
         'patient_middle_name',
         'patient_last_name',
+        'patient_suffix', // <--- Added
         'patient_email',
         'patient_phone',
-        'relationship', // Ensure this is in your migration or fillable if you added it
+        'relationship',
+        
+        'appointment_date',
+        'appointment_time',
+        'service',
+        'status',
+        'description',
+        'cancellation_reason',
+        
+        // Medical Fields
+        'diagnosis',
+        'prescription',
+        'notes'
     ];
 
     protected $casts = [
-        'appointment_date' => 'date',
+        'appointment_date' => 'datetime',
         'status' => AppointmentStatus::class,
     ];
 
@@ -40,61 +45,54 @@ class Appointment extends Model
         return $this->belongsTo(User::class);
     }
 
-    // --- Time Mutator ---
-    public function setAppointmentTimeAttribute($value)
-    {
-        $this->attributes['appointment_time'] = Carbon::parse($value)->format('h:i A');
-    }
-
-    // --- Helpers to get Patient Info (User OR Guest/Dependent) ---
+    // --- GLOBAL NAME DISPLAY ACCESSOR ---
+    // This automatically fixes the name display in History, Appointments, and Patient tables
     public function getPatientNameAttribute()
     {
-        // 1. Priority: Specific Patient Fields (Booking for child/other)
-        // If these columns are filled, it means the user booked for someone else.
-        if (!empty($this->attributes['patient_first_name'])) {
-            $name = $this->attributes['patient_first_name'];
-            if (!empty($this->attributes['patient_middle_name'])) {
-                $name .= ' ' . $this->attributes['patient_middle_name'];
+        // 1. Registered User or Dependent Booking by User
+        if ($this->user) {
+            // Check if it's a "Dependent" booking (fields manually filled)
+            if ($this->patient_first_name) {
+                return $this->formatName(
+                    $this->patient_first_name,
+                    $this->patient_middle_name,
+                    $this->patient_last_name,
+                    $this->patient_suffix
+                );
             }
-            $name .= ' ' . $this->attributes['patient_last_name'];
-            return $name;
+            // Standard User Booking
+            return $this->formatName(
+                $this->user->first_name,
+                $this->user->middle_name,
+                $this->user->last_name,
+                $this->user->suffix
+            );
         }
 
-        // 2. Fallback: Account Holder (Booking for self)
-        if ($this->user) {
-            return $this->user->first_name . ' ' . $this->user->last_name;
-        }
-        
-        // 3. Fallback: Legacy/Guest
-        return $this->attributes['patient_first_name'] ?? 'Guest Patient';
+        // 2. Guest/Walk-in
+        return $this->formatName(
+            $this->patient_first_name,
+            $this->patient_middle_name,
+            $this->patient_last_name,
+            $this->patient_suffix
+        );
     }
 
-    public function getPatientEmailAttribute()
+    // Helper to format name cleanly: "First M. Last Suffix"
+    private function formatName($first, $middle, $last, $suffix)
     {
-        // If specific email provided for dependent, use it (optional)
-        if (!empty($this->attributes['patient_email'])) {
-            return $this->attributes['patient_email'];
+        $name = $first;
+        
+        if ($middle) {
+            $name .= ' ' . $middle;
+        }
+        
+        $name .= ' ' . $last;
+        
+        if ($suffix) {
+            $name .= ' ' . $suffix;
         }
 
-        // Otherwise default to account email
-        if ($this->user) {
-            return $this->user->email;
-        }
-        return $this->attributes['patient_email'] ?? null;
-    }
-
-    // --- REFACTORED: Fetch Services from DB ---
-    public static function getServices()
-    {
-        // 1. Get all services EXCEPT 'Others', sorted alphabetically
-        $services = Service::where('name', '!=', 'Others')
-            ->orderBy('name')
-            ->pluck('name')
-            ->toArray();
-        
-        // 2. Append 'Others' at the very end
-        $services[] = 'Others';
-        
-        return $services;
+        return $name;
     }
 }

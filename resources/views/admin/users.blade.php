@@ -114,7 +114,8 @@
                                 <tbody>
                                     @foreach($pendingUsers as $user)
                                     <tr>
-                                        <td class="fw-bold">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</td>
+                                        {{-- UPDATED: Name + Suffix --}}
+                                        <td class="fw-bold">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
                                             <a href="{{ asset('storage/' . $user->id_photo_path) }}" target="_blank" class="text-decoration-none">
@@ -169,7 +170,6 @@
             {{-- TAB PERSISTENCE LOGIC --}}
             @php
                 $activeTab = request('tab') ?? 'registered';
-                // If the user navigates to a tab that isn't one of ours (e.g. typo), default to registered.
                 if(!in_array($activeTab, ['registered', 'restricted', 'guests'])) {
                     $activeTab = 'registered';
                 }
@@ -210,7 +210,6 @@
                 <div class="tab-pane fade {{ $activeTab === 'registered' ? 'show active' : '' }}" id="registered">
                     <div class="table-card shadow-sm">
                         <div class="p-4 border-bottom bg-light bg-opacity-50">
-                            {{-- Ensure search form retains current tab if needed, though search usually resets to page 1 --}}
                             <form action="{{ route('admin.users') }}" method="GET" class="row g-2">
                                 <input type="hidden" name="tab" value="registered">
                                 <div class="col-md-5">
@@ -246,7 +245,8 @@
                                 <tbody>
                                     @forelse($allUsers as $user)
                                     <tr>
-                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }}</td>
+                                        {{-- UPDATED: Name + Suffix --}}
+                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>{{ $user->phone_number ?? '-' }}</td>
                                         <td>
@@ -268,7 +268,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        {{-- PAGINATION: USERS --}}
                         <div class="row align-items-center p-3 border-top g-0">
                             <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
                             <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
@@ -308,7 +307,8 @@
                                 <tbody>
                                     @forelse($restrictedUsers as $user)
                                     <tr>
-                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->last_name }}</td>
+                                        {{-- UPDATED: Name + Suffix --}}
+                                        <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>
                                             <span class="badge bg-danger rounded-pill">{{ $user->strikes }} / 3</span>
                                         </td>
@@ -363,8 +363,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        {{-- PAGINATION: RESTRICTED --}}
                         <div class="row align-items-center p-3 border-top g-0">
                             <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
                             <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
@@ -378,7 +376,6 @@
                                 {{ $restrictedUsers->appends(['tab' => 'restricted'])->links('partials.pagination') }}
                             </div>
                         </div>
-                        
                     </div>
                 </div>
 
@@ -395,7 +392,6 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        {{-- UPDATED HEADER: "Latest Visit" instead of "First Visit" --}}
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">Guest Name</th>
                                         <th class="py-3 text-secondary small text-uppercase">Email</th>
                                         <th class="py-3 text-secondary small text-uppercase">Phone</th>
@@ -405,10 +401,12 @@
                                 <tbody>
                                     @forelse($guests as $guest)
                                     <tr>
+                                        {{-- UPDATED: Name + Suffix --}}
                                         <td class="ps-4 fw-bold text-dark">
                                             {{ $guest->patient_first_name }} 
                                             {{ $guest->patient_middle_name }}
                                             {{ $guest->patient_last_name }}
+                                            {{ $guest->patient_suffix }}
                                         </td>
                                         <td>{{ $guest->patient_email }}</td>
                                         <td>{{ $guest->patient_phone ?? '-' }}</td>
@@ -420,8 +418,6 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        {{-- PAGINATION: GUESTS --}}
                         <div class="row align-items-center p-3 border-top g-0">
                             <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
                             <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">

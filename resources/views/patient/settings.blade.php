@@ -56,12 +56,17 @@
                         </div>
                         <div class="mb-3">
                             <label class="small text-muted fw-bold">Full Name</label>
-                            <div class="form-control bg-light">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</div>
+                            <div class="form-control bg-light">
+                                {{ Auth::user()->first_name }} 
+                                {{ Auth::user()->middle_name }} 
+                                {{ Auth::user()->last_name }} 
+                                {{ Auth::user()->suffix }}
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="small text-muted fw-bold">Birthday</label>
-                                <div class="form-control bg-light">{{ Auth::user()->birthday }}</div>
+                                <div class="form-control bg-light">{{ Auth::user()->birthday->format('Y-m-d') }}</div>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="small text-muted fw-bold">Gender</label>
@@ -84,19 +89,29 @@
                                     <label class="small text-muted">M.I.</label>
                                     <input type="text" name="middle_name" class="form-control" value="{{ Auth::user()->middle_name }}">
                                 </div>
-                                <div class="col-md-5">
+                                <div class="col-md-3">
                                     <label class="small text-muted">Last Name</label>
                                     <input type="text" name="last_name" class="form-control" value="{{ Auth::user()->last_name }}" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="small text-muted">Suffix</label>
+                                    <select name="suffix" class="form-select">
+                                        <option value="" {{ Auth::user()->suffix == '' ? 'selected' : '' }}>None</option>
+                                        <option value="Jr." {{ Auth::user()->suffix == 'Jr.' ? 'selected' : '' }}>Jr.</option>
+                                        <option value="Sr." {{ Auth::user()->suffix == 'Sr.' ? 'selected' : '' }}>Sr.</option>
+                                        <option value="II" {{ Auth::user()->suffix == 'II' ? 'selected' : '' }}>II</option>
+                                        <option value="III" {{ Auth::user()->suffix == 'III' ? 'selected' : '' }}>III</option>
+                                        <option value="IV" {{ Auth::user()->suffix == 'IV' ? 'selected' : '' }}>IV</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-md-6">
                                     <label class="small text-muted">Birthday</label>
-                                    {{-- UPDATED: Added max attribute to disable dates younger than 18 years --}}
                                     <input type="date" 
                                            name="birthday" 
                                            class="form-control" 
-                                           value="{{ Auth::user()->birthday }}" 
+                                           value="{{ Auth::user()->birthday ? Auth::user()->birthday->format('Y-m-d') : '' }}" 
                                            max="{{ date('Y-m-d', strtotime('-18 years')) }}"
                                            required>
                                     <div class="form-text small">Must be 18+ years old.</div>
