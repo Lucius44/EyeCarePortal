@@ -155,11 +155,13 @@
                                 <span class="small">You are eligible to book appointments.</span>
                             </div>
                         </div>
+                        
+                        {{-- SECURE SELF-VIEW --}}
                         @if(Auth::user()->id_photo_path)
                             <div class="mt-3">
                                 <small class="text-muted d-block mb-2">Current ID on file (Click to view):</small>
-                                <a href="{{ asset('storage/' . Auth::user()->id_photo_path) }}" target="_blank" title="View Full Size">
-                                    <img src="{{ asset('storage/' . Auth::user()->id_photo_path) }}" class="img-fluid rounded-3 border shadow-sm cursor-pointer" style="max-height: 150px; object-fit: contain; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                                <a href="{{ route('settings.view_id') }}" target="_blank" title="View Full Size">
+                                    <img src="{{ route('settings.view_id') }}" class="img-fluid rounded-3 border shadow-sm cursor-pointer" style="max-height: 150px; object-fit: contain; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                                 </a>
                             </div>
                         @endif
@@ -189,9 +191,13 @@
                             </button>
                         </form>
                         
+                        {{-- SECURE SELF-VIEW FOR PENDING --}}
                         @if(Auth::user()->id_photo_path && !Auth::user()->rejection_reason)
                             <div class="mt-3 text-center">
                                 <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Review Pending</span>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <a href="{{ route('settings.view_id') }}" target="_blank" class="small text-muted">View uploaded ID</a>
                             </div>
                         @endif
                     @endif

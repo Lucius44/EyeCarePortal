@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Appointment;
 use App\Enums\AppointmentStatus; 
 
@@ -50,7 +51,7 @@ class PatientController extends Controller
             'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
             'middle_name' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
             'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
-            'suffix' => ['nullable', 'string', 'max:10'], // <--- Added
+            'suffix' => ['nullable', 'string', 'max:10'], 
             'birthday' => ['required', 'date', 'before:-18 years'],
             'gender' => 'required|string|in:Male,Female,Other',
         ], [
@@ -63,26 +64,6 @@ class PatientController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Personal information updated successfully.');
-    }
-
-    public function uploadId(Request $request)
-    {
-        $request->validate([
-            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
-        ]);
-
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        $path = $request->file('id_photo')->store('id_photos', 'public');
-
-        $user->update([
-            'id_photo_path' => $path,
-            'rejection_reason' => null, 
-            'is_verified' => false 
-        ]);
-
-        return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
     }
 
     public function myAppointments()
@@ -141,5 +122,51 @@ class PatientController extends Controller
         ]);
 
         return back()->with('success', 'Password changed successfully.');
+    }
+
+    // --- STRICT PRIVATE UPLOAD & VIEW ---
+
+    public function uploadId(Request $request)
+    {
+        $request->validate([
+            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // 1. Delete Old ID from PRIVATE disk
+        if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
+            Storage::disk('local')->delete($user->id_photo_path);
+        }
+
+        // 2. Store in PRIVATE 'local' disk (storage/app/id_photos)
+        $path = $request->file('id_photo')->store('id_photos', 'local');
+
+        $user->update([
+            'id_photo_path' => $path,
+            'rejection_reason' => null, 
+            'is_verified' => false 
+        ]);
+
+        return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
+    }
+
+    public function showIdPhoto()
+    {
+        $user = Auth::user();
+
+        if (!$user->id_photo_path) {
+            abort(404, 'No ID photo found.');
+        }
+
+        // Strictly check Private Storage
+        $path = storage_path('app/' . $user->id_photo_path);
+
+        if (!file_exists($path)) {
+            abort(404, 'File not found in secure storage.');
+        }
+
+        return response()->file($path);
     }
 }

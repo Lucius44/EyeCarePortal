@@ -45,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');
+    
+    // --- SECURE ROUTE FOR PATIENT VIEWING OWN ID ---
+    Route::get('/settings/my-id', [PatientController::class, 'showIdPhoto'])->name('settings.view_id');
 
     Route::get('/my-appointments', [PatientController::class, 'myAppointments'])->name('my.appointments');
 });
@@ -65,6 +68,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
+    
+    // --- SECURE ROUTE FOR ADMIN VIEWING USER ID ---
+    Route::get('/users/{id}/id-photo', [AdminController::class, 'showUserIdPhoto'])->name('admin.users.view_id');
     
     // --- NEW: Unrestrict User Route ---
     Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');

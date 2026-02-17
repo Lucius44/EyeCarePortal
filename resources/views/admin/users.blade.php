@@ -118,8 +118,9 @@
                                         <td class="fw-bold">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
-                                            <a href="{{ asset('storage/' . $user->id_photo_path) }}" target="_blank" class="text-decoration-none">
-                                                <img src="{{ asset('storage/' . $user->id_photo_path) }}" class="rounded border shadow-sm" style="height: 40px; width: 60px; object-fit: cover;">
+                                            {{-- SECURE ID VIEW LINK (Changed from asset() to route()) --}}
+                                            <a href="{{ route('admin.users.view_id', $user->id) }}" target="_blank" class="text-decoration-none">
+                                                <img src="{{ route('admin.users.view_id', $user->id) }}" class="rounded border shadow-sm" style="height: 40px; width: 60px; object-fit: cover;">
                                                 <small class="ms-2 text-primary fw-bold">View <i class="bi bi-box-arrow-up-right"></i></small>
                                             </a>
                                         </td>
@@ -250,7 +251,7 @@
                                         <td>{{ $user->email }}</td>
                                         <td>{{ $user->phone_number ?? '-' }}</td>
                                         <td>
-                                            @if($user->account_status === 'restricted')
+                                            @if($user->account_status === \App\Enums\UserStatus::Restricted)
                                                 <span class="badge bg-danger rounded-pill px-3">Restricted</span>
                                             @elseif($user->account_status === 'banned')
                                                 <span class="badge bg-dark rounded-pill px-3">Banned</span>

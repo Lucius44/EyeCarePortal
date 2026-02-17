@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; 
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -37,8 +38,6 @@ class AdminController extends Controller
         $stats = $this->dashboardService->getAdminStats();
         return view('admin.dashboard', $stats);
     }
-
-    // --- NEW SETTINGS METHODS ---
 
     public function settings()
     {
@@ -60,13 +59,30 @@ class AdminController extends Controller
         }
 
         $user->update([
-            'password' => $request->password, // Model casts will handle hashing
+            'password' => $request->password, 
         ]);
 
         return back()->with('success', 'Password updated successfully.');
     }
 
-    // ---------------------------
+    // --- STRICT PRIVATE VIEW ---
+    public function showUserIdPhoto($id)
+    {
+        $user = User::findOrFail($id);
+
+        if (!$user->id_photo_path) {
+            abort(404, 'ID Photo record not found.');
+        }
+
+        // Strictly check Private Storage
+        $path = storage_path('app/' . $user->id_photo_path);
+
+        if (!file_exists($path)) {
+            abort(404, 'File not found in secure storage.');
+        }
+
+        return response()->file($path);
+    }
 
     public function calendar()
     {
@@ -282,6 +298,11 @@ class AdminController extends Controller
         if ($action === 'reject') {
             $request->validate(['reason' => 'required|string|max:255']);
             
+            // Delete the Rejected ID (Strictly from PRIVATE disk)
+            if($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
+                Storage::disk('local')->delete($user->id_photo_path);
+            }
+
             $user->update([
                 'id_photo_path' => null, 
                 'is_verified' => false,
