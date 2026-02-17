@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Enums\UserRole;
+use App\Enums\UserStatus; // <--- Import the new Enum
 
 class User extends Authenticatable
 {
@@ -45,7 +46,8 @@ class User extends Authenticatable
             'is_verified' => 'boolean',
             'birthday' => 'date',
             'restricted_until' => 'datetime',
-            'role' => UserRole::class, // <--- This fixes the Enum mismatch
+            'role' => UserRole::class,
+            'account_status' => UserStatus::class, // <--- Cast to the new Enum
         ];
     }
 }

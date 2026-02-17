@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\DaySetting;
 use App\Models\User;
 use App\Enums\AppointmentStatus;
+use App\Enums\UserStatus; // <--- Import UserStatus
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -80,12 +81,13 @@ class AppointmentService
     public function checkPatientEligibility(User $user)
     {
         // --- RULE 1: Permanent Restriction (3 Strikes) ---
-        if ($user->account_status === 'restricted') {
+        // Refactored: Use Enum comparison
+        if ($user->account_status === UserStatus::Restricted) {
             
             // Auto-Unrestrict Logic
             if ($user->restricted_until && now()->greaterThanOrEqualTo($user->restricted_until)) {
                 $user->update([
-                    'account_status' => 'active',
+                    'account_status' => UserStatus::Active, // Refactored: Use Enum
                     'strikes' => 0,
                     'restricted_until' => null
                 ]);
@@ -136,7 +138,7 @@ class AppointmentService
         // Check if Limit Reached (3 Strikes)
         if ($user->strikes >= 3) {
             $user->update([
-                'account_status' => 'restricted',
+                'account_status' => UserStatus::Restricted, // Refactored: Use Enum
                 'restricted_until' => now()->addDays(30)
             ]);
             return true; // User was Restricted

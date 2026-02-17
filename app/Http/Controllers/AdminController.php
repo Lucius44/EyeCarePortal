@@ -9,8 +9,10 @@ use App\Models\DaySetting;
 use App\Models\Service; 
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Http\Resources\CalendarEventResource;
 use App\Services\AppointmentService;
+use App\Services\DashboardService; // <--- Import the new Service
 use App\Http\Requests\StoreAdminAppointmentRequest;
 use App\Http\Requests\UpdateDaySettingRequest;
 use Illuminate\Validation\Rule;
@@ -20,41 +22,21 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     protected $appointmentService;
+    protected $dashboardService; // <--- Define property
 
-    public function __construct(AppointmentService $appointmentService)
+    // Inject DashboardService into the constructor
+    public function __construct(AppointmentService $appointmentService, DashboardService $dashboardService)
     {
         $this->appointmentService = $appointmentService;
+        $this->dashboardService = $dashboardService;
     }
 
     public function dashboard()
     {
-        $today = Carbon::now('Asia/Manila')->startOfDay();
-        $totalPatients = User::where('role', UserRole::Patient)->count();
-        
-        $appointmentsToday = Appointment::whereDate('appointment_date', $today)
-            ->whereIn('status', [AppointmentStatus::Confirmed, AppointmentStatus::Completed])
-            ->count();
+        // Refactored: One line to fetch all stats
+        $stats = $this->dashboardService->getAdminStats();
 
-        $pendingRequests = Appointment::where('status', AppointmentStatus::Pending)->count();
-        $totalCompleted = Appointment::where('status', AppointmentStatus::Completed)->count();
-
-        $chartData = Appointment::select(DB::raw('DATE(appointment_date) as date'), DB::raw('count(*) as count'))
-            ->where('appointment_date', '>=', Carbon::now('Asia/Manila')->subDays(7))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        $labels = [];
-        $data = [];
-        
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now('Asia/Manila')->subDays($i)->format('Y-m-d');
-            $labels[] = Carbon::now('Asia/Manila')->subDays($i)->format('M d'); 
-            $record = $chartData->firstWhere('date', $date);
-            $data[] = $record ? $record->count : 0;
-        }
-
-        return view('admin.dashboard', compact('totalPatients', 'appointmentsToday', 'pendingRequests', 'totalCompleted', 'labels', 'data'));
+        return view('admin.dashboard', $stats);
     }
 
     public function calendar()
@@ -122,7 +104,6 @@ class AdminController extends Controller
 
     public function appointments()
     {
-        // Pagination: 10 per page, distinct page parameter names to avoid conflict
         $pending = Appointment::where('status', AppointmentStatus::Pending)
                               ->with('user')
                               ->orderBy('appointment_date')
@@ -168,7 +149,6 @@ class AdminController extends Controller
             $query->whereDate('appointment_date', '<=', $request->date_to);
         }
 
-        // Pagination: 15 per page, append query params so filters stay active
         $history = $query->orderByDesc('appointment_date')->paginate(15)->withQueryString();
 
         return view('admin.history', compact('history'));
@@ -198,7 +178,6 @@ class AdminController extends Controller
 
         $appointment->update($data);
 
-        // PENALTY LOGIC: Delegated to Service
         if ($request->status === AppointmentStatus::NoShow->value && $appointment->user_id) {
             $this->appointmentService->penalizeUser($appointment->user);
         }
@@ -214,7 +193,6 @@ class AdminController extends Controller
                             ->whereNull('rejection_reason')
                             ->get();
 
-        // 1. Fetch ALL Registered Patients (Paginated)
         $query = User::where('role', UserRole::Patient);
 
         if ($request->filled('search')) {
@@ -227,21 +205,25 @@ class AdminController extends Controller
         }
 
         if ($request->filled('filter_status')) {
-            if ($request->filter_status === 'verified') $query->where('is_verified', true)->where('account_status', 'active');
-            elseif ($request->filter_status === 'unverified') $query->where('is_verified', false);
-            elseif ($request->filter_status === 'restricted') $query->where('account_status', 'restricted'); 
+            if ($request->filter_status === 'verified') {
+                $query->where('is_verified', true)
+                      ->where('account_status', UserStatus::Active);
+            }
+            elseif ($request->filter_status === 'unverified') {
+                $query->where('is_verified', false);
+            }
+            elseif ($request->filter_status === 'restricted') {
+                $query->where('account_status', UserStatus::Restricted);
+            }
         }
 
         $allUsers = $query->orderBy('created_at', 'desc')->paginate(10, ['*'], 'users_page')->withQueryString();
 
-        // 2. Fetch RESTRICTED Users (Paginated)
         $restrictedUsers = User::where('role', UserRole::Patient)
-                               ->where('account_status', 'restricted')
+                               ->where('account_status', UserStatus::Restricted)
                                ->paginate(10, ['*'], 'restricted_page')
-                               ->withQueryString(); // <--- Added this
+                               ->withQueryString();
 
-        // 3. Fetch Walk-in Guests (Paginated via Subquery)
-        // This gets the LATEST appointment record for each unique guest email
         $guests = Appointment::whereNull('user_id')
             ->whereIn('id', function($q) {
                 $q->select(DB::raw('MAX(id)'))
@@ -286,12 +268,12 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if ($user->account_status !== 'restricted') {
+        if ($user->account_status !== UserStatus::Restricted) {
             return back()->with('error', 'User is not restricted.');
         }
 
         $user->update([
-            'account_status' => 'active',
+            'account_status' => UserStatus::Active,
             'strikes' => 0, 
             'restricted_until' => null
         ]);
