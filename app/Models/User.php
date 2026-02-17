@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Enums\UserRole;
 
 class User extends Authenticatable
 {
@@ -16,12 +17,12 @@ class User extends Authenticatable
         'first_name',
         'middle_name',
         'last_name',
-        'suffix', // <--- Added
+        'suffix',
         'birthday',
         'gender',
         'email',
         'password',
-        'phone_number', // <--- Ensure this is here
+        'phone_number',
         'role',
         'id_photo_path',
         'is_verified',
@@ -44,6 +45,7 @@ class User extends Authenticatable
             'is_verified' => 'boolean',
             'birthday' => 'date',
             'restricted_until' => 'datetime',
+            'role' => UserRole::class, // <--- This fixes the Enum mismatch
         ];
     }
 }

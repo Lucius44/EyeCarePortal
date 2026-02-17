@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest;
+use App\Enums\UserRole;
 
 class AuthController extends Controller
 {
@@ -27,7 +28,8 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             
-            if(Auth::user()->role === 'admin') {
+            // Fixed: Compare against the Enum, not a string
+            if(Auth::user()->role === UserRole::Admin) {
                 return redirect()->route('admin.dashboard');
             }
 
@@ -46,13 +48,13 @@ class AuthController extends Controller
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'],
             'last_name' => $validated['last_name'],
-            'suffix' => $validated['suffix'], // <--- Added
+            'suffix' => $validated['suffix'], 
             'birthday' => $validated['birthday'],
             'gender' => $validated['gender'],
             'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'], // <--- Added
+            'phone_number' => $validated['phone_number'],
             'password' => Hash::make($validated['password']),
-            'role' => 'patient'
+            'role' => UserRole::Patient, // Best practice: Use Enum here too
         ]);
 
         Auth::login($user);
