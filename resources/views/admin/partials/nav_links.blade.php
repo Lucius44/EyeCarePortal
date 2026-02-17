@@ -30,9 +30,14 @@
         <i class="bi bi-people"></i> Users & Patients
     </a>
     
-    {{-- Services Link with Updated Icon --}}
+    {{-- Services Link --}}
     <a href="{{ route('services.index') }}" class="admin-nav-link {{ request()->routeIs('services.index') ? 'active' : '' }}">
         <i class="bi bi-journal-medical"></i> Services
+    </a>
+
+    {{-- Settings Link (New) --}}
+    <a href="{{ route('admin.settings') }}" class="admin-nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
+        <i class="bi bi-gear-fill"></i> Settings
     </a>
     
     <form action="{{ route('logout') }}" method="POST" class="mt-3">

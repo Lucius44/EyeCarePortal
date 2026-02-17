@@ -69,5 +69,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // --- NEW: Unrestrict User Route ---
     Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');
 
+    // --- NEW: Admin Settings Routes ---
+    Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
+    Route::post('/settings/password', [AdminController::class, 'updatePassword'])->name('admin.settings.password');
+
     Route::resource('services', AdminServiceController::class)->except(['show', 'create', 'edit']);
 });

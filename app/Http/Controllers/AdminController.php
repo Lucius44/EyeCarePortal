@@ -12,19 +12,20 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Resources\CalendarEventResource;
 use App\Services\AppointmentService;
-use App\Services\DashboardService; // <--- Import the new Service
+use App\Services\DashboardService; 
 use App\Http\Requests\StoreAdminAppointmentRequest;
 use App\Http\Requests\UpdateDaySettingRequest;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash; // <--- Added Hash Facade
 
 class AdminController extends Controller
 {
     protected $appointmentService;
-    protected $dashboardService; // <--- Define property
+    protected $dashboardService;
 
-    // Inject DashboardService into the constructor
     public function __construct(AppointmentService $appointmentService, DashboardService $dashboardService)
     {
         $this->appointmentService = $appointmentService;
@@ -33,11 +34,38 @@ class AdminController extends Controller
 
     public function dashboard()
     {
-        // Refactored: One line to fetch all stats
         $stats = $this->dashboardService->getAdminStats();
-
         return view('admin.dashboard', $stats);
     }
+
+    // --- NEW SETTINGS METHODS ---
+
+    public function settings()
+    {
+        return view('admin.settings');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The provided password does not match your current records.']);
+        }
+
+        $user->update([
+            'password' => $request->password, // Model casts will handle hashing
+        ]);
+
+        return back()->with('success', 'Password updated successfully.');
+    }
+
+    // ---------------------------
 
     public function calendar()
     {
