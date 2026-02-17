@@ -101,19 +101,41 @@
                         <div class="card-body p-4">
                             <form action="{{ route('admin.settings.password') }}" method="POST">
                                 @csrf
-                                <div class="form-floating mb-3">
-                                    <input type="password" name="current_password" class="form-control" id="curPass" placeholder="Current" required>
-                                    <label for="curPass">Current Password</label>
+                                
+                                {{-- Current Password --}}
+                                <div class="input-group mb-3">
+                                    <div class="form-floating flex-grow-1">
+                                        <input type="password" name="current_password" class="form-control rounded-start" id="curPass" placeholder="Current" required>
+                                        <label for="curPass">Current Password</label>
+                                    </div>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('curPass', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                 </div>
-                                <div class="form-floating mb-3">
-                                    <input type="password" name="password" class="form-control" id="newPass" placeholder="New" required>
-                                    <label for="newPass">New Password</label>
+
+                                {{-- New Password --}}
+                                <div class="input-group mb-3">
+                                    <div class="form-floating flex-grow-1">
+                                        <input type="password" name="password" class="form-control rounded-start" id="newPass" placeholder="New" required>
+                                        <label for="newPass">New Password</label>
+                                    </div>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('newPass', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                 </div>
-                                <div class="form-floating mb-3">
-                                    <input type="password" name="password_confirmation" class="form-control" id="conPass" placeholder="Confirm" required>
-                                    <label for="conPass">Confirm New Password</label>
+
+                                {{-- Confirm Password --}}
+                                <div class="input-group mb-3">
+                                    <div class="form-floating flex-grow-1">
+                                        <input type="password" name="password_confirmation" class="form-control rounded-start" id="conPass" placeholder="Confirm" required>
+                                        <label for="conPass">Confirm New Password</label>
+                                    </div>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('conPass', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                 </div>
-                                <div class="d-grid">
+
+                                <div class="d-grid mt-4">
                                     <button type="submit" class="btn btn-dark rounded-pill fw-bold py-2">
                                         Update Password
                                     </button>
@@ -142,4 +164,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePassword(fieldId, btn) {
+        const input = document.getElementById(fieldId);
+        const icon = btn.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+</script>
 @endsection

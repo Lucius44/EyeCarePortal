@@ -19,7 +19,7 @@ use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash; // <--- Added Hash Facade
+use Illuminate\Support\Facades\Hash; 
 
 class AdminController extends Controller
 {
@@ -52,6 +52,7 @@ class AdminController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if (!Hash::check($request->current_password, $user->password)) {
