@@ -114,11 +114,10 @@
                                 <tbody>
                                     @foreach($pendingUsers as $user)
                                     <tr>
-                                        {{-- UPDATED: Name + Suffix --}}
                                         <td class="fw-bold">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
-                                            {{-- SECURE ID VIEW LINK (Changed from asset() to route()) --}}
+                                            {{-- SECURE ID VIEW LINK --}}
                                             <a href="{{ route('admin.users.view_id', $user->id) }}" target="_blank" class="text-decoration-none">
                                                 <img src="{{ route('admin.users.view_id', $user->id) }}" class="rounded border shadow-sm" style="height: 40px; width: 60px; object-fit: cover;">
                                                 <small class="ms-2 text-primary fw-bold">View <i class="bi bi-box-arrow-up-right"></i></small>
@@ -239,6 +238,8 @@
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">User</th>
                                         <th class="py-3 text-secondary small text-uppercase">Email</th>
                                         <th class="py-3 text-secondary small text-uppercase">Phone</th>
+                                        {{-- NEW COLUMN HEADER --}}
+                                        <th class="py-3 text-secondary small text-uppercase">ID Proof</th>
                                         <th class="py-3 text-secondary small text-uppercase">Status</th>
                                         <th class="py-3 text-secondary small text-uppercase">Joined</th>
                                     </tr>
@@ -246,10 +247,21 @@
                                 <tbody>
                                     @forelse($allUsers as $user)
                                     <tr>
-                                        {{-- UPDATED: Name + Suffix --}}
                                         <td class="ps-4 fw-bold text-dark">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>{{ $user->phone_number ?? '-' }}</td>
+                                        
+                                        {{-- NEW COLUMN DATA --}}
+                                        <td>
+                                            @if($user->id_photo_path)
+                                                <a href="{{ route('admin.users.view_id', $user->id) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                    <i class="bi bi-eye-fill me-1"></i> View ID
+                                                </a>
+                                            @else
+                                                <span class="text-muted small">-</span>
+                                            @endif
+                                        </td>
+
                                         <td>
                                             @if($user->account_status === \App\Enums\UserStatus::Restricted)
                                                 <span class="badge bg-danger rounded-pill px-3">Restricted</span>
@@ -264,7 +276,7 @@
                                         <td>{{ $user->created_at->format('M d, Y') }}</td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="5" class="text-center py-5 text-muted">No users found.</td></tr>
+                                    <tr><td colspan="6" class="text-center py-5 text-muted">No users found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -308,7 +320,6 @@
                                 <tbody>
                                     @forelse($restrictedUsers as $user)
                                     <tr>
-                                        {{-- FIXED: Added Middle Name + Suffix --}}
                                         <td class="ps-4 fw-bold text-dark">
                                             {{ $user->first_name }} 
                                             {{ $user->middle_name }} 
@@ -407,7 +418,6 @@
                                 <tbody>
                                     @forelse($guests as $guest)
                                     <tr>
-                                        {{-- UPDATED: Name + Suffix --}}
                                         <td class="ps-4 fw-bold text-dark">
                                             {{ $guest->patient_first_name }} 
                                             {{ $guest->patient_middle_name }}

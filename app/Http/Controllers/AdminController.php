@@ -65,7 +65,7 @@ class AdminController extends Controller
         return back()->with('success', 'Password updated successfully.');
     }
 
-    // --- STRICT PRIVATE VIEW ---
+    // --- STRICT PRIVATE VIEW (FIXED PATHING) ---
     public function showUserIdPhoto($id)
     {
         $user = User::findOrFail($id);
@@ -74,12 +74,12 @@ class AdminController extends Controller
             abort(404, 'ID Photo record not found.');
         }
 
-        // Strictly check Private Storage
-        $path = storage_path('app/' . $user->id_photo_path);
-
-        if (!file_exists($path)) {
+        // FIX: Use Storage facade to resolve path
+        if (!Storage::disk('local')->exists($user->id_photo_path)) {
             abort(404, 'File not found in secure storage.');
         }
+
+        $path = Storage::disk('local')->path($user->id_photo_path);
 
         return response()->file($path);
     }

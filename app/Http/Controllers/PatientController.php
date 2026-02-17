@@ -124,7 +124,7 @@ class PatientController extends Controller
         return back()->with('success', 'Password changed successfully.');
     }
 
-    // --- STRICT PRIVATE UPLOAD & VIEW ---
+    // --- STRICT PRIVATE UPLOAD & VIEW (FIXED PATHING) ---
 
     public function uploadId(Request $request)
     {
@@ -140,7 +140,7 @@ class PatientController extends Controller
             Storage::disk('local')->delete($user->id_photo_path);
         }
 
-        // 2. Store in PRIVATE 'local' disk (storage/app/id_photos)
+        // 2. Store in PRIVATE 'local' disk (storage/app/private/id_photos)
         $path = $request->file('id_photo')->store('id_photos', 'local');
 
         $user->update([
@@ -160,12 +160,13 @@ class PatientController extends Controller
             abort(404, 'No ID photo found.');
         }
 
-        // Strictly check Private Storage
-        $path = storage_path('app/' . $user->id_photo_path);
-
-        if (!file_exists($path)) {
+        // FIX: Use the Storage facade to get the real absolute path
+        // This automatically respects the 'root' => 'app/private' config
+        if (!Storage::disk('local')->exists($user->id_photo_path)) {
             abort(404, 'File not found in secure storage.');
         }
+
+        $path = Storage::disk('local')->path($user->id_photo_path);
 
         return response()->file($path);
     }
