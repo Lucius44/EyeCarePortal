@@ -2,17 +2,27 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ForgotPasswordController; // <--- Imported
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceController; 
-use Illuminate\Foundation\Auth\EmailVerificationRequest; // <--- Imported
-use Illuminate\Http\Request; // <--- Imported
+use Illuminate\Foundation\Auth\EmailVerificationRequest; 
+use Illuminate\Http\Request; 
 
 // -- Public Routes --
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Terms
+Route::view('/terms', 'terms')->name('terms');
+
+// --- FORGOT PASSWORD ROUTES (NEW) ---
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.update');
 
 // Login
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -28,9 +38,9 @@ Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.e
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// --- EMAIL VERIFICATION ROUTES (NEW) ---
+// --- EMAIL VERIFICATION ROUTES ---
 Route::get('/email/verify', function () {
-    return view('auth.verify-email'); // Ensure this view exists
+    return view('auth.verify-email'); 
 })->middleware('auth')->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
@@ -45,7 +55,6 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 
 // -- Protected Patient Routes --
-// ADDED 'verified' MIDDLEWARE HERE
 Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
@@ -91,10 +100,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // --- SECURE ROUTE FOR ADMIN VIEWING USER ID ---
     Route::get('/users/{id}/id-photo', [AdminController::class, 'showUserIdPhoto'])->name('admin.users.view_id');
     
-    // --- NEW: Unrestrict User Route ---
+    // --- Unrestrict User Route ---
     Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');
 
-    // --- NEW: Admin Settings Routes ---
+    // --- Admin Settings Routes ---
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/settings/password', [AdminController::class, 'updatePassword'])->name('admin.settings.password');
 

@@ -137,6 +137,13 @@
                 <form action="{{ route('login.post') }}" method="POST">
                     @csrf 
 
+                    {{-- Success Message (e.g., Password Reset Successful) --}}
+                    @if (session('status'))
+                        <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small rounded-3 mb-4">
+                            <i class="bi bi-check-circle-fill me-1"></i> {{ session('status') }}
+                        </div>
+                    @endif
+
                     @if ($errors->any())
                         <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small rounded-3 mb-4">
                             <i class="bi bi-exclamation-circle me-1"></i> Invalid credentials. Please try again.
@@ -148,11 +155,18 @@
                         <label for="email">Email Address</label>
                     </div>
 
-                    <div class="form-floating mb-4 position-relative">
+                    <div class="form-floating mb-2 position-relative">
                         <input type="password" name="password" class="form-control" id="password" placeholder="Password" required>
                         <label for="password">Password</label>
                         <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" 
                            id="togglePassword" style="cursor: pointer; z-index: 5;"></i>
+                    </div>
+
+                    {{-- Forgot Password Link --}}
+                    <div class="d-flex justify-content-end mb-4">
+                        <a href="{{ route('password.request') }}" class="text-decoration-none small fw-bold" style="color: var(--accent-color);">
+                            Forgot Password?
+                        </a>
                     </div>
 
                     <button type="submit" class="btn btn-login w-100 mb-4">
