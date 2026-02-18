@@ -238,10 +238,10 @@
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">User</th>
                                         <th class="py-3 text-secondary small text-uppercase">Email</th>
                                         <th class="py-3 text-secondary small text-uppercase">Phone</th>
-                                        {{-- NEW COLUMN HEADER --}}
                                         <th class="py-3 text-secondary small text-uppercase">ID Proof</th>
                                         <th class="py-3 text-secondary small text-uppercase">Status</th>
-                                        <th class="py-3 text-secondary small text-uppercase">Joined</th>
+                                        {{-- CHANGED: Replaced "Joined" with "Details" --}}
+                                        <th class="py-3 text-secondary small text-uppercase text-center">Details</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -251,7 +251,6 @@
                                         <td>{{ $user->email }}</td>
                                         <td>{{ $user->phone_number ?? '-' }}</td>
                                         
-                                        {{-- NEW COLUMN DATA --}}
                                         <td>
                                             @if($user->id_photo_path)
                                                 <a href="{{ route('admin.users.view_id', $user->id) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
@@ -273,8 +272,94 @@
                                                 <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">Unverified</span>
                                             @endif
                                         </td>
-                                        <td>{{ $user->created_at->format('M d, Y') }}</td>
+                                        
+                                        {{-- CHANGED: View Info Button --}}
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-light text-primary fw-bold border" data-bs-toggle="modal" data-bs-target="#userModal{{ $user->id }}">
+                                                <i class="bi bi-info-circle me-1"></i> View Info
+                                            </button>
+                                        </td>
                                     </tr>
+
+                                    {{-- NEW: Patient Details Modal --}}
+                                    <div class="modal fade" id="userModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                <div class="modal-header border-bottom-0">
+                                                    <h5 class="modal-title fw-bold text-primary">
+                                                        <i class="bi bi-person-lines-fill me-2"></i> Patient Information
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body px-4 pb-4">
+                                                    
+                                                    {{-- Name Breakdown Section --}}
+                                                    <div class="p-3 bg-light rounded-3 mb-3">
+                                                        <h6 class="text-uppercase small text-muted fw-bold mb-3">Full Name Breakdown</h6>
+                                                        <div class="row g-2">
+                                                            <div class="col-6">
+                                                                <label class="small text-muted">First Name</label>
+                                                                <div class="fw-bold">{{ $user->first_name }}</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="small text-muted">Middle Name</label>
+                                                                <div class="fw-bold">{{ $user->middle_name ?? '-' }}</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="small text-muted">Last Name</label>
+                                                                <div class="fw-bold">{{ $user->last_name }}</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="small text-muted">Suffix</label>
+                                                                <div class="fw-bold">{{ $user->suffix ?? '-' }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Biological Info Section --}}
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-6">
+                                                            <div class="border p-2 rounded-3 text-center">
+                                                                <label class="small text-muted d-block">Gender</label>
+                                                                <span class="fw-bold text-dark">
+                                                                    {{ $user->gender }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="border p-2 rounded-3 text-center">
+                                                                <label class="small text-muted d-block">Birthday</label>
+                                                                <span class="fw-bold text-dark">
+                                                                    {{ \Carbon\Carbon::parse($user->birthday)->format('M d, Y') }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- System Info Section --}}
+                                                    <div class="border-top pt-3">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="small text-muted">Account Created:</span>
+                                                            <span class="fw-bold text-secondary">
+                                                                {{ $user->created_at->format('F d, Y h:i A') }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <span class="small text-muted">Email Status:</span>
+                                                            @if($user->hasVerifiedEmail())
+                                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified</span>
+                                                            @else
+                                                                <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Unverified</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- End Modal --}}
+
                                     @empty
                                     <tr><td colspan="6" class="text-center py-5 text-muted">No users found.</td></tr>
                                     @endforelse
