@@ -80,6 +80,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');
     
+    // --- NEW: DELETE ACCOUNT ROUTE ---
+    Route::delete('/settings/delete', [PatientController::class, 'deleteAccount'])->name('settings.delete');
+    
     // --- SECURE ROUTE FOR PATIENT VIEWING OWN ID ---
     Route::get('/settings/my-id', [PatientController::class, 'showIdPhoto'])->name('settings.view_id');
 

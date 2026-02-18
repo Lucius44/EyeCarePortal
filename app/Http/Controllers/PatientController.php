@@ -124,6 +124,41 @@ class PatientController extends Controller
         return back()->with('success', 'Password changed successfully.');
     }
 
+    // --- NEW: ACCOUNT DELETION LOGIC ---
+    public function deleteAccount(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'], // Validates against their actual password
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // 1. Safety Check: Prevent deletion if they have active appointments
+        $activeAppointments = Appointment::where('user_id', $user->id)
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->exists();
+
+        if ($activeAppointments) {
+            return back()->with('error', 'You cannot delete your account while you have active appointments. Please cancel them first.');
+        }
+
+        // 2. Clean up Files: Delete their uploaded ID if it exists
+        if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
+            Storage::disk('local')->delete($user->id_photo_path);
+        }
+
+        // 3. Logout & Delete
+        Auth::logout();
+        
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account has been successfully deleted.');
+    }
+
     // --- STRICT PRIVATE UPLOAD & VIEW (FIXED PATHING) ---
 
     public function uploadId(Request $request)

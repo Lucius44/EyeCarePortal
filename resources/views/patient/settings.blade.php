@@ -180,7 +180,7 @@
                             </div>
                         @endif
 
-                        {{-- NEW: DATA PRIVACY NOTICE --}}
+                        {{-- DATA PRIVACY NOTICE --}}
                         <div class="alert alert-light border shadow-sm mb-4">
                             <div class="d-flex">
                                 <div class="me-3">
@@ -204,7 +204,7 @@
                                 <input class="form-control" type="file" id="id_photo" name="id_photo" required>
                             </div>
 
-                            {{-- NEW: CONSENT CHECKBOX --}}
+                            {{-- CONSENT CHECKBOX --}}
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" name="data_privacy_consent" id="privacyConsent" required>
                                 <label class="form-check-label small text-muted" for="privacyConsent">
@@ -267,7 +267,7 @@
             </div>
 
             {{-- Password Card --}}
-            <div class="card border-0 shadow-sm rounded-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center mb-2">
                         <div class="bg-danger bg-opacity-10 text-danger p-2 rounded-3 me-3">
@@ -309,6 +309,61 @@
                 </div>
             </div>
 
+            {{-- NEW: DANGER ZONE (DELETE ACCOUNT) --}}
+            <div class="card border-danger border-opacity-25 shadow-sm rounded-4">
+                <div class="card-header bg-danger bg-opacity-10 border-0 pt-4 px-4 pb-0">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-white text-danger p-2 rounded-3 me-3">
+                            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-danger">Danger Zone</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <p class="small text-muted">
+                        Deleting your account is permanent. All your data and appointments will be removed from our system.
+                    </p>
+                    <button class="btn btn-outline-danger w-100 fw-bold rounded-pill" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{-- DELETE CONFIRMATION MODAL --}}
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold text-danger">Delete Account?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4">
+                <p class="text-secondary mb-3">
+                    Are you sure you want to delete your account? This action <strong>cannot be undone</strong>.
+                </p>
+                <p class="small text-muted mb-4">
+                    Please enter your password to confirm.
+                </p>
+                
+                <form action="{{ route('settings.delete') }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    
+                    <div class="form-floating mb-3">
+                        <input type="password" name="password" class="form-control" id="delPass" placeholder="Password" required>
+                        <label for="delPass">Current Password</label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger fw-bold py-2 rounded-3">Confirm Deletion</button>
+                        <button type="button" class="btn btn-light text-muted fw-bold py-2 rounded-3" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
