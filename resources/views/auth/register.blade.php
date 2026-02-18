@@ -150,6 +150,21 @@
     @media (max-width: 991px) {
         .btn-back-home { top: 1rem; right: 1rem; }
     }
+
+    /* Modal Text Styling */
+    .legal-text h6 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-top: 1.5rem;
+    }
+    .legal-text p, .legal-text ul {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+    .legal-text li {
+        margin-bottom: 0.25rem;
+    }
 </style>
 
 <div class="register-bg">
@@ -322,9 +337,8 @@
                                         <label class="form-check-label ms-2" for="terms">
                                             I agree to the 
                                             <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="fw-bold text-decoration-none" style="color: var(--accent-color);">
-                                                Terms of Service
-                                            </a> 
-                                            & Privacy Policy.
+                                                Terms of Service & Privacy Policy
+                                            </a>.
                                         </label>
                                         <div class="invalid-feedback-custom" id="termsError">You must agree to the terms.</div>
                                     </div>
@@ -351,20 +365,69 @@
     </div>
 </div>
 
+{{-- PROFESSIONAL TERMS AND CONDITIONS MODAL --}}
 <div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom-0">
-                <h5 class="modal-title fw-bold">Terms and Conditions</h5>
+            <div class="modal-header border-bottom-0 bg-light">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-file-earmark-text-fill me-2 text-primary"></i> 
+                    Terms of Service & Privacy Policy
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-secondary px-4">
-                <p>Welcome to the <strong>Eye Care Portal</strong>...</p>
-                <h6>1. User Accounts & Security</h6>
-                <p>...</p>
-                </div>
-            <div class="modal-footer border-top-0">
-                <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">I Understand</button>
+            <div class="modal-body text-secondary px-4 legal-text">
+                <p class="small text-muted mb-4">Last Updated: {{ date('F Y') }}</p>
+
+                <p>Welcome to <strong>EyeCarePortal</strong> ("ClearOptics"). By creating an account and using our online services, you agree to comply with the following terms in accordance with the laws of the Republic of the Philippines.</p>
+
+                <h6>1. Data Privacy & Collection (RA 10173)</h6>
+                <p>In compliance with the <strong>Data Privacy Act of 2012</strong>, we value your privacy. By registering, you consent to the collection and processing of the following:</p>
+                <ul>
+                    <li><strong>Personal Information:</strong> Name, Birthday, Gender, Contact Number, and Email for identification and communication.</li>
+                    <li><strong>Sensitive Personal Information:</strong> Government-issued ID photos for <strong>Identity Verification</strong> and security audits.</li>
+                    <li><strong>Health Information:</strong> Appointment history, optical prescriptions, and medical notes generated during your clinic visits.</li>
+                </ul>
+                <p><strong>Purpose:</strong> Your data is strictly used for appointment scheduling, identity verification (to prevent fraud), and maintaining your medical history at our clinic.</p>
+
+                <h6>2. Identity Verification & Document Storage</h6>
+                <p>To ensure the safety of our patients and staff:</p>
+                <ul>
+                    <li>You are required to upload a valid Government ID to book an appointment.</li>
+                    <li><strong>Storage:</strong> Your ID is stored in a <strong>Secure, Private Server Location</strong> (Private Storage) accessible only by authorized Admin staff. It is NOT accessible to the public.</li>
+                    <li><strong>Retention:</strong> Verification documents are retained as part of our security audit trail for the duration of your account's activity, in compliance with standard medical record retention policies.</li>
+                </ul>
+
+                <h6>3. Appointment Policy & "Strikes" System</h6>
+                <p>We value time and efficiency. Our system enforces a strict attendance policy:</p>
+                <ul>
+                    <li><strong>Cancellations:</strong> Must be made at least 24 hours before the scheduled time.</li>
+                    <li><strong>No-Show Penalty:</strong> Failure to appear for a confirmed appointment without valid notice will result in a <strong>"Strike"</strong> recorded on your account.</li>
+                    <li><strong>3-Strike Rule:</strong> Accumulating <strong>three (3) strikes</strong> will result in the automatic <strong>Restriction</strong> of your account. Restricted users cannot book new appointments for 30 days.</li>
+                </ul>
+
+                <h6>4. Medical Disclaimer</h6>
+                <p>The EyeCarePortal is an <strong>appointment management and record-viewing tool</strong> only.</p>
+                <ul>
+                    <li>The availability of a time slot does not guarantee immediate medical attention in emergency cases.</li>
+                    <li>Content viewed on this portal (past prescriptions, notes) is for informational purposes and does not replace a real-time consultation with a licensed Optometrist.</li>
+                </ul>
+
+                <h6>5. User Responsibilities</h6>
+                <p>You agree to:</p>
+                <ul>
+                    <li>Provide truthful and accurate information.</li>
+                    <li>Keep your login credentials (email and password) confidential.</li>
+                    <li>Use the portal only for personal, non-commercial purposes.</li>
+                </ul>
+                <p>ClearOptics reserves the right to terminate or suspend accounts found to be using fake identities, submitting fraudulent documents, or abusing the booking system.</p>
+
+                <h6>6. Contact Us</h6>
+                <p>For data privacy concerns or requests for data deletion, please contact our staff at the clinic directly.</p>
+
+            </div>
+            <div class="modal-footer border-top-0 bg-light">
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">I Have Read & Understood</button>
             </div>
         </div>
     </div>

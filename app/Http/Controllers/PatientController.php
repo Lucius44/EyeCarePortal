@@ -128,8 +128,13 @@ class PatientController extends Controller
 
     public function uploadId(Request $request)
     {
+        // UPDATED: Added data_privacy_consent validation
         $request->validate([
-            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
+            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'data_privacy_consent' => 'required|accepted', 
+        ], [
+            'data_privacy_consent.required' => 'You must consent to the privacy policy to upload your ID.',
+            'data_privacy_consent.accepted' => 'You must consent to the privacy policy to upload your ID.',
         ]);
 
         /** @var \App\Models\User $user */

@@ -180,12 +180,38 @@
                             </div>
                         @endif
 
+                        {{-- NEW: DATA PRIVACY NOTICE --}}
+                        <div class="alert alert-light border shadow-sm mb-4">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                     <i class="bi bi-shield-lock-fill text-primary fs-3"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Data Privacy Notice</h6>
+                                    <p class="small text-muted mb-0">
+                                        Your ID is strictly used for identity verification to ensure the safety of our clinic. 
+                                        It is stored securely and is <strong>never shared</strong> with third parties.
+                                        By uploading, you consent to ClearOptics processing this document.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <form action="{{ route('settings.upload') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
                                 <label for="id_photo" class="form-label fw-bold small">Upload ID (JPG/PNG)</label>
                                 <input class="form-control" type="file" id="id_photo" name="id_photo" required>
                             </div>
+
+                            {{-- NEW: CONSENT CHECKBOX --}}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="data_privacy_consent" id="privacyConsent" required>
+                                <label class="form-check-label small text-muted" for="privacyConsent">
+                                    I consent to the collection of my Government ID for identity verification and security purposes.
+                                </label>
+                            </div>
+
                             <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold">
                                 Upload for Verification
                             </button>
