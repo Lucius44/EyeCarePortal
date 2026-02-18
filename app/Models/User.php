@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail; // <--- Uncommented
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Enums\UserRole;
-use App\Enums\UserStatus; // <--- Import the new Enum
+use App\Enums\UserStatus;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail // <--- Added Interface
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -47,7 +47,7 @@ class User extends Authenticatable
             'birthday' => 'date',
             'restricted_until' => 'datetime',
             'role' => UserRole::class,
-            'account_status' => UserStatus::class, // <--- Cast to the new Enum
+            'account_status' => UserStatus::class,
         ];
     }
 }

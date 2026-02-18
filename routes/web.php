@@ -6,6 +6,8 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceController; 
+use Illuminate\Foundation\Auth\EmailVerificationRequest; // <--- Imported
+use Illuminate\Http\Request; // <--- Imported
 
 // -- Public Routes --
 Route::get('/', function () {
@@ -26,8 +28,25 @@ Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.e
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// --- EMAIL VERIFICATION ROUTES (NEW) ---
+Route::get('/email/verify', function () {
+    return view('auth.verify-email'); // Ensure this view exists
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->route('dashboard');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Verification link sent!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+
 // -- Protected Patient Routes --
-Route::middleware(['auth'])->group(function () {
+// ADDED 'verified' MIDDLEWARE HERE
+Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
     

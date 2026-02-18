@@ -6,7 +6,7 @@ use App\Models\Appointment;
 use App\Models\DaySetting;
 use App\Models\User;
 use App\Enums\AppointmentStatus;
-use App\Enums\UserStatus; // <--- Import UserStatus
+use App\Enums\UserStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -80,14 +80,19 @@ class AppointmentService
      */
     public function checkPatientEligibility(User $user)
     {
+        // --- RULE 0: Identity Verification Required (NEW) ---
+        // Even if email is verified, the ID Photo must be approved by Admin.
+        if (! $user->is_verified) {
+             return ['error' => 'You must upload a valid Government ID and wait for Admin verification before booking.'];
+        }
+
         // --- RULE 1: Permanent Restriction (3 Strikes) ---
-        // Refactored: Use Enum comparison
         if ($user->account_status === UserStatus::Restricted) {
             
             // Auto-Unrestrict Logic
             if ($user->restricted_until && now()->greaterThanOrEqualTo($user->restricted_until)) {
                 $user->update([
-                    'account_status' => UserStatus::Active, // Refactored: Use Enum
+                    'account_status' => UserStatus::Active, 
                     'strikes' => 0,
                     'restricted_until' => null
                 ]);
@@ -138,7 +143,7 @@ class AppointmentService
         // Check if Limit Reached (3 Strikes)
         if ($user->strikes >= 3) {
             $user->update([
-                'account_status' => UserStatus::Restricted, // Refactored: Use Enum
+                'account_status' => UserStatus::Restricted, 
                 'restricted_until' => now()->addDays(30)
             ]);
             return true; // User was Restricted
@@ -190,13 +195,10 @@ class AppointmentService
                 }
 
                 // --- NEW: Handle Missing Email (System-Generated ID) ---
-                // If email is missing, we check for 'email' key OR 'patient_email' key.
                 $inputEmail = $data['email'] ?? $data['patient_email'] ?? null;
                 
                 if (empty($inputEmail)) {
-                    // Fallback: Use Phone or a random string to create a unique ID
                     $identifier = $data['phone'] ?? $data['patient_phone'] ?? Str::random(8);
-                    // Sanitize identifier to be email-safe
                     $cleanId = preg_replace('/[^a-zA-Z0-9]/', '', $identifier);
                     $inputEmail = "guest-{$cleanId}@portal.local";
                 }
@@ -214,7 +216,7 @@ class AppointmentService
                     'patient_middle_name' => $data['patient_middle_name'] ?? $data['middle_name'] ?? null,
                     'patient_last_name' => $data['patient_last_name'] ?? $data['last_name'] ?? null,
                     'patient_suffix' => $data['patient_suffix'] ?? $data['suffix'] ?? null, 
-                    'patient_email' => $inputEmail, // Use the resolved email
+                    'patient_email' => $inputEmail, 
                     'patient_phone' => $data['patient_phone'] ?? $data['phone'] ?? null,
                     'relationship' => $data['relationship'] ?? null,
                 ];

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest;
 use App\Enums\UserRole;
+use Illuminate\Auth\Events\Registered; // <--- Imported
 
 class AuthController extends Controller
 {
@@ -54,8 +55,11 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'],
             'password' => Hash::make($validated['password']),
-            'role' => UserRole::Patient, // Best practice: Use Enum here too
+            'role' => UserRole::Patient,
         ]);
+
+        // --- NEW: Trigger Email Verification ---
+        event(new Registered($user));
 
         Auth::login($user);
 
