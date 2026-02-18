@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail; // <--- Uncommented
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+// --- IMPORT THE CUSTOM NOTIFICATIONS ---
+use App\Notifications\VerifyEmailNotification;
+use App\Notifications\ResetPasswordNotification;
 
-class User extends Authenticatable implements MustVerifyEmail // <--- Added Interface
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -49,5 +52,23 @@ class User extends Authenticatable implements MustVerifyEmail // <--- Added Inte
             'role' => UserRole::class,
             'account_status' => UserStatus::class,
         ];
+    }
+
+    /**
+     * Send the email verification notification.
+     * OVERRIDE: Uses our custom VerifyEmailNotification
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmailNotification);
+    }
+
+    /**
+     * Send the password reset notification.
+     * OVERRIDE: Uses our custom ResetPasswordNotification
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
