@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest;
 use App\Enums\UserRole;
-use Illuminate\Auth\Events\Registered; // <--- Imported
+use Illuminate\Auth\Events\Registered; 
 
 class AuthController extends Controller
 {
@@ -79,5 +79,14 @@ class AuthController extends Controller
         $email = $request->query('email');
         $exists = User::where('email', $email)->exists();
         return response()->json(['exists' => $exists]);
+    }
+
+    // --- NEW: AJAX Check for Verification Status ---
+    public function checkVerificationStatus(Request $request)
+    {
+        // returns { verified: true } if the timestamp is present
+        return response()->json([
+            'verified' => $request->user()->hasVerifiedEmail()
+        ]);
     }
 }

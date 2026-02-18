@@ -105,4 +105,31 @@
         </div>
     </div>
 </div>
+
+{{-- SCRIPT TO AUTO-REDIRECT WHEN VERIFIED --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkInterval = setInterval(function () {
+            
+            // Call the endpoint to check status
+            fetch("{{ route('verification.check') }}", {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // If verified, redirect to dashboard immediately
+                if (data.verified) {
+                    clearInterval(checkInterval);
+                    window.location.href = "{{ route('dashboard') }}";
+                }
+            })
+            .catch(error => console.error('Error checking verification:', error));
+            
+        }, 2000); // Checks every 2 seconds
+    });
+</script>
+
 @endsection

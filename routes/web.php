@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ForgotPasswordController; // <--- Imported
+use App\Http\Controllers\ForgotPasswordController; 
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
@@ -34,6 +34,12 @@ Route::post('/register', [AuthController::class, 'store'])->name('register.post'
 
 // AJAX Email Check
 Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.email');
+
+// --- NEW: AJAX Verification Status Check ---
+// The Verify Page will hit this every few seconds
+Route::get('/email/check-status', [AuthController::class, 'checkVerificationStatus'])
+    ->middleware('auth')
+    ->name('verification.check');
 
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
