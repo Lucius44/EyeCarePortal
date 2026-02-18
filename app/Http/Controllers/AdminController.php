@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\Appointment\AppointmentStatusChanged;
+use App\Notifications\Account\IdVerificationResult;
 
 class AdminController extends Controller
 {
@@ -65,7 +68,6 @@ class AdminController extends Controller
         return back()->with('success', 'Password updated successfully.');
     }
 
-    // --- STRICT PRIVATE VIEW (FIXED PATHING) ---
     public function showUserIdPhoto($id)
     {
         $user = User::findOrFail($id);
@@ -74,7 +76,6 @@ class AdminController extends Controller
             abort(404, 'ID Photo record not found.');
         }
 
-        // FIX: Use Storage facade to resolve path
         if (!Storage::disk('local')->exists($user->id_photo_path)) {
             abort(404, 'File not found in secure storage.');
         }
@@ -119,18 +120,30 @@ class AdminController extends Controller
             );
 
             if ($isClosed) {
-                Appointment::where('appointment_date', $cleanDate)
+                $affectedAppointments = Appointment::where('appointment_date', $cleanDate)
                     ->where('status', AppointmentStatus::Pending)
-                    ->update([
+                    ->with('user') 
+                    ->get();
+
+                foreach ($affectedAppointments as $appt) {
+                    $appt->update([
                         'status' => AppointmentStatus::Rejected,
                         'cancellation_reason' => $request->close_reason ?? 'Clinic closed for the day.'
                     ]);
+
+                    // --- NOTIFICATION (Bulk Reject) ---
+                    $recipient = $appt->user ?? Notification::route('mail', $appt->patient_email);
+                    
+                    if ($recipient) {
+                         $recipient->notify(new AppointmentStatusChanged($appt));
+                    }
+                }
             }
         });
 
         $message = 'Day settings updated successfully.';
         if ($isClosed) {
-            $message .= ' Any pending requests for this date have been rejected.';
+            $message .= ' Any pending requests for this date have been rejected and notified.';
         }
 
         return back()->with('success', $message);
@@ -143,6 +156,16 @@ class AdminController extends Controller
         if (is_array($result) && isset($result['error'])) {
             return back()->withErrors(['appointment_date' => $result['error']])->withInput();
         }
+
+        // Optional: Notify Guest of Admin Booking (Uncomment if needed)
+        /*
+        if ($result instanceof Appointment) {
+             $recipient = $result->user ?? Notification::route('mail', $result->patient_email);
+             if ($recipient) {
+                 $recipient->notify(new AppointmentStatusChanged($result));
+             }
+        }
+        */
 
         return back()->with('success', 'Appointment booked successfully.');
     }
@@ -167,7 +190,6 @@ class AdminController extends Controller
         $query = Appointment::with('user')
             ->whereIn('status', [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::Rejected, AppointmentStatus::NoShow]);
 
-        // Search Filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -181,12 +203,10 @@ class AdminController extends Controller
             });
         }
 
-        // Status Filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Date Range Filter
         if ($request->filled('date_from')) {
             $query->whereDate('appointment_date', '>=', $request->date_from);
         }
@@ -225,6 +245,13 @@ class AdminController extends Controller
 
         if ($request->status === AppointmentStatus::NoShow->value && $appointment->user_id) {
             $this->appointmentService->penalizeUser($appointment->user);
+        }
+
+        // --- NOTIFICATION TRIGGER ---
+        $recipient = $appointment->user ?? Notification::route('mail', $appointment->patient_email);
+
+        if ($recipient) {
+            $recipient->notify(new AppointmentStatusChanged($appointment));
         }
 
         return back()->with('success', 'Appointment updated successfully.');
@@ -292,13 +319,16 @@ class AdminController extends Controller
                 'is_verified' => true,
                 'rejection_reason' => null
             ]);
+            
+            // --- NOTIFY APPROVAL ---
+            $user->notify(new IdVerificationResult(true));
+
             return back()->with('success', 'User verified successfully!');
         } 
         
         if ($action === 'reject') {
             $request->validate(['reason' => 'required|string|max:255']);
             
-            // Delete the Rejected ID (Strictly from PRIVATE disk)
             if($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
                 Storage::disk('local')->delete($user->id_photo_path);
             }
@@ -308,6 +338,10 @@ class AdminController extends Controller
                 'is_verified' => false,
                 'rejection_reason' => $request->input('reason')
             ]);
+
+            // --- NOTIFY REJECTION ---
+            $user->notify(new IdVerificationResult(false, $request->input('reason')));
+
             return back()->with('success', 'User verification rejected.');
         }
 

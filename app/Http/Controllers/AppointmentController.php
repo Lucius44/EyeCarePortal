@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\User;
-use App\Models\Service; // Imported Service
+use App\Models\Service;
 use App\Enums\AppointmentStatus;
 use App\Services\AppointmentService; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\Appointment\AppointmentRequested;
+use App\Notifications\Appointment\AppointmentStatusChanged;
 use Carbon\Carbon;
 
 class AppointmentController extends Controller
@@ -31,10 +34,9 @@ class AppointmentController extends Controller
 
         $calendarData = $this->appointmentService->getCalendarData();
 
-        // FIXED: Fetch services and move "Others" to the bottom
         $services = Service::pluck('name')->sortBy(function ($name) {
-            return $name === 'Others' ? 1 : 0; // 1 moves to bottom, 0 stays top
-        })->values(); // Reset keys
+            return $name === 'Others' ? 1 : 0; 
+        })->values(); 
         
         return view('patient.appointments', array_merge(
             [
@@ -65,6 +67,11 @@ class AppointmentController extends Controller
 
         if (is_array($result) && isset($result['error'])) {
             return redirect()->back()->withErrors(['error' => $result['error']])->withInput();
+        }
+
+        // --- NOTIFICATION: Request Received ---
+        if ($result instanceof Appointment) {
+            $user->notify(new AppointmentRequested($result));
         }
 
         return redirect()->route('appointments.index')->with('success', 'Appointment request submitted successfully!');
@@ -105,7 +112,6 @@ class AppointmentController extends Controller
                 $isRestricted = $this->appointmentService->penalizeUser($user);
                 
                 if ($isRestricted) {
-                    // UPDATED: Changed message to reflect 30 days
                     $message = 'Appointment cancelled. WARNING: Your account has been RESTRICTED for 30 days due to multiple late cancellations.';
                 } else {
                     $message = 'Appointment cancelled. You received a STRIKE for cancelling less than 24 hours in advance.';
@@ -117,6 +123,9 @@ class AppointmentController extends Controller
                 'cancellation_reason' => $request->cancellation_reason
             ]);
             
+            // --- NOTIFICATION: Cancelled ---
+            $user->notify(new AppointmentStatusChanged($appointment));
+
             return back()->with('success', $message);
         }
 
