@@ -127,8 +127,15 @@
 </head>
 <body>
 
-    {{-- CONDITIONAL NAVBAR: Hidden on Login, Register, Admin AND Email Verification --}}
-    @if(!request()->routeIs('login') && !request()->routeIs('register') && !request()->is('admin*') && !request()->routeIs('verification.notice'))
+    {{-- CONDITIONAL NAVBAR: Hidden on Login, Register, Admin, Verify, Forgot Password, and Reset Password --}}
+    @if(
+        !request()->routeIs('login') && 
+        !request()->routeIs('register') && 
+        !request()->is('admin*') && 
+        !request()->routeIs('verification.notice') &&
+        !request()->routeIs('password.request') && 
+        !request()->routeIs('password.reset')
+    )
         <nav class="navbar navbar-expand-lg fixed-top">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
@@ -254,7 +261,7 @@
             @yield('content')
         </div>
     @else
-        {{-- No Navbar Padding for Login/Register/Admin/Verify --}}
+        {{-- No Navbar Padding for Clean Pages --}}
         <div style="flex: 1;">
             @yield('content')
         </div>

@@ -110,21 +110,27 @@
                         </div>
                     @endif
 
-                    {{-- Email (Read-only recommended so they don't accidentally change it) --}}
+                    {{-- Email (Read-only recommended) --}}
                     <div class="form-floating mb-3">
                         <input type="email" name="email" class="form-control" id="email" 
                                value="{{ $email ?? old('email') }}" readonly required>
                         <label for="email">Email Address</label>
                     </div>
 
+                    {{-- New Password with Eye Icon --}}
                     <div class="form-floating mb-3 position-relative">
                         <input type="password" name="password" class="form-control" id="password" placeholder="New Password" required>
                         <label for="password">New Password</label>
+                        <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" 
+                           id="togglePassword" style="cursor: pointer; z-index: 5;"></i>
                     </div>
 
+                    {{-- Confirm Password with Eye Icon --}}
                     <div class="form-floating mb-4 position-relative">
                         <input type="password" name="password_confirmation" class="form-control" id="password_confirmation" placeholder="Confirm" required>
                         <label for="password_confirmation">Confirm Password</label>
+                        <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" 
+                           id="toggleConfirmPassword" style="cursor: pointer; z-index: 5;"></i>
                     </div>
 
                     <button type="submit" class="btn btn-reset w-100 mb-4">
@@ -136,4 +142,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle function for any button-input pair
+        function setupToggle(btnId, inputId) {
+            const btn = document.querySelector(btnId);
+            const input = document.querySelector(inputId);
+
+            if(btn && input) {
+                btn.addEventListener('click', function (e) {
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    
+                    // Toggle Icon Class
+                    this.classList.toggle('bi-eye');
+                    this.classList.toggle('bi-eye-slash');
+                });
+            }
+        }
+
+        // Setup both toggles
+        setupToggle('#togglePassword', '#password');
+        setupToggle('#toggleConfirmPassword', '#password_confirmation');
+    });
+</script>
 @endsection
