@@ -137,19 +137,18 @@
                         Welcome to your personal vision portal. Manage your appointments and track your eye health journey all in one place.
                     </p>
                     
-                    {{-- [NEW] RESTRICTED ACCOUNT ALERT --}}
-                    @if(Auth::user()->account_status === 'restricted')
+                    {{-- RESTRICTED ACCOUNT ALERT --}}
+                    @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
                         <div class="d-inline-flex align-items-center bg-danger border border-danger text-white px-4 py-3 rounded-4 backdrop-blur shadow-sm mb-3 me-2">
                             <i class="bi bi-exclamation-octagon fs-3 me-3"></i>
                             <div>
                                 <h6 class="fw-bold mb-0">Account Restricted</h6>
-                                <span class="small opacity-90">Booking privileges are suspended due to multiple violations.</span>
+                                <span class="small opacity-90">Booking privileges are suspended until {{ Auth::user()->restricted_until ? Auth::user()->restricted_until->format('F d, Y') : 'further notice' }}.</span>
                             </div>
                         </div>
                     @endif
 
                     @if(!Auth::user()->is_verified)
-                        {{-- UPDATED ALERT TEXT COLOR: text-dark for better contrast on yellow --}}
                         <div class="d-inline-flex align-items-center bg-warning border border-warning text-dark px-4 py-3 rounded-4 backdrop-blur shadow-sm mb-3">
                             <i class="bi bi-shield-exclamation fs-4 me-3"></i>
                             <div>
@@ -227,10 +226,12 @@
                         </p>
                         
                         {{-- Logic to disable booking button if restricted --}}
-                        @if(Auth::user()->account_status === 'restricted')
-                            <button class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-lg" disabled>
-                                <i class="bi bi-slash-circle me-2"></i> Account Restricted
-                            </button>
+                        @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
+                            <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Restricted until {{ Auth::user()->restricted_until ? Auth::user()->restricted_until->format('M d, Y') : 'further notice' }}">
+                                <button class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-lg" disabled style="pointer-events: none;">
+                                    <i class="bi bi-slash-circle me-2"></i> Account Restricted
+                                </button>
+                            </span>
                         @elseif(Auth::user()->is_verified)
                             <a href="{{ route('appointments.index') }}" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg">
                                 <i class="bi bi-plus-lg me-2"></i> Book Appointment
@@ -246,9 +247,9 @@
             <h5 class="fw-bold text-dark mb-4 px-1">Quick Actions</h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    @if(Auth::user()->account_status === 'restricted')
+                    @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
                         {{-- Disabled Card for Restricted Users --}}
-                        <div class="action-card disabled">
+                        <div class="action-card disabled" data-bs-toggle="tooltip" title="Restricted until {{ Auth::user()->restricted_until ? Auth::user()->restricted_until->format('M d, Y') : 'further notice' }}">
                             <div>
                                 <div class="action-icon bg-secondary text-white bg-opacity-50">
                                     <i class="bi bi-calendar-x-fill"></i>
@@ -309,7 +310,6 @@
                     @endif
                 </div>
                 
-                {{-- FIXED: Added Suffix, Removed Middle Name for space --}}
                 <h5 class="fw-bold mb-1">
                     {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} {{ Auth::user()->suffix }}
                 </h5>
@@ -325,11 +325,9 @@
                 
                 <div class="stat-row">
                     <span class="text-muted">Status</span>
-                    {{-- [NEW] STATUS BADGE LOGIC --}}
-                    @if(Auth::user()->account_status === 'restricted')
+                    {{-- STATUS BADGE LOGIC --}}
+                    @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
                         <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Restricted</span>
-                    @elseif(Auth::user()->account_status === 'banned')
-                        <span class="badge bg-dark text-white rounded-pill px-3">Banned</span>
                     @elseif(Auth::user()->is_verified)
                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Active</span>
                     @else
@@ -351,4 +349,14 @@
         </div>
     </div>
 </div>
+
+{{-- Initialize tooltips --}}
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
 @endsection

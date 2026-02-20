@@ -24,19 +24,14 @@
                     </div>
 
                     <div class="text-center mt-5 mb-5">
-                        {{-- FIXED: Added Suffix to Full Name --}}
                         <h3 class="fw-bold mb-1">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }} {{ Auth::user()->suffix }}</h3>
                         <p class="text-muted mb-2">{{ Auth::user()->email }}</p>
                         
                         <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap mt-3">
-                            {{-- [NEW] Account Status Badge (High Visibility) --}}
-                            @if(Auth::user()->account_status === 'restricted')
-                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 fw-bold border border-danger border-opacity-25">
+                            {{-- Account Status Badge (High Visibility) --}}
+                            @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
+                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 fw-bold border border-danger border-opacity-25" data-bs-toggle="tooltip" title="Restricted until {{ Auth::user()->restricted_until ? Auth::user()->restricted_until->format('M d, Y') : 'further notice' }}">
                                     <i class="bi bi-exclamation-octagon-fill me-1"></i> Restricted Account
-                                </span>
-                            @elseif(Auth::user()->account_status === 'banned')
-                                <span class="badge bg-dark rounded-pill px-3 py-2 fw-bold">
-                                    <i class="bi bi-slash-circle-fill me-1"></i> Banned
                                 </span>
                             @endif
 
@@ -73,20 +68,17 @@
                                 {{-- Account Status Field --}}
                                 <div class="mb-3">
                                     <label class="small text-muted d-block mb-1">Account Status</label>
-                                    @if(Auth::user()->account_status === 'restricted')
+                                    @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
                                         <div class="d-flex flex-column">
                                             <span class="fw-bold text-danger fs-5">
                                                 <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Restricted
                                             </span>
-                                            {{-- Display End Date Below --}}
                                             @if(Auth::user()->restricted_until)
                                                 <small class="text-danger fw-bold mt-1">
                                                     Ends: {{ Auth::user()->restricted_until->format('F d, Y') }}
                                                 </small>
                                             @endif
                                         </div>
-                                    @elseif(Auth::user()->account_status === 'banned')
-                                        <span class="fw-bold text-dark fs-5">Banned</span>
                                     @else
                                         <span class="fw-bold text-success fs-5">Active</span>
                                     @endif
@@ -121,4 +113,14 @@
         </div>
     </div>
 </div>
+
+{{-- Initialize tooltips --}}
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
 @endsection
