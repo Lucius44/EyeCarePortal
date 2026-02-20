@@ -32,10 +32,11 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Reset Your Password - ClearOptics')
-            ->from(config('mail.from.address'), 'ClearOptics') // <--- Forces the Sender Name
-            ->view('emails.reset', [
-                'url' => $url,
-                'user' => $notifiable
-            ]);
+            ->from(config('mail.from.address'), 'ClearOptics') 
+            ->greeting('Hello ' . ($notifiable->first_name ?? 'there') . ',')
+            ->line('You are receiving this email because we received a password reset request for your account.')
+            ->action('Reset Password', $url)
+            ->line('This password reset link will expire in 60 minutes.')
+            ->line('If you did not request a password reset, no further action is required.');
     }
 }

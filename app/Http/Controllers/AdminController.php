@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\Appointment\AppointmentStatusChanged;
 use App\Notifications\Account\IdVerificationResult;
+use App\Notifications\Account\AccountUnrestricted;
 
 class AdminController extends Controller
 {
@@ -266,7 +267,6 @@ class AdminController extends Controller
             });
         }
 
-        // --- NEW FILTERING LOGIC ---
         if ($request->filled('filter_status')) {
             if ($request->filter_status === 'active') {
                 $query->whereNotNull('email_verified_at')
@@ -364,6 +364,9 @@ class AdminController extends Controller
             'restricted_until' => null
         ]);
 
-        return back()->with('success', 'Restriction lifted. User is now Active.');
+        // --- NOTIFY PATIENT ---
+        $user->notify(new AccountUnrestricted());
+
+        return back()->with('success', 'Restriction lifted. User is now Active and has been notified.');
     }
 }

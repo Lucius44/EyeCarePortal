@@ -30,11 +30,11 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Welcome to ClearOptics! Please Verify Your Email')
-            ->from(config('mail.from.address'), 'ClearOptics') // <--- Forces the Sender Name
-            ->view('emails.verify', [
-                'url' => $verificationUrl,
-                'user' => $notifiable
-            ]);
+            ->from(config('mail.from.address'), 'ClearOptics') 
+            ->greeting('Hello ' . $notifiable->first_name . '!')
+            ->line('Thank you for registering at ClearOptics. Please click the button below to verify your email address and complete your registration.')
+            ->action('Verify Email Address', $verificationUrl)
+            ->line('If you did not create an account, no further action is required.');
     }
 
     protected function verificationUrl($notifiable)

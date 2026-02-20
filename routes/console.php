@@ -20,5 +20,5 @@ Schedule::call(function () {
     User::where('role', UserRole::Patient)
         ->whereNull('email_verified_at')
         ->where('created_at', '<', now()->subDays(7))
-        ->delete(); // Hard delete prevents 'email already taken' errors for future registrations
+        ->forceDelete(); // <--- Changed from delete() to forceDelete()
 })->dailyAt('00:00')->name('cleanup-unverified-users');
