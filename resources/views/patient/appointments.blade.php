@@ -11,15 +11,17 @@
         <h1 class="display-5 fw-bold mb-2">Book Appointment</h1>
         <p class="lead mb-0 text-white-50 fs-6">Select a date to schedule your visit.</p>
         
-        {{-- Desktop View Toggles --}}
-        <div class="d-none d-md-flex justify-content-center gap-3 mt-4">
-            <button id="btnDayView" class="btn btn-outline-light px-4 fw-bold rounded-pill border-2 transition-btn">
-                <i class="bi bi-calendar-day me-2"></i>Day View
-            </button>
-            <button id="btnMonthView" class="btn btn-light px-4 fw-bold rounded-pill text-primary shadow-sm transition-btn">
-                <i class="bi bi-calendar-month me-2"></i>Month View
-            </button>
-        </div>
+        {{-- Desktop View Toggles - Only show if not restricted --}}
+        @if(Auth::user()->account_status !== \App\Enums\UserStatus::Restricted)
+            <div class="d-none d-md-flex justify-content-center gap-3 mt-4">
+                <button id="btnDayView" class="btn btn-outline-light px-4 fw-bold rounded-pill border-2 transition-btn">
+                    <i class="bi bi-calendar-day me-2"></i>Day View
+                </button>
+                <button id="btnMonthView" class="btn btn-light px-4 fw-bold rounded-pill text-primary shadow-sm transition-btn">
+                    <i class="bi bi-calendar-month me-2"></i>Month View
+                </button>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -46,333 +48,350 @@
             @endif
 
             {{-- ========================================== --}}
-            {{-- MOBILE VIEW: Date Strip & Slot Grid        --}}
+            {{-- RESTRICTED ACCOUNT VIEW                    --}}
             {{-- ========================================== --}}
-            <div class="d-md-none">
-                {{-- 1. Date Strip --}}
-                <h6 class="text-uppercase text-muted small fw-bold mb-3 px-1">Select Date</h6>
-                <div class="date-strip-wrapper mb-4">
-                    <div class="d-flex gap-2" id="mobileDateStrip">
-                        {{-- JS will populate this --}}
+            @if(Auth::user()->account_status === \App\Enums\UserStatus::Restricted)
+                <div class="card border-0 shadow-sm rounded-4 mb-5 bg-danger bg-opacity-10 border border-danger border-opacity-25 text-center p-5">
+                    <i class="bi bi-slash-circle text-danger display-1 mb-3"></i>
+                    <h2 class="fw-bold text-danger">Booking Unavailable</h2>
+                    <p class="lead text-dark opacity-75 mb-2" style="max-width: 600px; margin: 0 auto;">
+                        Your account is currently restricted due to multiple violations (e.g., no-shows or late cancellations). You cannot book new appointments at this time.
+                    </p>
+                    <p class="fw-bold text-danger mt-3 fs-5">
+                        Restriction ends: {{ Auth::user()->restricted_until ? Auth::user()->restricted_until->format('F d, Y') : 'Further Notice' }}
+                    </p>
+                    <div class="mt-4">
+                        <a href="{{ route('dashboard') }}" class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-sm">
+                            Return to Dashboard
+                        </a>
+                    </div>
+                </div>
+            @else
+                {{-- ========================================== --}}
+                {{-- MOBILE VIEW: Date Strip & Slot Grid        --}}
+                {{-- ========================================== --}}
+                <div class="d-md-none">
+                    {{-- 1. Date Strip --}}
+                    <h6 class="text-uppercase text-muted small fw-bold mb-3 px-1">Select Date</h6>
+                    <div class="date-strip-wrapper mb-4">
+                        <div class="d-flex gap-2" id="mobileDateStrip">
+                            {{-- JS will populate this --}}
+                        </div>
+                    </div>
+
+                    {{-- 2. Time Slots Grid --}}
+                    <div id="mobileTimeSection" style="display: none;">
+                        <h6 class="text-uppercase text-muted small fw-bold mb-3 px-1">
+                            Available Slots for <span id="mobileSelectedDateText" style="color: var(--accent-color);"></span>
+                        </h6>
+                        <div class="row g-2" id="mobileTimeGrid">
+                            {{-- JS will populate this --}}
+                        </div>
+                        <div id="mobileNoSlots" class="text-center py-5 bg-light rounded-4 text-muted" style="display:none;">
+                            <i class="bi bi-calendar-x display-1 text-secondary opacity-25"></i>
+                            <p class="mt-3 mb-0">No available slots for this date.</p>
+                        </div>
+                    </div>
+
+                    {{-- Initial Prompt State --}}
+                    <div id="mobileInitialPrompt" class="text-center py-5">
+                        <i class="bi bi-hand-index-thumb text-primary opacity-25 display-1"></i>
+                        <p class="text-muted mt-3">Tap a date above to see availability.</p>
                     </div>
                 </div>
 
-                {{-- 2. Time Slots Grid --}}
-                <div id="mobileTimeSection" style="display: none;">
-                    <h6 class="text-uppercase text-muted small fw-bold mb-3 px-1">
-                        Available Slots for <span id="mobileSelectedDateText" style="color: var(--accent-color);"></span>
-                    </h6>
-                    <div class="row g-2" id="mobileTimeGrid">
-                        {{-- JS will populate this --}}
-                    </div>
-                    <div id="mobileNoSlots" class="text-center py-5 bg-light rounded-4 text-muted" style="display:none;">
-                        <i class="bi bi-calendar-x display-1 text-secondary opacity-25"></i>
-                        <p class="mt-3 mb-0">No available slots for this date.</p>
+                {{-- ========================================== --}}
+                {{-- DESKTOP VIEW: FullCalendar                 --}}
+                {{-- ========================================== --}}
+                <div class="d-none d-md-block card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+                    <div class="card-body p-4">
+                        {{-- Legend --}}
+                        <div class="d-flex align-items-center mb-4 text-muted small flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-2"><span class="d-inline-block border rounded-circle" style="width: 12px; height: 12px; background: #fff;"></span> Available</div>
+                            <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #eff6ff; border: 1px solid var(--accent-color);"></span> Today</div>
+                            <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #fff5f5; border: 1px solid #dc3545;"></span> Closed</div>
+                            <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #f8fafc; border: 1px solid #94a3b8;"></span> Full</div>
+                            <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #f1f5f9; border: 1px dashed #64748b;"></span> Cutoff (8PM)</div>
+                        </div>
+                        
+                        {{-- Calendar Container --}}
+                        <div id="calendar"></div>
                     </div>
                 </div>
-
-                {{-- Initial Prompt State --}}
-                <div id="mobileInitialPrompt" class="text-center py-5">
-                    <i class="bi bi-hand-index-thumb text-primary opacity-25 display-1"></i>
-                    <p class="text-muted mt-3">Tap a date above to see availability.</p>
-                </div>
-            </div>
-
-            {{-- ========================================== --}}
-            {{-- DESKTOP VIEW: FullCalendar                 --}}
-            {{-- ========================================== --}}
-            <div class="d-none d-md-block card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
-                <div class="card-body p-4">
-                    {{-- Legend --}}
-                    <div class="d-flex align-items-center mb-4 text-muted small flex-wrap gap-3">
-                        <div class="d-flex align-items-center gap-2"><span class="d-inline-block border rounded-circle" style="width: 12px; height: 12px; background: #fff;"></span> Available</div>
-                        <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #eff6ff; border: 1px solid var(--accent-color);"></span> Today</div>
-                        <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #fff5f5; border: 1px solid #dc3545;"></span> Closed</div>
-                        <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #f8fafc; border: 1px solid #94a3b8;"></span> Full</div>
-                        <div class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background: #f1f5f9; border: 1px dashed #64748b;"></span> Cutoff (8PM)</div>
-                    </div>
-                    
-                    {{-- Calendar Container --}}
-                    <div id="calendar"></div>
-                </div>
-            </div>
+            @endif
 
         </div>
     </div>
 </div>
 
-{{-- Data Store for JS --}}
-<div id="calendarData" 
-     data-verified="{{ Auth::user()->is_verified }}"
-     data-has-active="{{ $activeAppointment ? '1' : '0' }}"
-     data-server-hour="{{ \Carbon\Carbon::now('Asia/Manila')->hour }}"
-     data-server-tomorrow="{{ \Carbon\Carbon::tomorrow('Asia/Manila')->format('Y-m-d') }}"
-     data-daily-counts="{{ json_encode($dailyCounts) }}"
-     data-taken-slots="{{ json_encode($takenSlots) }}"
-     data-status="{{ json_encode($calendarStatus ?? []) }}" 
-></div>
+{{-- Only load JS data and Modals if user is NOT restricted --}}
+@if(Auth::user()->account_status !== \App\Enums\UserStatus::Restricted)
+    {{-- Data Store for JS --}}
+    <div id="calendarData" 
+         data-verified="{{ Auth::user()->is_verified }}"
+         data-has-active="{{ $activeAppointment ? '1' : '0' }}"
+         data-server-hour="{{ \Carbon\Carbon::now('Asia/Manila')->hour }}"
+         data-server-tomorrow="{{ \Carbon\Carbon::tomorrow('Asia/Manila')->format('Y-m-d') }}"
+         data-daily-counts="{{ json_encode($dailyCounts ?? []) }}"
+         data-taken-slots="{{ json_encode($takenSlots ?? []) }}"
+         data-status="{{ json_encode($calendarStatus ?? []) }}" 
+    ></div>
 
-{{-- 1. Booking Modal --}}
-<div class="modal fade" id="bookingModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <form action="{{ route('appointments.store') }}" method="POST">
-            @csrf
+    {{-- 1. Booking Modal --}}
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="{{ route('appointments.store') }}" method="POST">
+                @csrf
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header text-white" style="background-color: var(--primary-color);">
+                        <h5 class="modal-title fw-bold">Confirm Booking</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="appointment_date" id="modalDateInput">
+
+                        {{-- 1. Date/Time Summary --}}
+                        <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-4 border border-light-subtle">
+                            <div class="me-3">
+                                <div class="bg-white p-2 rounded shadow-sm text-center" style="min-width: 60px;">
+                                    <div id="summaryMonth" class="small text-uppercase fw-bold text-danger" style="font-size: 0.7rem;"></div>
+                                    <div id="summaryDay" class="h4 mb-0 fw-bold" style="color: var(--primary-color);"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="small text-muted text-uppercase">Appointment Time</div>
+                                <div id="summaryTime" class="h5 mb-0 fw-bold" style="color: var(--accent-color);"></div>
+                                <input type="hidden" name="appointment_time" id="modalTimeInput">
+                            </div>
+                        </div>
+
+                        {{-- 2. Booking for Someone Else Toggle --}}
+                        <div class="mb-4 bg-light rounded-3 border border-light-subtle overflow-hidden">
+                            <div class="p-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <label class="fw-bold mb-0 text-dark" for="isGuestToggle" style="cursor: pointer;">
+                                        I am booking for someone else
+                                    </label>
+                                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">
+                                        Select this if you are booking for a child or family member.
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="isGuestToggle" name="is_guest" onchange="toggleGuestFields()" style="width: 3em; height: 1.5em; cursor: pointer;">
+                                </div>
+                            </div>
+
+                            <div id="guestFields" class="d-none border-top px-3 pb-3 pt-3 bg-white">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="small fw-bold text-muted">First Name</label>
+                                        <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" 
+                                               oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
+                                    </div>
+                                    
+                                    <div class="col-6">
+                                        <label class="small fw-bold text-muted">Middle Name (Optional)</label>
+                                        <input type="text" name="patient_middle_name" id="patientMiddleName" class="form-control" 
+                                               oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
+                                    </div>
+
+                                    <div class="col-6 mt-2">
+                                        <label class="small fw-bold text-muted">Last Name</label>
+                                        <input type="text" name="patient_last_name" id="patientLastName" class="form-control" 
+                                               oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
+                                    </div>
+
+                                    <div class="col-6 mt-2">
+                                        <label class="small fw-bold text-muted">Suffix (Optional)</label>
+                                        <select name="patient_suffix" id="patientSuffix" class="form-select">
+                                            <option value="">-- None --</option>
+                                            <option value="Jr.">Jr.</option>
+                                            <option value="Sr.">Sr.</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 mt-2">
+                                        <label class="small fw-bold text-muted">Relationship (Optional)</label>
+                                        <input type="text" name="relationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 3. Time Selection --}}
+                        <div class="mb-3" id="desktopTimeSelectWrapper">
+                            <label class="form-label fw-bold">Select Time</label>
+                            <select id="desktopTimeSelect" class="form-select form-select-lg" onchange="document.getElementById('modalTimeInput').value = this.value; updateSummaryTime(this.value);">
+                                <option value="">-- Select Time --</option>
+                                @php
+                                    $times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
+                                @endphp
+                                @foreach($times as $time)
+                                    <option value="{{ $time }}">{{ $time }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text text-danger" id="timeSlotWarning" style="display:none;">
+                                Some slots are unavailable.
+                            </div>
+                        </div>
+
+                        {{-- 4. Service Selection --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Service Required</label>
+                            <select name="service" class="form-select form-select-lg bg-light border-0" required id="serviceSelect">
+                                <option value="">-- Select Service --</option>
+                                @foreach($services as $service)
+                                    <option value="{{ $service }}">{{ $service }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- 5. Notes --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notes / Symptoms</label>
+                            <textarea name="description" id="notesTextarea" class="form-control bg-light border-0" rows="3" placeholder="Optional notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn text-white px-4 rounded-pill fw-bold shadow-sm" style="background-color: var(--primary-color);">Confirm Booking</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- 2. Today Modal --}}
+    <div class="modal fade" id="todayModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header text-white" style="background-color: var(--primary-color);">
-                    <h5 class="modal-title fw-bold">Confirm Booking</h5>
+                <div class="modal-header text-white" style="background-color: var(--accent-color);">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>Today's Schedule</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <input type="hidden" name="appointment_date" id="modalDateInput">
-
-                    {{-- 1. Date/Time Summary --}}
-                    <div class="d-flex align-items-center bg-light p-3 rounded-3 mb-4 border border-light-subtle">
-                        <div class="me-3">
-                            <div class="bg-white p-2 rounded shadow-sm text-center" style="min-width: 60px;">
-                                <div id="summaryMonth" class="small text-uppercase fw-bold text-danger" style="font-size: 0.7rem;"></div>
-                                <div id="summaryDay" class="h4 mb-0 fw-bold" style="color: var(--primary-color);"></div>
-                            </div>
+                <div class="modal-body p-4 text-center">
+                    <h4 class="fw-bold mb-3" style="color: var(--primary-color);" id="todayDateDisplay"></h4>
+                    <p class="text-muted mb-4">We do not accept same-day appointments online.<br>Please call us at <strong>+63 945 826 4969</strong> for urgent inquiries.</p>
+                    <div class="card bg-light border-0 p-3 rounded-4">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Booked Slots Today</h6>
+                        <div id="todaySlotsList" class="d-flex flex-wrap justify-content-center gap-2"></div>
+                        <div id="todayNoSlots" class="text-success fw-bold small" style="display:none;">
+                            <i class="bi bi-check-circle me-1"></i> No appointments scheduled yet.
                         </div>
-                        <div>
-                            <div class="small text-muted text-uppercase">Appointment Time</div>
-                            <div id="summaryTime" class="h5 mb-0 fw-bold" style="color: var(--accent-color);"></div>
-                            <input type="hidden" name="appointment_time" id="modalTimeInput">
-                        </div>
-                    </div>
-
-                    {{-- 2. Booking for Someone Else Toggle --}}
-                    <div class="mb-4 bg-light rounded-3 border border-light-subtle overflow-hidden">
-                        {{-- Header (Always Visible) --}}
-                        <div class="p-3 d-flex align-items-center justify-content-between">
-                            <div>
-                                <label class="fw-bold mb-0 text-dark" for="isGuestToggle" style="cursor: pointer;">
-                                    I am booking for someone else
-                                </label>
-                                <div class="small text-muted mt-1" style="font-size: 0.8rem;">
-                                    Select this if you are booking for a child or family member.
-                                </div>
-                            </div>
-                            <div class="form-check form-switch m-0">
-                                <input class="form-check-input" type="checkbox" id="isGuestToggle" name="is_guest" onchange="toggleGuestFields()" style="width: 3em; height: 1.5em; cursor: pointer;">
-                            </div>
-                        </div>
-
-                        {{-- Hidden Fields (Slides Down Inside) --}}
-                        <div id="guestFields" class="d-none border-top px-3 pb-3 pt-3 bg-white">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="small fw-bold text-muted">First Name</label>
-                                    <input type="text" name="patient_first_name" id="patientFirstName" class="form-control" 
-                                           oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
-                                </div>
-                                
-                                <div class="col-6">
-                                    <label class="small fw-bold text-muted">Middle Name (Optional)</label>
-                                    <input type="text" name="patient_middle_name" id="patientMiddleName" class="form-control" 
-                                           oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
-                                </div>
-
-                                <div class="col-6 mt-2">
-                                    <label class="small fw-bold text-muted">Last Name</label>
-                                    <input type="text" name="patient_last_name" id="patientLastName" class="form-control" 
-                                           oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
-                                </div>
-
-                                {{-- FIXED: Removed "V" to maintain consistency with registration --}}
-                                <div class="col-6 mt-2">
-                                    <label class="small fw-bold text-muted">Suffix (Optional)</label>
-                                    <select name="patient_suffix" id="patientSuffix" class="form-select">
-                                        <option value="">-- None --</option>
-                                        <option value="Jr.">Jr.</option>
-                                        <option value="Sr.">Sr.</option>
-                                        <option value="II">II</option>
-                                        <option value="III">III</option>
-                                        <option value="IV">IV</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-12 mt-2">
-                                    <label class="small fw-bold text-muted">Relationship (Optional)</label>
-                                    <input type="text" name="relationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- 3. Time Selection --}}
-                    <div class="mb-3" id="desktopTimeSelectWrapper">
-                        <label class="form-label fw-bold">Select Time</label>
-                        <select id="desktopTimeSelect" class="form-select form-select-lg" onchange="document.getElementById('modalTimeInput').value = this.value; updateSummaryTime(this.value);">
-                            <option value="">-- Select Time --</option>
-                            @php
-                                $times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
-                            @endphp
-                            @foreach($times as $time)
-                                <option value="{{ $time }}">{{ $time }}</option>
-                            @endforeach
-                        </select>
-                        <div class="form-text text-danger" id="timeSlotWarning" style="display:none;">
-                            Some slots are unavailable.
-                        </div>
-                    </div>
-
-                    {{-- 4. Service Selection --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Service Required</label>
-                        <select name="service" class="form-select form-select-lg bg-light border-0" required id="serviceSelect">
-                            <option value="">-- Select Service --</option>
-                            @foreach($services as $service)
-                                <option value="{{ $service }}">{{ $service }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- 5. Notes --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Notes / Symptoms</label>
-                        <textarea name="description" id="notesTextarea" class="form-control bg-light border-0" rows="3" placeholder="Optional notes..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white px-4 rounded-pill fw-bold shadow-sm" style="background-color: var(--primary-color);">Confirm Booking</button>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn text-white px-5 rounded-pill fw-bold shadow-sm" style="background-color: var(--accent-color);" data-bs-dismiss="modal">I Understand</button>
                 </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- 2. Today Modal --}}
-<div class="modal fade" id="todayModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header text-white" style="background-color: var(--accent-color);">
-                <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>Today's Schedule</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4 text-center">
-                <h4 class="fw-bold mb-3" style="color: var(--primary-color);" id="todayDateDisplay"></h4>
-                <p class="text-muted mb-4">We do not accept same-day appointments online.<br>Please call us at <strong>+63 945 826 4969</strong> for urgent inquiries.</p>
-                <div class="card bg-light border-0 p-3 rounded-4">
-                    <h6 class="fw-bold text-uppercase small text-muted mb-3">Booked Slots Today</h6>
-                    <div id="todaySlotsList" class="d-flex flex-wrap justify-content-center gap-2"></div>
-                    <div id="todayNoSlots" class="text-success fw-bold small" style="display:none;">
-                        <i class="bi bi-check-circle me-1"></i> No appointments scheduled yet.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn text-white px-5 rounded-pill fw-bold shadow-sm" style="background-color: var(--accent-color);" data-bs-dismiss="modal">I Understand</button>
             </div>
         </div>
     </div>
-</div>
 
-{{-- 3. Active Appointment Modal --}}
-<div class="modal fade" id="activeAppointmentModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-body p-5 text-center">
-                <i class="bi bi-calendar-check text-warning display-1 mb-3"></i>
-                <h3 class="fw-bold">Active Appointment</h3>
-                @if($activeAppointment)
-                    <p class="text-muted mb-4">You have a <strong>{{ $activeAppointment->status->value }}</strong> appointment on:<br>
-                        <span class="fs-5 fw-bold" style="color: var(--primary-color);">{{ $activeAppointment->appointment_date->format('F d, Y') }} at {{ $activeAppointment->appointment_time }}</span>
-                    </p>
+    {{-- 3. Active Appointment Modal --}}
+    <div class="modal fade" id="activeAppointmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-5 text-center">
+                    <i class="bi bi-calendar-check text-warning display-1 mb-3"></i>
+                    <h3 class="fw-bold">Active Appointment</h3>
+                    @if($activeAppointment)
+                        <p class="text-muted mb-4">You have a <strong>{{ $activeAppointment->status->value }}</strong> appointment on:<br>
+                            <span class="fs-5 fw-bold" style="color: var(--primary-color);">{{ $activeAppointment->appointment_date->format('F d, Y') }} at {{ $activeAppointment->appointment_time }}</span>
+                        </p>
+                        <div class="d-grid gap-2 col-10 mx-auto">
+                            <a href="{{ route('my.appointments') }}" class="btn text-white rounded-pill fw-bold" style="background-color: var(--primary-color);">View Details</a>
+                            
+                            @if($activeAppointment->status->value === 'pending')
+                                <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="modal" data-bs-target="#pendingCancelModal">Cancel Request</button>
+                            @else
+                                <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="collapse" data-bs-target="#cancelReasonCollapse">Cancel Existing Appointment</button>
+                                <div class="collapse mt-3" id="cancelReasonCollapse">
+                                    <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST" class="text-start p-3 bg-light rounded-3">
+                                        @csrf
+                                        <label class="small fw-bold mb-1">Reason for cancellation:</label>
+                                        <textarea name="cancellation_reason" class="form-control mb-2" rows="2" required placeholder="Why are you cancelling?"></textarea>
+                                        <button type="submit" class="btn btn-danger btn-sm w-100">Confirm Cancellation</button>
+                                    </form>
+                                </div>
+                            @endif
+
+                            <button type="button" class="btn btn-light rounded-pill mt-2" data-bs-dismiss="modal">Close & View Calendar</button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 4. Unverified Modal --}}
+    <div class="modal fade" id="unverifiedModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-5 text-center">
+                    <i class="bi bi-shield-lock text-danger display-1 mb-3"></i>
+                    <h3 class="fw-bold">ID Verification Required</h3>
+                    <p class="text-muted mb-4">To ensure clinic security, please upload a valid ID before booking your first appointment.</p>
                     <div class="d-grid gap-2 col-10 mx-auto">
-                        <a href="{{ route('my.appointments') }}" class="btn text-white rounded-pill fw-bold" style="background-color: var(--primary-color);">View Details</a>
-                        
-                        @if($activeAppointment->status->value === 'pending')
-                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="modal" data-bs-target="#pendingCancelModal">Cancel Request</button>
-                        @else
-                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold w-100" data-bs-toggle="collapse" data-bs-target="#cancelReasonCollapse">Cancel Existing Appointment</button>
-                            <div class="collapse mt-3" id="cancelReasonCollapse">
-                                <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST" class="text-start p-3 bg-light rounded-3">
-                                    @csrf
-                                    <label class="small fw-bold mb-1">Reason for cancellation:</label>
-                                    <textarea name="cancellation_reason" class="form-control mb-2" rows="2" required placeholder="Why are you cancelling?"></textarea>
-                                    <button type="submit" class="btn btn-danger btn-sm w-100">Confirm Cancellation</button>
-                                </form>
-                            </div>
-                        @endif
-
-                        <button type="button" class="btn btn-light rounded-pill mt-2" data-bs-dismiss="modal">Close & View Calendar</button>
+                        <a href="{{ route('settings') }}" class="btn btn-danger rounded-pill fw-bold shadow-sm"><i class="bi bi-upload me-2"></i>Upload ID</a>
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
                     </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- 4. Unverified Modal --}}
-<div class="modal fade" id="unverifiedModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-body p-5 text-center">
-                <i class="bi bi-shield-lock text-danger display-1 mb-3"></i>
-                <h3 class="fw-bold">ID Verification Required</h3>
-                <p class="text-muted mb-4">To ensure clinic security, please upload a valid ID before booking your first appointment.</p>
-                <div class="d-grid gap-2 col-10 mx-auto">
-                    <a href="{{ route('settings') }}" class="btn btn-danger rounded-pill fw-bold shadow-sm"><i class="bi bi-upload me-2"></i>Upload ID</a>
-                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-{{-- 5. Pending Cancel Modal --}}
-@if($activeAppointment && $activeAppointment->status->value === 'pending')
-<div class="modal fade" id="pendingCancelModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-body p-4 text-center">
-                <h5 class="fw-bold mb-3">Cancel Request?</h5>
-                <p class="text-muted mb-4">Are you sure you want to remove this appointment request?</p>
-                <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#activeAppointmentModal">Keep It</button>
-                    <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-danger rounded-pill px-4">Yes, Cancel</button>
-                    </form>
+    {{-- 5. Pending Cancel Modal --}}
+    @if($activeAppointment && $activeAppointment->status->value === 'pending')
+    <div class="modal fade" id="pendingCancelModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h5 class="fw-bold mb-3">Cancel Request?</h5>
+                    <p class="text-muted mb-4">Are you sure you want to remove this appointment request?</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#activeAppointmentModal">Keep It</button>
+                        <form action="{{ route('appointments.cancel', $activeAppointment->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-danger rounded-pill px-4">Yes, Cancel</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-@endif
+    @endif
 
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<script>
-    // --- UPDATED: Toggle Dependent Fields ---
-    function toggleGuestFields() {
-        const checkBox = document.getElementById('isGuestToggle');
-        const fieldsDiv = document.getElementById('guestFields');
-        
-        // Fields
-        const fName = document.getElementById('patientFirstName');
-        const mName = document.getElementById('patientMiddleName'); 
-        const lName = document.getElementById('patientLastName');
-        const suffix = document.getElementById('patientSuffix'); 
-
-        if (checkBox.checked) {
-            fieldsDiv.classList.remove('d-none');
-            // Make core fields required
-            fName.required = true;
-            lName.required = true;
-        } else {
-            fieldsDiv.classList.add('d-none');
-            // Remove required & Clear values
-            fName.required = false;
-            lName.required = false;
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script>
+        function toggleGuestFields() {
+            const checkBox = document.getElementById('isGuestToggle');
+            const fieldsDiv = document.getElementById('guestFields');
             
-            fName.value = '';
-            mName.value = ''; 
-            lName.value = '';
-            suffix.value = ''; 
+            const fName = document.getElementById('patientFirstName');
+            const mName = document.getElementById('patientMiddleName'); 
+            const lName = document.getElementById('patientLastName');
+            const suffix = document.getElementById('patientSuffix'); 
+
+            if (checkBox.checked) {
+                fieldsDiv.classList.remove('d-none');
+                fName.required = true;
+                lName.required = true;
+            } else {
+                fieldsDiv.classList.add('d-none');
+                fName.required = false;
+                lName.required = false;
+                
+                fName.value = '';
+                mName.value = ''; 
+                lName.value = '';
+                suffix.value = ''; 
+            }
         }
-    }
-</script>
+    </script>
+@endif
 
 <style>
     /* HERO SECTION */
@@ -448,7 +467,6 @@
     .day-full { background-color: #f8fafc !important; cursor: not-allowed !important; position: relative; }
     .day-full::after { content: 'FULL'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; font-weight: 800; color: #94a3b8; opacity: 0.5; letter-spacing: 1px; }
 
-    /* --- NEW: CUTOFF STYLE --- */
     .day-cutoff { background-color: #f1f5f9 !important; cursor: not-allowed !important; position: relative; border-color: #e2e8f0 !important; }
     .day-cutoff::after { content: 'CUTOFF'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; font-weight: 800; color: #64748b; opacity: 0.5; letter-spacing: 1px; }
 
