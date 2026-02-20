@@ -117,7 +117,6 @@
                                         <td class="fw-bold">{{ $user->first_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
-                                            {{-- SECURE ID VIEW LINK --}}
                                             <a href="{{ route('admin.users.view_id', $user->id) }}" target="_blank" class="text-decoration-none">
                                                 <img src="{{ route('admin.users.view_id', $user->id) }}" class="rounded border shadow-sm" style="height: 40px; width: 60px; object-fit: cover;">
                                                 <small class="ms-2 text-primary fw-bold">View <i class="bi bi-box-arrow-up-right"></i></small>
@@ -167,7 +166,6 @@
                 </div>
             @endif
 
-            {{-- TAB PERSISTENCE LOGIC --}}
             @php
                 $activeTab = request('tab') ?? 'registered';
                 if(!in_array($activeTab, ['registered', 'restricted', 'guests'])) {
@@ -212,15 +210,16 @@
                         <div class="p-4 border-bottom bg-light bg-opacity-50">
                             <form action="{{ route('admin.users') }}" method="GET" class="row g-2">
                                 <input type="hidden" name="tab" value="registered">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="{{ request('search') }}">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <select name="filter_status" class="form-select">
-                                        <option value="">All Users</option>
-                                        <option value="verified" {{ request('filter_status') == 'verified' ? 'selected' : '' }}>Verified</option>
-                                        <option value="unverified" {{ request('filter_status') == 'unverified' ? 'selected' : '' }}>Unverified</option>
-                                        <option value="restricted" {{ request('filter_status') == 'restricted' ? 'selected' : '' }}>Restricted</option>
+                                        <option value="" {{ blank(request('filter_status')) ? 'selected' : '' }}>Verified Emails (Default)</option>
+                                        <option value="pending_email" {{ request('filter_status') == 'pending_email' ? 'selected' : '' }}>Pending Email Verification</option>
+                                        <option value="pending_id" {{ request('filter_status') == 'pending_id' ? 'selected' : '' }}>Pending ID Approval</option>
+                                        <option value="active" {{ request('filter_status') == 'active' ? 'selected' : '' }}>Fully Verified (Active)</option>
+                                        <option value="all" {{ request('filter_status') == 'all' ? 'selected' : '' }}>Show All (Including Unverified)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
@@ -240,7 +239,6 @@
                                         <th class="py-3 text-secondary small text-uppercase">Phone</th>
                                         <th class="py-3 text-secondary small text-uppercase">ID Proof</th>
                                         <th class="py-3 text-secondary small text-uppercase">Status</th>
-                                        {{-- CHANGED: Replaced "Joined" with "Details" --}}
                                         <th class="py-3 text-secondary small text-uppercase text-center">Details</th>
                                     </tr>
                                 </thead>
@@ -266,14 +264,15 @@
                                                 <span class="badge bg-danger rounded-pill px-3">Restricted</span>
                                             @elseif($user->account_status === 'banned')
                                                 <span class="badge bg-dark rounded-pill px-3">Banned</span>
+                                            @elseif(!$user->hasVerifiedEmail())
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">Unverified Email</span>
                                             @elseif($user->is_verified)
-                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified</span>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified (Active)</span>
                                             @else
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">Unverified</span>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">Pending ID</span>
                                             @endif
                                         </td>
                                         
-                                        {{-- CHANGED: View Info Button --}}
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-light text-primary fw-bold border" data-bs-toggle="modal" data-bs-target="#userModal{{ $user->id }}">
                                                 <i class="bi bi-info-circle me-1"></i> View Info
@@ -281,7 +280,6 @@
                                         </td>
                                     </tr>
 
-                                    {{-- NEW: Patient Details Modal --}}
                                     <div class="modal fade" id="userModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -293,7 +291,6 @@
                                                 </div>
                                                 <div class="modal-body px-4 pb-4">
                                                     
-                                                    {{-- Name Breakdown Section --}}
                                                     <div class="p-3 bg-light rounded-3 mb-3">
                                                         <h6 class="text-uppercase small text-muted fw-bold mb-3">Full Name Breakdown</h6>
                                                         <div class="row g-2">
@@ -316,7 +313,6 @@
                                                         </div>
                                                     </div>
 
-                                                    {{-- Biological Info Section --}}
                                                     <div class="row g-3 mb-3">
                                                         <div class="col-6">
                                                             <div class="border p-2 rounded-3 text-center">
@@ -336,7 +332,6 @@
                                                         </div>
                                                     </div>
 
-                                                    {{-- System Info Section --}}
                                                     <div class="border-top pt-3">
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <span class="small text-muted">Account Created:</span>
@@ -358,7 +353,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    {{-- End Modal --}}
 
                                     @empty
                                     <tr><td colspan="6" class="text-center py-5 text-muted">No users found.</td></tr>

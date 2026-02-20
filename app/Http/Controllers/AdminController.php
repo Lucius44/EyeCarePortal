@@ -157,16 +157,6 @@ class AdminController extends Controller
             return back()->withErrors(['appointment_date' => $result['error']])->withInput();
         }
 
-        // Optional: Notify Guest of Admin Booking (Uncomment if needed)
-        /*
-        if ($result instanceof Appointment) {
-             $recipient = $result->user ?? Notification::route('mail', $result->patient_email);
-             if ($recipient) {
-                 $recipient->notify(new AppointmentStatusChanged($result));
-             }
-        }
-        */
-
         return back()->with('success', 'Appointment booked successfully.');
     }
 
@@ -276,17 +266,29 @@ class AdminController extends Controller
             });
         }
 
+        // --- NEW FILTERING LOGIC ---
         if ($request->filled('filter_status')) {
-            if ($request->filter_status === 'verified') {
-                $query->where('is_verified', true)
+            if ($request->filter_status === 'active') {
+                $query->whereNotNull('email_verified_at')
+                      ->where('is_verified', true)
                       ->where('account_status', UserStatus::Active);
             }
-            elseif ($request->filter_status === 'unverified') {
-                $query->where('is_verified', false);
+            elseif ($request->filter_status === 'pending_email') {
+                $query->whereNull('email_verified_at');
+            }
+            elseif ($request->filter_status === 'pending_id') {
+                $query->whereNotNull('email_verified_at')
+                      ->where('is_verified', false);
             }
             elseif ($request->filter_status === 'restricted') {
                 $query->where('account_status', UserStatus::Restricted);
             }
+            elseif ($request->filter_status === 'all') {
+                // Do nothing, let query get everyone
+            }
+        } else {
+            // Default View: Hide Unverified Emails
+            $query->whereNotNull('email_verified_at');
         }
 
         $allUsers = $query->orderBy('created_at', 'desc')->paginate(10, ['*'], 'users_page')->withQueryString();
