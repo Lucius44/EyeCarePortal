@@ -139,7 +139,7 @@
         <nav class="navbar navbar-expand-lg fixed-top">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-                    <i class="bi bi-eye-fill text-primary"></i> 
+                    <img src="{{ asset('images/clearoptics-logo.png') }}" alt="ClearOptics Logo" style="height: 35px; width: auto;">
                     <span>Clear<span class="text-primary">Optics</span></span>
                 </a>
 
