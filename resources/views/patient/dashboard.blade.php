@@ -14,18 +14,6 @@
         color: white;
         box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
     }
-    
-    .hero-bg-img {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 50%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.4;
-        mask-image: linear-gradient(to left, black, transparent);
-        -webkit-mask-image: linear-gradient(to left, black, transparent);
-    }
 
     /* Action Cards */
     .action-card {
@@ -122,16 +110,19 @@
     <div class="row mb-5">
         <div class="col-12">
             <div class="dashboard-hero">
-                <img src="https://images.unsplash.com/photo-1579684385180-1ea55f61d21e?q=80&w=2070&auto=format&fit=crop" class="hero-bg-img" alt="Background">
+                {{-- Background image tag completely removed --}}
                 
                 <div class="position-relative z-2">
                     @php
                         $hour = date('H');
                         $greeting = $hour < 12 ? 'Good Morning' : ($hour < 18 ? 'Good Afternoon' : 'Good Evening');
                     @endphp
-                    <span class="badge bg-white bg-opacity-20 backdrop-blur text-white px-3 py-2 rounded-pill mb-3 fw-bold border border-white border-opacity-25">
-                        <i class="bi bi-calendar-day me-2"></i> {{ date('l, F j, Y') }}
+                    
+                    {{-- Fixed: Solid white background with dark text for visibility --}}
+                    <span class="badge bg-white text-dark px-3 py-2 rounded-pill mb-3 fw-bold shadow-sm">
+                        <i class="bi bi-calendar-day me-2 text-primary"></i> {{ date('l, F j, Y') }}
                     </span>
+                    
                     <h1 class="display-5 fw-bold mb-2">{{ $greeting }}, {{ Auth::user()->first_name }}!</h1>
                     <p class="lead opacity-75 mb-4" style="max-width: 600px;">
                         Welcome to your personal vision portal. Manage your appointments and track your eye health journey all in one place.
