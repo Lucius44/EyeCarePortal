@@ -107,7 +107,7 @@
 
 <div class="container-fluid p-0 position-relative">
     
-    {{-- BACK BUTTON (Moved outside row for stability) --}}
+    {{-- BACK BUTTON --}}
     <a href="{{ route('home') }}" class="btn-back-home">
         <i class="bi bi-arrow-left"></i> Home
     </a>
@@ -137,7 +137,7 @@
                 <form action="{{ route('login.post') }}" method="POST">
                     @csrf 
 
-                    {{-- Success Message (e.g., Password Reset Successful) --}}
+                    {{-- Success Message --}}
                     @if (session('status'))
                         <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small rounded-3 mb-4">
                             <i class="bi bi-check-circle-fill me-1"></i> {{ session('status') }}
@@ -155,15 +155,21 @@
                         <label for="email">Email Address</label>
                     </div>
 
-                    <div class="form-floating mb-2 position-relative">
+                    <div class="form-floating mb-3 position-relative">
                         <input type="password" name="password" class="form-control" id="password" placeholder="Password" required>
                         <label for="password">Password</label>
                         <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" 
                            id="togglePassword" style="cursor: pointer; z-index: 5;"></i>
                     </div>
 
-                    {{-- Forgot Password Link --}}
-                    <div class="d-flex justify-content-end mb-4">
+                    {{-- Remember Me & Forgot Password Wrapper --}}
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                            <label class="form-check-label text-muted small" for="remember" style="user-select: none;">
+                                Remember Me
+                            </label>
+                        </div>
                         <a href="{{ route('password.request') }}" class="text-decoration-none small fw-bold" style="color: var(--accent-color);">
                             Forgot Password?
                         </a>

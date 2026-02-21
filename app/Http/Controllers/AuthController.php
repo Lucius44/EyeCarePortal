@@ -26,10 +26,13 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // Capture the remember me checkbox value
+        $remember = $request->boolean('remember');
+
+        // Pass $remember as the second argument to attempt
+        if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
             
-            // Fixed: Compare against the Enum, not a string
             if(Auth::user()->role === UserRole::Admin) {
                 return redirect()->route('admin.dashboard');
             }
@@ -58,7 +61,6 @@ class AuthController extends Controller
             'role' => UserRole::Patient,
         ]);
 
-        // --- NEW: Trigger Email Verification ---
         event(new Registered($user));
 
         Auth::login($user);
@@ -73,7 +75,6 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-    // AJAX Check for email uniqueness
     public function checkEmail(Request $request)
     {
         $email = $request->query('email');
@@ -81,10 +82,8 @@ class AuthController extends Controller
         return response()->json(['exists' => $exists]);
     }
 
-    // --- NEW: AJAX Check for Verification Status ---
     public function checkVerificationStatus(Request $request)
     {
-        // returns { verified: true } if the timestamp is present
         return response()->json([
             'verified' => $request->user()->hasVerifiedEmail()
         ]);
