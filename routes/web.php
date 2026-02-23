@@ -36,7 +36,6 @@ Route::post('/register', [AuthController::class, 'store'])->name('register.post'
 Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.email');
 
 // --- NEW: AJAX Verification Status Check ---
-// The Verify Page will hit this every few seconds
 Route::get('/email/check-status', [AuthController::class, 'checkVerificationStatus'])
     ->middleware('auth')
     ->name('verification.check');
@@ -79,14 +78,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');
-    
-    // --- NEW: DELETE ACCOUNT ROUTE ---
     Route::delete('/settings/delete', [PatientController::class, 'deleteAccount'])->name('settings.delete');
     
-    // --- SECURE ROUTE FOR PATIENT VIEWING OWN ID ---
+    // SECURE ROUTE FOR PATIENT VIEWING OWN ID
     Route::get('/settings/my-id', [PatientController::class, 'showIdPhoto'])->name('settings.view_id');
 
     Route::get('/my-appointments', [PatientController::class, 'myAppointments'])->name('my.appointments');
+
+    // --- NEW: NOTIFICATION ROUTES ---
+    Route::get('/notifications/{id}/read', [PatientController::class, 'markNotificationAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [PatientController::class, 'markAllNotificationsAsRead'])->name('notifications.markAllRead');
 });
 
 // -- Admin Routes (Protected) --
@@ -105,14 +106,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
-    
-    // --- SECURE ROUTE FOR ADMIN VIEWING USER ID ---
     Route::get('/users/{id}/id-photo', [AdminController::class, 'showUserIdPhoto'])->name('admin.users.view_id');
-    
-    // --- Unrestrict User Route ---
     Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');
 
-    // --- Admin Settings Routes ---
+    // Admin Settings Routes
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/settings/password', [AdminController::class, 'updatePassword'])->name('admin.settings.password');
 

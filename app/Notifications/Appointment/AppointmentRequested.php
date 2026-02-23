@@ -14,38 +14,57 @@ class AppointmentRequested extends Notification implements ShouldQueue
 
     protected $appointment;
 
+    /**
+     * Create a new notification instance.
+     */
     public function __construct(Appointment $appointment)
     {
         $this->appointment = $appointment;
     }
 
+    /**
+     * Get the notification's delivery channels.
+     */
     public function via(object $notifiable): array
     {
-        // 1. Resolve Email (User vs Guest)
-        $email = $notifiable->email ?? $notifiable->routeNotificationFor('mail');
-
-        // 2. Dummy Email Guard
-        if (!$email || str_contains($email, 'guest.eyecareportal.com') || str_contains($email, 'no-email')) {
-            return [];
-        }
-
-        return ['mail'];
+        // Broadcast to both Email and the Database (Bell Icon) if registered user
+        return $notifiable instanceof \App\Models\User ? ['mail', 'database'] : ['mail'];
     }
 
+    /**
+     * Get the mail representation of the notification.
+     */
     public function toMail(object $notifiable): MailMessage
     {
-        $date = $this->appointment->appointment_date->format('F j, Y');
-        $time = date('g:i A', strtotime($this->appointment->appointment_time));
+        $date = $this->appointment->appointment_date->format('F d, Y');
+        $time = date('h:i A', strtotime($this->appointment->appointment_time));
         $service = $this->appointment->service;
 
-        return (new MailMessage)
-            ->subject('Appointment Request Received - EyeCarePortal')
-            ->greeting('Hello ' . $this->appointment->patient_name . ',')
-            ->line('We have received your appointment request.')
-            ->line("**Service:** {$service}")
-            ->line("**Date:** {$date} at {$time}")
-            ->line('Your request is currently PENDING. We will notify you once an admin confirms your schedule.')
-            ->action('View Appointment', url('/appointments'))
-            ->line('Thank you for choosing EyeCarePortal!');
+        $message = (new MailMessage)
+                    ->subject('Appointment Request Received - ClearOptics')
+                    ->greeting("Hello {$this->appointment->patient_name},")
+                    ->line("We have received your appointment request for **{$service}** on **{$date}** at **{$time}**.")
+                    ->line('Your request is currently pending review by our clinic staff. We will notify you once it has been confirmed.');
+
+        if ($notifiable instanceof \App\Models\User) {
+            $message->action('View My Appointments', route('my.appointments'));
+        }
+
+        return $message->line('Thank you for choosing ClearOptics!');
+    }
+
+    /**
+     * Get the array representation of the notification for the Database (Bell Icon).
+     */
+    public function toArray(object $notifiable): array
+    {
+        $date = $this->appointment->appointment_date->format('M d, Y');
+
+        return [
+            'appointment_id' => $this->appointment->id,
+            'status' => 'pending',
+            'message' => "Your appointment request for {$date} is pending confirmation.",
+            'url' => route('my.appointments') // Redirects to their appointments list
+        ];
     }
 }

@@ -124,17 +124,15 @@ class PatientController extends Controller
         return back()->with('success', 'Password changed successfully.');
     }
 
-    // --- NEW: ACCOUNT DELETION LOGIC ---
     public function deleteAccount(Request $request)
     {
         $request->validate([
-            'password' => ['required', 'current_password'], // Validates against their actual password
+            'password' => ['required', 'current_password'], 
         ]);
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // 1. Safety Check: Prevent deletion if they have active appointments
         $activeAppointments = Appointment::where('user_id', $user->id)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->exists();
@@ -143,12 +141,10 @@ class PatientController extends Controller
             return back()->with('error', 'You cannot delete your account while you have active appointments. Please cancel them first.');
         }
 
-        // 2. Clean up Files: Delete their uploaded ID if it exists
         if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
             Storage::disk('local')->delete($user->id_photo_path);
         }
 
-        // 3. Logout & Delete
         Auth::logout();
         
         $user->delete();
@@ -159,11 +155,8 @@ class PatientController extends Controller
         return redirect('/')->with('success', 'Your account has been successfully deleted.');
     }
 
-    // --- STRICT PRIVATE UPLOAD & VIEW (FIXED PATHING) ---
-
     public function uploadId(Request $request)
     {
-        // UPDATED: Added data_privacy_consent validation
         $request->validate([
             'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'data_privacy_consent' => 'required|accepted', 
@@ -175,12 +168,10 @@ class PatientController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // 1. Delete Old ID from PRIVATE disk
         if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
             Storage::disk('local')->delete($user->id_photo_path);
         }
 
-        // 2. Store in PRIVATE 'local' disk (storage/app/private/id_photos)
         $path = $request->file('id_photo')->store('id_photos', 'local');
 
         $user->update([
@@ -200,8 +191,6 @@ class PatientController extends Controller
             abort(404, 'No ID photo found.');
         }
 
-        // FIX: Use the Storage facade to get the real absolute path
-        // This automatically respects the 'root' => 'app/private' config
         if (!Storage::disk('local')->exists($user->id_photo_path)) {
             abort(404, 'File not found in secure storage.');
         }
@@ -209,5 +198,30 @@ class PatientController extends Controller
         $path = Storage::disk('local')->path($user->id_photo_path);
 
         return response()->file($path);
+    }
+
+    // --- NEW: NOTIFICATION METHODS (WITH DOCBLOCK FIXES) ---
+
+    public function markNotificationAsRead($id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        
+        $notification = $user->notifications()->findOrFail($id);
+        
+        $notification->markAsRead();
+
+        // Redirect to the URL attached to the notification (e.g., My Appointments)
+        return redirect($notification->data['url'] ?? route('dashboard'));
+    }
+
+    public function markAllNotificationsAsRead()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        
+        $user->unreadNotifications->markAsRead();
+        
+        return back();
     }
 }

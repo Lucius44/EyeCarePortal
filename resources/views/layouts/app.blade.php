@@ -108,6 +108,61 @@
             color: var(--accent-color);
         }
 
+        /* --- Notification Bell Styling --- */
+        .notification-bell {
+            position: relative;
+            font-size: 1.25rem;
+            color: #64748B;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+        }
+        .notification-bell:hover {
+            color: var(--accent-color);
+            background-color: #F1F5F9;
+        }
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background-color: #EF4444; /* Red badge */
+            color: white;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 10px;
+            line-height: 1;
+            border: 2px solid white;
+        }
+        .dropdown-menu-notifications {
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0;
+        }
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            white-space: normal; /* Allow text wrapping */
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .notification-item:hover {
+            background-color: #F8FAFC;
+        }
+        .notification-unread {
+            background-color: #EFF6FF; /* Very light blue for unread */
+        }
+        .notification-unread:hover {
+             background-color: #DBEAFE;
+        }
+
         /* Footer - Flattened & Slimmer */
         footer {
             background: white;
@@ -129,7 +184,7 @@
 </head>
 <body>
 
-    {{-- CONDITIONAL NAVBAR: Hidden on Login, Register, Admin, Verify, Forgot Password, and Reset Password --}}
+    {{-- CONDITIONAL NAVBAR --}}
     @if(
         !request()->routeIs('login') && 
         !request()->routeIs('register') && 
@@ -145,9 +200,51 @@
                     <span>Clear<span class="text-primary">Optics</span></span>
                 </a>
 
-                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                {{-- MOBILE RIGHT CONTROLS: Notification Bell + Hamburger Menu --}}
+                <div class="d-flex align-items-center d-lg-none gap-2">
+                    @auth
+                        @php 
+                            $unreadCount = Auth::user()->unreadNotifications->count(); 
+                            $notifications = Auth::user()->notifications()->take(5)->get();
+                        @endphp
+                        <div class="dropdown">
+                            <a class="notification-bell" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell"></i>
+                                @if($unreadCount > 0)
+                                    <span class="notification-badge">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-notifications shadow-lg">
+                                <li class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center rounded-top">
+                                    <span class="fw-bold small text-uppercase text-muted">Notifications</span>
+                                    @if($unreadCount > 0)
+                                        <form method="POST" action="{{ route('notifications.markAllRead') }}">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none" style="font-size: 0.8rem;">Mark all as read</button>
+                                        </form>
+                                    @endif
+                                </li>
+                                @forelse($notifications as $notification)
+                                    <li>
+                                        <a class="dropdown-item notification-item {{ $notification->read_at ? '' : 'notification-unread' }}" 
+                                           href="{{ route('notifications.read', $notification->id) }}">
+                                            <div class="d-flex flex-column">
+                                                <span class="small fw-semibold text-dark">{{ $notification->data['message'] ?? 'New notification' }}</span>
+                                                <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li><span class="dropdown-item text-muted small py-3 text-center">No notifications yet.</span></li>
+                                @endforelse
+                            </ul>
+                        </div>
+                    @endauth
+
+                    <button class="navbar-toggler border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto align-items-center gap-2">
@@ -178,8 +275,42 @@
                                 </li>
                             @endif
 
+                            {{-- DESKTOP NOTIFICATION BELL --}}
+                            <li class="nav-item dropdown ms-2 d-none d-lg-block">
+                                <a class="notification-bell" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell"></i>
+                                    @if($unreadCount > 0)
+                                        <span class="notification-badge">{{ $unreadCount }}</span>
+                                    @endif
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-notifications shadow-lg">
+                                    <li class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center rounded-top">
+                                        <span class="fw-bold small text-uppercase text-muted">Notifications</span>
+                                        @if($unreadCount > 0)
+                                            <form method="POST" action="{{ route('notifications.markAllRead') }}">
+                                                @csrf
+                                                <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none" style="font-size: 0.8rem;">Mark all as read</button>
+                                            </form>
+                                        @endif
+                                    </li>
+                                    @forelse($notifications as $notification)
+                                        <li>
+                                            <a class="dropdown-item notification-item {{ $notification->read_at ? '' : 'notification-unread' }}" 
+                                               href="{{ route('notifications.read', $notification->id) }}">
+                                                <div class="d-flex flex-column">
+                                                    <span class="small fw-semibold text-dark">{{ $notification->data['message'] ?? 'New notification' }}</span>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    @empty
+                                        <li><span class="dropdown-item text-muted small py-3 text-center">No notifications yet.</span></li>
+                                    @endforelse
+                                </ul>
+                            </li>
+
                             {{-- User Dropdown --}}
-                            <li class="nav-item dropdown ms-3 d-none d-lg-block">
+                            <li class="nav-item dropdown ms-2 d-none d-lg-block">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
                                     <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 1rem;">
                                         {{ substr(Auth::user()->first_name, 0, 1) }}
@@ -221,7 +352,7 @@
                                 </ul>
                             </li>
 
-                            {{-- Mobile Menu --}}
+                            {{-- Mobile Menu Content --}}
                             <li class="nav-item d-lg-none mt-2 w-100">
                                 <hr class="text-secondary opacity-10">
                                 <div class="px-2 mb-2 text-uppercase text-muted small fw-bold">
