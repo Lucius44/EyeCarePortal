@@ -28,6 +28,14 @@ class DashboardService
             ->count();
 
         $pendingRequests = Appointment::where('status', AppointmentStatus::Pending)->count();
+        
+        // NEW: Calculate Pending ID Verifications
+        $pendingVerifications = User::where('role', UserRole::Patient)
+            ->whereNotNull('id_photo_path')
+            ->where('is_verified', false)
+            ->whereNull('rejection_reason')
+            ->count();
+
         $totalCompleted = Appointment::where('status', AppointmentStatus::Completed)->count();
 
         // 2. Chart Data Generation (Last 7 Days)
@@ -51,6 +59,7 @@ class DashboardService
             'totalPatients' => $totalPatients,
             'appointmentsToday' => $appointmentsToday,
             'pendingRequests' => $pendingRequests,
+            'pendingVerifications' => $pendingVerifications,
             'totalCompleted' => $totalCompleted,
             'labels' => $labels,
             'data' => $data,

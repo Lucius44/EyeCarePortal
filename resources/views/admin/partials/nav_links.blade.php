@@ -30,17 +30,28 @@
         <i class="bi bi-people"></i> Users & Patients
     </a>
     
-    {{-- Services Link --}}
     <a href="{{ route('services.index') }}" class="admin-nav-link {{ request()->routeIs('services.index') ? 'active' : '' }}">
         <i class="bi bi-journal-medical"></i> Services
     </a>
 
-    {{-- Settings Link (New) --}}
     <a href="{{ route('admin.settings') }}" class="admin-nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
         <i class="bi bi-gear-fill"></i> Settings
     </a>
+
+    {{-- NEW: Admin Notification Offcanvas Trigger --}}
+    <a href="#adminNotificationsOffcanvas" data-bs-toggle="offcanvas" role="button" aria-controls="adminNotificationsOffcanvas" class="admin-nav-link d-flex align-items-center mt-3 border-top border-secondary border-opacity-25 pt-3">
+        <i class="bi bi-bell-fill"></i> Notifications
+        @php 
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            $adminUnreadCount = $user->unreadNotifications->count(); 
+        @endphp
+        @if($adminUnreadCount > 0)
+            <span class="badge bg-danger ms-auto rounded-pill" style="font-size: 0.75rem;">{{ $adminUnreadCount }}</span>
+        @endif
+    </a>
     
-    <form action="{{ route('logout') }}" method="POST" class="mt-3">
+    <form action="{{ route('logout') }}" method="POST" class="mt-2">
         @csrf
         <button type="submit" class="admin-nav-link w-100 text-start border-0 bg-transparent logout-btn">
             <i class="bi bi-box-arrow-right"></i> Log Out

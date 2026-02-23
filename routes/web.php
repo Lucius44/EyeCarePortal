@@ -18,7 +18,7 @@ Route::get('/', function () {
 // Terms
 Route::view('/terms', 'terms')->name('terms');
 
-// --- FORGOT PASSWORD ROUTES (NEW) ---
+// --- FORGOT PASSWORD ROUTES ---
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
@@ -35,7 +35,7 @@ Route::post('/register', [AuthController::class, 'store'])->name('register.post'
 // AJAX Email Check
 Route::get('/check-email', [AuthController::class, 'checkEmail'])->name('check.email');
 
-// --- NEW: AJAX Verification Status Check ---
+// AJAX Verification Status Check
 Route::get('/email/check-status', [AuthController::class, 'checkVerificationStatus'])
     ->middleware('auth')
     ->name('verification.check');
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/my-appointments', [PatientController::class, 'myAppointments'])->name('my.appointments');
 
-    // --- NEW: NOTIFICATION ROUTES ---
+    // PATIENT NOTIFICATION ROUTES
     Route::get('/notifications/{id}/read', [PatientController::class, 'markNotificationAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [PatientController::class, 'markAllNotificationsAsRead'])->name('notifications.markAllRead');
 });
@@ -114,4 +114,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/settings/password', [AdminController::class, 'updatePassword'])->name('admin.settings.password');
 
     Route::resource('services', AdminServiceController::class)->except(['show', 'create', 'edit']);
+
+    // --- NEW: ADMIN NOTIFICATION ROUTES ---
+    Route::get('/notifications/{id}/read', [AdminController::class, 'markNotificationAsRead'])->name('admin.notifications.read');
+    Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead'])->name('admin.notifications.markAllRead');
 });

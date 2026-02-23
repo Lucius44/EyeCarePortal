@@ -408,6 +408,51 @@
         </div>
     </footer>
 
+    {{-- NEW: ADMIN OFFCANVAS NOTIFICATION PANEL --}}
+    @if(Auth::check() && Auth::user()->role === \App\Enums\UserRole::Admin)
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="adminNotificationsOffcanvas" aria-labelledby="adminNotificationsLabel" style="width: 350px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold text-dark" id="adminNotificationsLabel"><i class="bi bi-bell-fill text-primary me-2"></i>Notifications</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            @php
+                /** @var \App\Models\User $user */
+                $user = Auth::user();
+                $adminUnread = $user->unreadNotifications->count();
+                $adminNotifs = $user->notifications()->take(10)->get();
+            @endphp
+            @if($adminUnread > 0)
+                <div class="p-2 border-bottom text-end bg-light">
+                    <form method="POST" action="{{ route('admin.notifications.markAllRead') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-link btn-sm text-decoration-none fw-semibold">Mark all as read</button>
+                    </form>
+                </div>
+            @endif
+            <div class="list-group list-group-flush">
+                @forelse($adminNotifs as $notification)
+                    <a href="{{ route('admin.notifications.read', $notification->id) }}" 
+                       class="list-group-item list-group-item-action p-3 border-bottom {{ $notification->read_at ? '' : 'bg-primary bg-opacity-10' }}">
+                        <div class="d-flex w-100 justify-content-between mb-1">
+                            <small class="text-muted fw-semibold" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</small>
+                            @if(!$notification->read_at)
+                                <span class="badge bg-primary rounded-circle p-1"><span class="visually-hidden">Unread</span></span>
+                            @endif
+                        </div>
+                        <p class="mb-0 small text-dark">{{ $notification->data['message'] ?? 'New notification' }}</p>
+                    </a>
+                @empty
+                    <div class="p-5 text-center text-muted d-flex flex-column align-items-center">
+                        <i class="bi bi-bell-slash fs-1 mb-2 opacity-25"></i>
+                        <span class="small fw-semibold">No notifications yet.</span>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+    @endif
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

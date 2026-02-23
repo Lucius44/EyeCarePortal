@@ -369,4 +369,26 @@ class AdminController extends Controller
 
         return back()->with('success', 'Restriction lifted. User is now Active and has been notified.');
     }
+
+    // --- NEW: ADMIN NOTIFICATION METHODS ---
+
+    public function markNotificationAsRead($id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $notification = $user->notifications()->findOrFail($id);
+        
+        $notification->markAsRead();
+
+        return redirect($notification->data['url'] ?? route('admin.dashboard'));
+    }
+
+    public function markAllNotificationsAsRead()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->unreadNotifications->markAsRead();
+        
+        return back();
+    }
 }

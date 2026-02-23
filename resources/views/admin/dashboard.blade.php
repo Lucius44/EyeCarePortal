@@ -54,6 +54,13 @@
         display: flex; align-items: center; justify-content: center;
         font-size: 1.25rem; margin-right: 1rem;
     }
+    
+    /* Snapshot Card Customization */
+    .snapshot-card {
+        background: linear-gradient(135deg, #0F172A 0%, #1e293b 100%);
+        border: none;
+        color: white;
+    }
 </style>
 
 <div class="container-fluid p-0">
@@ -78,7 +85,7 @@
         <div class="admin-content">
             
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div class="d-flex align-items-center gap-3">
                     {{-- MOBILE MENU TOGGLE --}}
                     <button class="btn btn-white border shadow-sm d-lg-none rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileAdminMenu">
@@ -97,6 +104,23 @@
                 </div>
             </div>
 
+            {{-- DAILY OVERVIEW ROW --}}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card snapshot-card shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h6 class="text-uppercase text-white-50 fw-bold mb-1"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Daily Overview</h6>
+                                <h2 class="fw-bold mb-0 display-6">{{ $appointmentsToday }} <span class="fs-5 fw-normal text-white-50">Visits Scheduled Today</span></h2>
+                            </div>
+                            <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-clipboard2-data fs-1 text-white opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- STATS GRID --}}
             <div class="row g-3 g-md-4 mb-5">
                 <div class="col-12 col-sm-6 col-md-3">
@@ -111,33 +135,39 @@
                     </div>
                 </div>
                 
+                {{-- Appointment Requests --}}
+                <div class="col-12 col-sm-6 col-md-3">
+                    <a href="{{ route('admin.appointments') }}" class="text-decoration-none">
+                        <div class="stat-card d-flex align-items-center">
+                            <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-calendar-event-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-secondary text-uppercase small fw-bold mb-1">Apt. Requests</h6>
+                                <h3 class="fw-bold text-dark mb-0">{{ $pendingRequests }}</h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                {{-- ID Verifications --}}
+                <div class="col-12 col-sm-6 col-md-3">
+                    <a href="{{ route('admin.users', ['filter_status' => 'pending_id']) }}" class="text-decoration-none">
+                        <div class="stat-card d-flex align-items-center">
+                            <div class="icon-box bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-secondary text-uppercase small fw-bold mb-1">ID Verifications</h6>
+                                <h3 class="fw-bold text-dark mb-0">{{ $pendingVerifications }}</h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
                 <div class="col-12 col-sm-6 col-md-3">
                     <div class="stat-card d-flex align-items-center">
                         <div class="icon-box bg-success bg-opacity-10 text-success">
-                            <i class="bi bi-calendar-check-fill"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-secondary text-uppercase small fw-bold mb-1">Visits Today</h6>
-                            <h3 class="fw-bold text-dark mb-0">{{ $appointmentsToday }}</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-3">
-                    <div class="stat-card d-flex align-items-center">
-                        <div class="icon-box bg-warning bg-opacity-10 text-warning">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-secondary text-uppercase small fw-bold mb-1">Pending</h6>
-                            <h3 class="fw-bold text-dark mb-0">{{ $pendingRequests }}</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-3">
-                    <div class="stat-card d-flex align-items-center">
-                        <div class="icon-box bg-info bg-opacity-10 text-info">
                             <i class="bi bi-clipboard-check-fill"></i>
                         </div>
                         <div>
@@ -184,8 +214,8 @@
                                 </a>
 
                                 <a href="{{ route('admin.appointments') }}" class="btn btn-outline-light text-dark text-start p-3 rounded-3 border fw-bold d-flex align-items-center">
-                                    <div class="bg-success text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-check-lg"></i>
+                                    <div class="bg-warning text-dark rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-calendar-event-fill"></i>
                                     </div>
                                     <div>
                                         <span class="d-block">Review Requests</span>
@@ -193,13 +223,13 @@
                                     </div>
                                 </a>
 
-                                <a href="{{ route('admin.users') }}" class="btn btn-outline-light text-dark text-start p-3 rounded-3 border fw-bold d-flex align-items-center">
-                                    <div class="bg-warning text-dark rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <a href="{{ route('admin.users', ['filter_status' => 'pending_id']) }}" class="btn btn-outline-light text-dark text-start p-3 rounded-3 border fw-bold d-flex align-items-center">
+                                    <div class="bg-danger text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                         <i class="bi bi-person-badge"></i>
                                     </div>
                                     <div>
                                         <span class="d-block">Verify Patients</span>
-                                        <small class="text-muted fw-normal">Check uploaded IDs</small>
+                                        <small class="text-muted fw-normal">{{ $pendingVerifications }} IDs to review</small>
                                     </div>
                                 </a>
                             </div>
