@@ -6,8 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
 use App\Models\Appointment;
+use App\Models\User;
 use App\Enums\AppointmentStatus; 
+use App\Enums\UserRole;
+// Notifications
+use App\Notifications\Admin\NewIdUploaded;
 
 class PatientController extends Controller
 {
@@ -180,6 +185,10 @@ class PatientController extends Controller
             'is_verified' => false 
         ]);
 
+        // --- NEW: Notify Admins of ID Upload ---
+        $admins = User::where('role', UserRole::Admin)->get();
+        Notification::send($admins, new NewIdUploaded($user));
+
         return back()->with('success', 'ID uploaded successfully! Please wait for Admin approval.');
     }
 
@@ -200,7 +209,7 @@ class PatientController extends Controller
         return response()->file($path);
     }
 
-    // --- NEW: NOTIFICATION METHODS (WITH DOCBLOCK FIXES) ---
+    // --- NOTIFICATION METHODS ---
 
     public function markNotificationAsRead($id)
     {
@@ -211,7 +220,7 @@ class PatientController extends Controller
         
         $notification->markAsRead();
 
-        // Redirect to the URL attached to the notification (e.g., My Appointments)
+        // Redirect to the URL attached to the notification
         return redirect($notification->data['url'] ?? route('dashboard'));
     }
 

@@ -7,13 +7,18 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Models\Service;
 use App\Enums\AppointmentStatus;
+use App\Enums\UserRole;
 use App\Services\AppointmentService; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Carbon\Carbon;
+
+// Notification Classes
 use App\Notifications\Appointment\AppointmentRequested;
 use App\Notifications\Appointment\AppointmentStatusChanged;
-use Carbon\Carbon;
+use App\Notifications\Admin\NewAppointmentRequest; // New
+use App\Notifications\Admin\AppointmentCancelled; // New
 
 class AppointmentController extends Controller
 {
@@ -28,12 +33,15 @@ class AppointmentController extends Controller
     {
         $userId = Auth::id();
 
+        // 1. Fetch Active Appointment (CRITICAL: Required by view)
         $activeAppointment = Appointment::where('user_id', $userId)
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
 
+        // 2. Fetch Calendar Data via Service (Restored)
         $calendarData = $this->appointmentService->getCalendarData();
 
+        // 3. Fetch Services (Restored)
         $services = Service::pluck('name')->sortBy(function ($name) {
             return $name === 'Others' ? 1 : 0; 
         })->values(); 
@@ -69,9 +77,14 @@ class AppointmentController extends Controller
             return redirect()->back()->withErrors(['error' => $result['error']])->withInput();
         }
 
-        // --- NOTIFICATION: Request Received ---
+        // --- NOTIFICATIONS ---
         if ($result instanceof Appointment) {
+            // 1. Notify Patient
             $user->notify(new AppointmentRequested($result));
+
+            // 2. Notify Admins (NEW)
+            $admins = User::where('role', UserRole::Admin)->get();
+            Notification::send($admins, new NewAppointmentRequest($result));
         }
 
         return redirect()->route('appointments.index')->with('success', 'Appointment request submitted successfully!');
@@ -123,8 +136,14 @@ class AppointmentController extends Controller
                 'cancellation_reason' => $request->cancellation_reason
             ]);
             
-            // --- NOTIFICATION: Cancelled ---
+            // --- NOTIFICATIONS ---
+            
+            // 1. Notify Patient (Confirmation)
             $user->notify(new AppointmentStatusChanged($appointment));
+
+            // 2. Notify Admins (NEW - Because a slot opened up)
+            $admins = User::where('role', UserRole::Admin)->get();
+            Notification::send($admins, new AppointmentCancelled($appointment));
 
             return back()->with('success', $message);
         }
