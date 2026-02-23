@@ -311,6 +311,32 @@ class AdminController extends Controller
         return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'guests'));
     }
 
+    /**
+     * AJAX Search for Patients
+     * Used in Admin Calendar Modal to link appointments to existing users.
+     */
+    public function searchUsers(Request $request)
+    {
+        $query = $request->get('query');
+
+        if (!$query) {
+            return response()->json([]);
+        }
+
+        $users = User::where('role', UserRole::Patient)
+            ->where(function ($q) use ($query) {
+                $q->where('first_name', 'like', "%{$query}%")
+                  ->orWhere('last_name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%")
+                  ->orWhere('phone_number', 'like', "%{$query}%");
+            })
+            ->select(['id', 'first_name', 'middle_name', 'last_name', 'suffix', 'email', 'phone_number'])
+            ->limit(10)
+            ->get();
+
+        return response()->json($users);
+    }
+
     public function verifyUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -370,7 +396,7 @@ class AdminController extends Controller
         return back()->with('success', 'Restriction lifted. User is now Active and has been notified.');
     }
 
-    // --- NEW: ADMIN NOTIFICATION METHODS ---
+    // --- ADMIN NOTIFICATION METHODS ---
 
     public function markNotificationAsRead($id)
     {

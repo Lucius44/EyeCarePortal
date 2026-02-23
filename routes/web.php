@@ -104,6 +104,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/appointments-history', [AdminController::class, 'history'])->name('admin.history');
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
     
+    // User Management
+    // --- NEW: USER SEARCH ENDPOINT (Must be before dynamic {id} routes) ---
+    Route::get('/users/search', [AdminController::class, 'searchUsers'])->name('admin.users.search');
+    
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
     Route::get('/users/{id}/id-photo', [AdminController::class, 'showUserIdPhoto'])->name('admin.users.view_id');
@@ -115,7 +119,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     Route::resource('services', AdminServiceController::class)->except(['show', 'create', 'edit']);
 
-    // --- NEW: ADMIN NOTIFICATION ROUTES ---
+    // --- ADMIN NOTIFICATION ROUTES ---
     Route::get('/notifications/{id}/read', [AdminController::class, 'markNotificationAsRead'])->name('admin.notifications.read');
     Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead'])->name('admin.notifications.markAllRead');
 });

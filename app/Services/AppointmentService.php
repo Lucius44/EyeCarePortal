@@ -80,8 +80,7 @@ class AppointmentService
      */
     public function checkPatientEligibility(User $user)
     {
-        // --- RULE 0: Identity Verification Required (NEW) ---
-        // Even if email is verified, the ID Photo must be approved by Admin.
+        // --- RULE 0: Identity Verification Required ---
         if (! $user->is_verified) {
              return ['error' => 'You must upload a valid Government ID and wait for Admin verification before booking.'];
         }
@@ -134,22 +133,20 @@ class AppointmentService
 
     /**
      * Apply a strike to a user and check for restriction thresholds.
-     * Returns TRUE if the user was just restricted, FALSE otherwise.
      */
     public function penalizeUser(User $user)
     {
         $user->increment('strikes');
 
-        // Check if Limit Reached (3 Strikes)
         if ($user->strikes >= 3) {
             $user->update([
                 'account_status' => UserStatus::Restricted, 
                 'restricted_until' => now()->addDays(30)
             ]);
-            return true; // User was Restricted
+            return true;
         }
 
-        return false; // User was just Warned
+        return false;
     }
 
     /**
@@ -194,7 +191,7 @@ class AppointmentService
                     return ['error' => 'The selected time slot is already taken.'];
                 }
 
-                // --- NEW: Handle Missing Email (System-Generated ID) ---
+                // --- Handle Missing Email (System-Generated ID for Guests) ---
                 $inputEmail = $data['email'] ?? $data['patient_email'] ?? null;
                 
                 if (empty($inputEmail)) {
@@ -211,7 +208,7 @@ class AppointmentService
                     'description' => $data['description'] ?? null,
                     'status' => ($origin === 'admin') ? AppointmentStatus::Confirmed : AppointmentStatus::Pending,
                     
-                    // -- Capture Dependent Details (Works for Auth User AND Guests) --
+                    // Always save the names provided in the form
                     'patient_first_name' => $data['patient_first_name'] ?? $data['first_name'] ?? null,
                     'patient_middle_name' => $data['patient_middle_name'] ?? $data['middle_name'] ?? null,
                     'patient_last_name' => $data['patient_last_name'] ?? $data['last_name'] ?? null,
@@ -221,12 +218,12 @@ class AppointmentService
                     'relationship' => $data['relationship'] ?? null,
                 ];
 
-                // 4. Handle User Linking
-                if (isset($data['user_id'])) {
-                    // Authenticated User
-                    $appointmentData['user_id'] = $data['user_id'];
+                // 4. Handle User Linking (The Key Feature)
+                if (!empty($data['user_id'])) {
+                    // Explicit Link (from Admin Search)
+                    $appointmentData['user_id'] = (int) $data['user_id'];
                 } else {
-                    // Check if this "Guest" is actually a registered user
+                    // Auto-Link: Check if this "Guest" Email matches a registered user
                     $existingUser = User::where('email', $inputEmail)->first();
                     
                     if ($existingUser) {
@@ -240,7 +237,7 @@ class AppointmentService
             });
 
         } catch (LockTimeoutException $e) {
-            return ['error' => 'The server is currently busy processing other bookings. Please try again in a moment.'];
+            return ['error' => 'The server is currently busy. Please try again in a moment.'];
         }
     }
 }

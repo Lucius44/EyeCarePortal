@@ -92,6 +92,32 @@
     
     .transition-btn { transition: all 0.2s ease; }
     .transition-btn:hover { transform: translateY(-2px); }
+
+    /* --- SEARCH RESULTS DROPDOWN --- */
+    #searchResults {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .search-result-item {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .search-result-item:hover {
+        background-color: #f3f4f6;
+    }
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
 </style>
 
 <div class="container-fluid p-0">
@@ -251,23 +277,48 @@
                         @csrf
                         <h6 class="fw-bold text-success mb-3">Add Walk-in / Manual Booking</h6>
                         <input type="hidden" name="appointment_date" id="bookDateInput">
+                        
+                        <input type="hidden" name="user_id" id="book_user_id">
+
+                        <div class="mb-4 bg-white p-3 rounded-3 border">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Search Registered Patient</label>
+                            <div class="position-relative">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="patientSearch" class="form-control border-start-0 ps-0" 
+                                           placeholder="Type Name, Email or Phone..." autocomplete="off">
+                                </div>
+                                <div id="searchResults" class="d-none"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted" id="searchStatus">Searching auto-fills details below.</small>
+                                <button type="button" onclick="resetGuestMode()" class="btn btn-link btn-sm text-danger p-0 text-decoration-none" style="font-size: 0.8rem;">Clear / Guest Mode</button>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_dependent">
+                            <label class="form-check-label small fw-bold text-dark" for="is_dependent">
+                                Book for Dependent/Family Member
+                            </label>
+                        </div>
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
-                                <input type="text" name="first_name" class="form-control" placeholder="First Name" required
+                                <input type="text" name="first_name" id="p_first" class="form-control" placeholder="First Name" required
                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" name="middle_name" class="form-control" placeholder="Middle (Opt)"
+                                <input type="text" name="middle_name" id="p_middle" class="form-control" placeholder="Middle (Opt)"
                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" name="last_name" class="form-control" placeholder="Last Name" required
+                                <input type="text" name="last_name" id="p_last" class="form-control" placeholder="Last Name" required
                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')">
                             </div>
                             {{-- SUFFIX FIELD --}}
                             <div class="col-md-2">
-                                <select name="patient_suffix" class="form-select">
+                                <select name="patient_suffix" id="p_suffix" class="form-select">
                                     <option value="">Suffix</option>
                                     <option value="Jr.">Jr.</option>
                                     <option value="Sr.">Sr.</option>
@@ -279,12 +330,10 @@
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
-                                {{-- FIXED: Removed 'required' attribute and updated placeholder --}}
-                                <input type="email" name="email" class="form-control" placeholder="Email">
+                                <input type="email" name="email" id="p_email" class="form-control" placeholder="Email">
                             </div>
                             <div class="col-md-6">
-                                {{-- FIXED: Added PH Phone Format restrictions --}}
-                                <input type="text" name="phone" class="form-control" 
+                                <input type="text" name="phone" id="p_phone" class="form-control" 
                                        placeholder="09123456789" 
                                        maxlength="11" 
                                        pattern="^09\d{9}$"
@@ -382,6 +431,9 @@
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
+    // --- GLOBAL VARIABLES FOR SEARCH LOGIC ---
+    let selectedUser = null; 
+
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('adminCalendar');
         var eventsData = JSON.parse(calendarEl.getAttribute('data-events'));
@@ -447,6 +499,83 @@
                 btnMonth.classList.add('btn-outline-secondary');
             });
         }
+
+        // --- SEARCH FUNCTIONALITY ---
+        const searchInput = document.getElementById('patientSearch');
+        const resultsDiv = document.getElementById('searchResults');
+
+        // Debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Perform Search
+        searchInput.addEventListener('input', debounce(function(e) {
+            const query = e.target.value;
+            if (query.length < 2) {
+                resultsDiv.classList.add('d-none');
+                return;
+            }
+
+            fetch(`{{ route('admin.users.search') }}?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if (data.length > 0) {
+                        resultsDiv.classList.remove('d-none');
+                        data.forEach(user => {
+                            const item = document.createElement('div');
+                            item.classList.add('search-result-item');
+                            item.innerHTML = `
+                                <div class="fw-bold text-dark">${user.first_name} ${user.last_name}</div>
+                                <div class="small text-muted">${user.email} | ${user.phone_number}</div>
+                            `;
+                            
+                            // CLICK RESULT
+                            item.addEventListener('click', () => {
+                                selectUser(user);
+                            });
+                            
+                            resultsDiv.appendChild(item);
+                        });
+                    } else {
+                        resultsDiv.classList.add('d-none');
+                    }
+                });
+        }, 300));
+
+        // Hide search if clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+                resultsDiv.classList.add('d-none');
+            }
+        });
+
+        // --- DEPENDENT TOGGLE LOGIC ---
+        document.getElementById('is_dependent').addEventListener('change', function(e) {
+            if (!selectedUser) return; // Logic only applies if a user is selected
+
+            if (this.checked) {
+                // DEPENDENT MODE: Unlock Name, Clear Name, Keep Contact Linked
+                toggleFields(false, ['p_first', 'p_middle', 'p_last', 'p_suffix']);
+                document.getElementById('p_first').value = '';
+                document.getElementById('p_middle').value = '';
+                document.getElementById('p_last').value = '';
+                document.getElementById('p_suffix').value = '';
+                // Note: Email/Phone remain locked and filled with Guardian's info
+            } else {
+                // USER MODE: Re-fill and Lock Name
+                document.getElementById('p_first').value = selectedUser.first_name;
+                document.getElementById('p_middle').value = selectedUser.middle_name || '';
+                document.getElementById('p_last').value = selectedUser.last_name;
+                document.getElementById('p_suffix').value = selectedUser.suffix || '';
+                toggleFields(true, ['p_first', 'p_middle', 'p_last', 'p_suffix']);
+            }
+        });
 
         // --- MOBILE STRIP LOGIC ---
         var currentMobileDate = new Date(); // State for current view
@@ -566,6 +695,9 @@
             var colBook = document.getElementById('col-book-btn');
             var badge = document.getElementById('masterDateStatus');
 
+            // Reset Guest Mode when opening modal
+            resetGuestMode();
+
             if (isPast) {
                 colBook.classList.add('d-none');
                 defaultTab = 'view';
@@ -623,6 +755,90 @@
             toggleSection(defaultTab);
             masterModal.show();
         }
+
+        // --- HELPER FUNCTIONS FOR SEARCH ---
+        window.selectUser = function(user) {
+            selectedUser = user;
+            
+            // 1. Fill Hidden ID
+            document.getElementById('book_user_id').value = user.id;
+
+            // 2. Fill Visible Fields
+            document.getElementById('p_first').value = user.first_name;
+            document.getElementById('p_middle').value = user.middle_name || '';
+            document.getElementById('p_last').value = user.last_name;
+            document.getElementById('p_suffix').value = user.suffix || '';
+            document.getElementById('p_email').value = user.email;
+            document.getElementById('p_phone').value = user.phone_number;
+
+            // 3. Lock Fields (Read Only)
+            toggleFields(true, ['p_first', 'p_middle', 'p_last', 'p_suffix', 'p_email', 'p_phone']);
+
+            // 4. Update UI
+            document.getElementById('patientSearch').value = `${user.first_name} ${user.last_name}`;
+            document.getElementById('searchResults').classList.add('d-none');
+            document.getElementById('searchStatus').innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Linked to Account</span>';
+            
+            // 5. Reset Dependent Checkbox
+            document.getElementById('is_dependent').checked = false;
+            document.getElementById('is_dependent').disabled = false;
+        };
+
+        window.resetGuestMode = function() {
+            selectedUser = null;
+            document.getElementById('book_user_id').value = '';
+            
+            // Clear Inputs
+            document.getElementById('p_first').value = '';
+            document.getElementById('p_middle').value = '';
+            document.getElementById('p_last').value = '';
+            document.getElementById('p_suffix').value = '';
+            document.getElementById('p_email').value = '';
+            document.getElementById('p_phone').value = '';
+            document.getElementById('patientSearch').value = '';
+
+            // Unlock Inputs
+            toggleFields(false, ['p_first', 'p_middle', 'p_last', 'p_suffix', 'p_email', 'p_phone']);
+
+            document.getElementById('searchStatus').innerText = 'Searching auto-fills details below.';
+            document.getElementById('searchResults').classList.add('d-none');
+            
+            // Disable Dependent Checkbox (Only for registered users)
+            document.getElementById('is_dependent').checked = false;
+        };
+
+        window.toggleFields = function(isLocked, ids) {
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                if (isLocked) {
+                    // Visual Lock
+                    el.classList.add('bg-light', 'text-muted');
+                    
+                    if (el.tagName === 'SELECT') {
+                        // Special fix for Dropdowns (CSS Lock)
+                        el.style.pointerEvents = 'none'; 
+                        el.style.backgroundColor = '#e9ecef'; // Bootstrap readonly gray
+                        // Optional: Add a hidden input if you want to be 100% safe, 
+                        // but pointer-events prevents clicking entirely.
+                    } else {
+                        // Standard Text Input Lock
+                        el.setAttribute('readonly', true);
+                    }
+                } else {
+                    // Unlock
+                    el.classList.remove('bg-light', 'text-muted');
+                    
+                    if (el.tagName === 'SELECT') {
+                        el.style.pointerEvents = 'auto';
+                        el.style.backgroundColor = ''; 
+                    } else {
+                        el.removeAttribute('readonly');
+                    }
+                }
+            });
+        };
 
         window.toggleSection = function(sec) {
             document.querySelectorAll('.control-section').forEach(el => el.classList.remove('active'));
