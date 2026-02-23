@@ -29,10 +29,19 @@ class StoreAdminAppointmentRequest extends FormRequest
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required',
             'service' => 'required|string',
-            'description' => 'nullable|string',
             
-            // Optional: Relationship if booking for dependent
+            // --- UPDATED: Required only if Service is 'Others' ---
+            'description' => 'required_if:service,Others|nullable|string',
+            
+            // --- FIXED: Increased max length from 5 to 50 ---
             'relationship' => 'nullable|string|max:50'
+        ];
+    }
+    
+    public function messages()
+    {
+        return [
+            'description.required_if' => 'Please provide a reason/note when selecting "Others".',
         ];
     }
 }

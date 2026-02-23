@@ -303,6 +303,11 @@
                             </label>
                         </div>
 
+                        <div class="mb-3 d-none" id="relationshipFieldWrapper">
+                            <label class="form-label small fw-bold text-secondary">Relationship to Account Holder <span class="text-danger">*</span></label>
+                            <input type="text" name="relationship" id="relationshipInput" class="form-control" placeholder="e.g. Son, Daughter, Spouse">
+                        </div>
+
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
                                 <input type="text" name="first_name" id="p_first" class="form-control" placeholder="First Name" required
@@ -350,7 +355,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <select name="service" class="form-select" required>
+                                <select name="service" id="serviceSelect" class="form-select" required>
                                     <option value="" disabled selected>Select Service...</option>
                                     @foreach($services as $service)
                                         <option value="{{ $service->name }}">{{ $service->name }}</option>
@@ -358,6 +363,16 @@
                                 </select>
                             </div>
                         </div>
+
+                        {{-- NEW: NOTES FIELD --}}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">
+                                Notes / Reason <span id="notesRequired" class="text-danger d-none">*</span>
+                            </label>
+                            <textarea name="description" id="notesField" class="form-control" rows="2" 
+                                      placeholder="e.g. Patient requests checkup for blurred vision..."></textarea>
+                        </div>
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success fw-bold">Confirm Booking</button>
                         </div>
@@ -557,25 +572,58 @@
 
         // --- DEPENDENT TOGGLE LOGIC ---
         document.getElementById('is_dependent').addEventListener('change', function(e) {
-            if (!selectedUser) return; // Logic only applies if a user is selected
+            
+            const relWrapper = document.getElementById('relationshipFieldWrapper');
+            const relInput = document.getElementById('relationshipInput');
 
             if (this.checked) {
-                // DEPENDENT MODE: Unlock Name, Clear Name, Keep Contact Linked
-                toggleFields(false, ['p_first', 'p_middle', 'p_last', 'p_suffix']);
-                document.getElementById('p_first').value = '';
-                document.getElementById('p_middle').value = '';
-                document.getElementById('p_last').value = '';
-                document.getElementById('p_suffix').value = '';
-                // Note: Email/Phone remain locked and filled with Guardian's info
+                // DEPENDENT MODE
+                relWrapper.classList.remove('d-none');
+                relInput.setAttribute('required', 'true');
+
+                if (selectedUser) {
+                    toggleFields(false, ['p_first', 'p_middle', 'p_last', 'p_suffix']);
+                    document.getElementById('p_first').value = '';
+                    document.getElementById('p_middle').value = '';
+                    document.getElementById('p_last').value = '';
+                    document.getElementById('p_suffix').value = '';
+                }
             } else {
-                // USER MODE: Re-fill and Lock Name
-                document.getElementById('p_first').value = selectedUser.first_name;
-                document.getElementById('p_middle').value = selectedUser.middle_name || '';
-                document.getElementById('p_last').value = selectedUser.last_name;
-                document.getElementById('p_suffix').value = selectedUser.suffix || '';
-                toggleFields(true, ['p_first', 'p_middle', 'p_last', 'p_suffix']);
+                // USER MODE
+                relWrapper.classList.add('d-none');
+                relInput.removeAttribute('required');
+                relInput.value = '';
+
+                if (selectedUser) {
+                    document.getElementById('p_first').value = selectedUser.first_name;
+                    document.getElementById('p_middle').value = selectedUser.middle_name || '';
+                    document.getElementById('p_last').value = selectedUser.last_name;
+                    document.getElementById('p_suffix').value = selectedUser.suffix || '';
+                    toggleFields(true, ['p_first', 'p_middle', 'p_last', 'p_suffix']);
+                }
             }
         });
+
+        // --- OTHERS/NOTES TOGGLE LOGIC ---
+        const serviceSelect = document.getElementById('serviceSelect');
+        const notesField = document.getElementById('notesField');
+        const notesRequired = document.getElementById('notesRequired');
+
+        if(serviceSelect) {
+            serviceSelect.addEventListener('change', function() {
+                if (this.value === 'Others') {
+                    // Make Required
+                    notesField.setAttribute('required', 'required');
+                    notesField.classList.add('border-danger');
+                    notesRequired.classList.remove('d-none');
+                } else {
+                    // Make Optional
+                    notesField.removeAttribute('required');
+                    notesField.classList.remove('border-danger');
+                    notesRequired.classList.add('d-none');
+                }
+            });
+        }
 
         // --- MOBILE STRIP LOGIC ---
         var currentMobileDate = new Date(); // State for current view
@@ -779,9 +827,12 @@
             document.getElementById('searchResults').classList.add('d-none');
             document.getElementById('searchStatus').innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Linked to Account</span>';
             
-            // 5. Reset Dependent Checkbox
+            // 5. Reset Dependent Checkbox & Relationship
             document.getElementById('is_dependent').checked = false;
             document.getElementById('is_dependent').disabled = false;
+            document.getElementById('relationshipFieldWrapper').classList.add('d-none');
+            document.getElementById('relationshipInput').removeAttribute('required');
+            document.getElementById('relationshipInput').value = '';
         };
 
         window.resetGuestMode = function() {
@@ -796,6 +847,12 @@
             document.getElementById('p_email').value = '';
             document.getElementById('p_phone').value = '';
             document.getElementById('patientSearch').value = '';
+            document.getElementById('notesField').value = ''; 
+            
+            // Reset Relationship
+            document.getElementById('relationshipFieldWrapper').classList.add('d-none');
+            document.getElementById('relationshipInput').value = '';
+            document.getElementById('relationshipInput').removeAttribute('required');
 
             // Unlock Inputs
             toggleFields(false, ['p_first', 'p_middle', 'p_last', 'p_suffix', 'p_email', 'p_phone']);
@@ -820,8 +877,6 @@
                         // Special fix for Dropdowns (CSS Lock)
                         el.style.pointerEvents = 'none'; 
                         el.style.backgroundColor = '#e9ecef'; // Bootstrap readonly gray
-                        // Optional: Add a hidden input if you want to be 100% safe, 
-                        // but pointer-events prevents clicking entirely.
                     } else {
                         // Standard Text Input Lock
                         el.setAttribute('readonly', true);

@@ -155,7 +155,13 @@
                                             </div>
                                         </td>
                                         <td><span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{ $appt->service }}</span></td>
-                                        <td class="small text-muted" style="max-width: 200px;">{{ Str::limit($appt->description, 30) ?: '-' }}</td>
+                                        <td class="small text-muted" style="max-width: 200px;">
+                                            @if($appt->description)
+                                                <span title="{{ $appt->description }}">{{ Str::limit($appt->description, 30) }}</span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td class="text-end pe-4">
                                             <form action="{{ route('admin.appointment.status', $appt->id) }}" method="POST" class="d-inline">
                                                 @csrf
@@ -241,6 +247,8 @@
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">Patient</th>
                                         <th class="py-3 text-secondary small text-uppercase">Schedule</th>
                                         <th class="py-3 text-secondary small text-uppercase">Service</th>
+                                        {{-- NEW: NOTES COLUMN HEADER --}}
+                                        <th class="py-3 text-secondary small text-uppercase">Notes</th>
                                         <th class="py-3 text-end pe-4 text-secondary small text-uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -269,6 +277,16 @@
                                             <span class="text-muted small ms-2">{{ $appt->appointment_time }}</span>
                                         </td>
                                         <td>{{ $appt->service }}</td>
+                                        
+                                        {{-- NEW: NOTES DATA ROW --}}
+                                        <td class="small text-muted" style="max-width: 200px;">
+                                            @if($appt->description)
+                                                <span title="{{ $appt->description }}">{{ Str::limit($appt->description, 30) }}</span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+
                                         <td class="text-end pe-4">
                                             {{-- Mark Complete Button Triggers Modal --}}
                                             <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#completeModal-{{ $appt->id }}">
@@ -363,7 +381,7 @@
                                     </div>
 
                                     @empty
-                                    <tr><td colspan="4" class="text-center py-5 text-muted">No upcoming appointments found.</td></tr>
+                                    <tr><td colspan="5" class="text-center py-5 text-muted">No upcoming appointments found.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
