@@ -297,9 +297,10 @@
                         </div>
 
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="is_dependent">
+                            {{-- UPDATED: Disabled by default --}}
+                            <input class="form-check-input" type="checkbox" id="is_dependent" disabled>
                             <label class="form-check-label small fw-bold text-dark" for="is_dependent">
-                                Book for Dependent/Family Member
+                                Book for Dependent/Family Member <span class="text-muted fw-normal">(Select User First)</span>
                             </label>
                         </div>
 
@@ -829,7 +830,7 @@
             
             // 5. Reset Dependent Checkbox & Relationship
             document.getElementById('is_dependent').checked = false;
-            document.getElementById('is_dependent').disabled = false;
+            document.getElementById('is_dependent').disabled = false; // UNLOCK IT HERE
             document.getElementById('relationshipFieldWrapper').classList.add('d-none');
             document.getElementById('relationshipInput').removeAttribute('required');
             document.getElementById('relationshipInput').value = '';
@@ -862,6 +863,7 @@
             
             // Disable Dependent Checkbox (Only for registered users)
             document.getElementById('is_dependent').checked = false;
+            document.getElementById('is_dependent').disabled = true; // LOCK IT HERE
         };
 
         window.toggleFields = function(isLocked, ids) {
