@@ -180,6 +180,24 @@
                             </div>
                         @endif
 
+                        {{-- NEW: PENDING ALERT & SELF-VIEW (Replace Flow) --}}
+                        @if(Auth::user()->id_photo_path && !Auth::user()->rejection_reason)
+                            <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-dark rounded-3 mb-3 d-flex align-items-center">
+                                <i class="bi bi-hourglass-split fs-4 me-3 text-warning"></i>
+                                <div>
+                                    <strong>Review Pending</strong><br>
+                                    <span class="small">Your ID is being reviewed. If you made a mistake, you can replace it below.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4 text-center">
+                                <p class="small text-muted mb-2">Currently Submitted ID (Click to view):</p>
+                                <a href="{{ route('settings.view_id') }}" target="_blank" title="View Full Size">
+                                    <img src="{{ route('settings.view_id') }}" class="img-fluid rounded-3 border shadow-sm cursor-pointer" style="max-height: 150px; object-fit: contain; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                                </a>
+                            </div>
+                        @endif
+
                         {{-- DATA PRIVACY NOTICE --}}
                         <div class="alert alert-light border shadow-sm mb-4">
                             <div class="d-flex">
@@ -213,19 +231,10 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold">
-                                Upload for Verification
+                                {{ (Auth::user()->id_photo_path && !Auth::user()->rejection_reason) ? 'Replace Submitted ID' : 'Upload for Verification' }}
                             </button>
                         </form>
                         
-                        {{-- SECURE SELF-VIEW FOR PENDING --}}
-                        @if(Auth::user()->id_photo_path && !Auth::user()->rejection_reason)
-                            <div class="mt-3 text-center">
-                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Review Pending</span>
-                            </div>
-                            <div class="mt-2 text-center">
-                                <a href="{{ route('settings.view_id') }}" target="_blank" class="small text-muted">View uploaded ID</a>
-                            </div>
-                        @endif
                     @endif
                 </div>
             </div>

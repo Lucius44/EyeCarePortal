@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter; // <--- IMPORT THIS
 use App\Notifications\Appointment\AppointmentStatusChanged;
 use App\Notifications\Account\IdVerificationResult;
 use App\Notifications\Account\AccountUnrestricted;
@@ -330,7 +331,7 @@ class AdminController extends Controller
         }
 
         $users = User::where('role', UserRole::Patient)
-            ->whereNotNull('email_verified_at') // <--- NEW REQUIREMENT: Ensure only email-verified users can be searched for manual booking
+            ->whereNotNull('email_verified_at') 
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('last_name', 'like', "%{$query}%")
@@ -375,6 +376,10 @@ class AdminController extends Controller
                 'is_verified' => false,
                 'rejection_reason' => $request->input('reason')
             ]);
+
+            // --- NEW: CLEAR THE RATE LIMITER ---
+            // If the user hit the 5-upload max, we drop the ban so they can upload again immediately.
+            RateLimiter::clear('id-uploads:' . $user->id);
 
             // --- NOTIFY REJECTION ---
             $user->notify(new IdVerificationResult(false, $request->input('reason')));

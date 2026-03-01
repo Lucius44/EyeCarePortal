@@ -75,7 +75,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Settings & Upload
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
     Route::post('/settings/profile', [PatientController::class, 'updateProfile'])->name('settings.profile');
-    Route::post('/settings/upload', [PatientController::class, 'uploadId'])->name('settings.upload');
+    
+    // --- UPDATED: Use the Named Rate Limiter ---
+    Route::post('/settings/upload', [PatientController::class, 'uploadId'])
+        ->name('settings.upload')
+        ->middleware('throttle:id-uploads');
+        
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');
     Route::delete('/settings/delete', [PatientController::class, 'deleteAccount'])->name('settings.delete');
@@ -105,7 +110,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
     
     // User Management
-    // --- NEW: USER SEARCH ENDPOINT (Must be before dynamic {id} routes) ---
     Route::get('/users/search', [AdminController::class, 'searchUsers'])->name('admin.users.search');
     
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');

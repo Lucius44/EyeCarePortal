@@ -173,6 +173,11 @@ class PatientController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        // --- NEW: Failsafe block for already verified users ---
+        if ($user->is_verified) {
+            return back()->with('error', 'Your account is already verified. No further uploads are required.');
+        }
+
         if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
             Storage::disk('local')->delete($user->id_photo_path);
         }
