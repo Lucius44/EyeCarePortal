@@ -47,10 +47,10 @@ class StoreAppointmentRequest extends FormRequest
             // --- NEW: Dependent Booking Validation ---
             'is_guest' => 'sometimes|accepted', // The checkbox
             'patient_first_name' => 'required_if:is_guest,on|nullable|string|max:255',
-            'patient_middle_name' => 'nullable|string|max:255', // <--- ADDED
+            'patient_middle_name' => 'nullable|string|max:255',
             'patient_last_name' => 'required_if:is_guest,on|nullable|string|max:255',
-            'patient_suffix' => 'nullable|string|max:255',      // <--- ADDED
-            'relationship' => 'nullable|string|max:255',
+            'patient_suffix' => 'nullable|string|max:255',
+            'relationship' => 'required_if:is_guest,on|nullable|string|max:255', // <--- UPDATED: Now required when guest is checked
         ];
     }
 
@@ -60,6 +60,7 @@ class StoreAppointmentRequest extends FormRequest
             'appointment_time.date_format' => 'The time must be in the format HH:MM AM/PM (e.g., 09:00 AM).',
             'patient_first_name.required_if' => 'Patient First Name is required when booking for someone else.',
             'patient_last_name.required_if' => 'Patient Last Name is required when booking for someone else.',
+            'relationship.required_if' => 'Please specify your relationship with the patient.', // <--- ADDED Custom Message
         ];
     }
 }

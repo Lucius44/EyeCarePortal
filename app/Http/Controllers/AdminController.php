@@ -324,6 +324,7 @@ class AdminController extends Controller
         }
 
         $users = User::where('role', UserRole::Patient)
+            ->whereNotNull('email_verified_at') // <--- NEW REQUIREMENT: Ensure only email-verified users can be searched for manual booking
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('last_name', 'like', "%{$query}%")

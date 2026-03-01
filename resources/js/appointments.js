@@ -365,6 +365,39 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('summaryTime').innerText = val || "Select in form below";
     };
 
+    // --- RE-IMPLEMENTED GUEST TOGGLE (In case of external call) ---
+    // If you placed the script outside the bundle or in blade, this ensures it exists globally.
+    window.toggleGuestFields = function() {
+        const checkBox = document.getElementById('isGuestToggle');
+        const fieldsDiv = document.getElementById('guestFields');
+        
+        const fName = document.getElementById('patientFirstName');
+        const mName = document.getElementById('patientMiddleName'); 
+        const lName = document.getElementById('patientLastName');
+        const suffix = document.getElementById('patientSuffix'); 
+        const relationship = document.getElementById('patientRelationship'); // <--- ADDED
+
+        if (checkBox && fieldsDiv) {
+            if (checkBox.checked) {
+                fieldsDiv.classList.remove('d-none');
+                fName.required = true;
+                lName.required = true;
+                relationship.required = true; // <--- ADDED
+            } else {
+                fieldsDiv.classList.add('d-none');
+                fName.required = false;
+                lName.required = false;
+                relationship.required = false; // <--- ADDED
+                
+                fName.value = '';
+                mName.value = ''; 
+                lName.value = '';
+                suffix.value = ''; 
+                relationship.value = ''; // <--- ADDED
+            }
+        }
+    };
+
     initMobileView();
     initDesktopCalendar();
 });
