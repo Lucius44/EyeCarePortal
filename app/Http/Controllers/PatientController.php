@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\RateLimiter; // <--- IMPORT THIS
+use Illuminate\Support\Facades\RateLimiter; 
 use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus; 
@@ -147,17 +147,22 @@ class PatientController extends Controller
             return back()->with('error', 'You cannot delete your account while you have active appointments. Please cancel them first.');
         }
 
-        // --- NEW: The Guest Transition (Updated with full name accuracy) ---
-        // Convert all historical appointments to guest records before deleting the user
-        Appointment::where('user_id', $user->id)->update([
-            'user_id' => null,
-            'patient_first_name' => $user->first_name,
-            'patient_middle_name' => $user->middle_name,
-            'patient_last_name' => $user->last_name,
-            'patient_suffix' => $user->suffix,
-            'patient_email' => $user->email,
-            'patient_phone' => $user->phone_number,
-        ]);
+        // --- NEW: The Guest Transition (Safeguarded against Dependent Overwrites) ---
+        $appointments = Appointment::where('user_id', $user->id)->get();
+
+        foreach ($appointments as $appointment) {
+            $appointment->update([
+                'user_id' => null,
+                // Retain existing name if it was a dependent booking, otherwise use the account owner's name
+                'patient_first_name' => $appointment->patient_first_name ?? $user->first_name,
+                'patient_middle_name' => $appointment->patient_middle_name ?? $user->middle_name,
+                'patient_last_name' => $appointment->patient_last_name ?? $user->last_name,
+                'patient_suffix' => $appointment->patient_suffix ?? $user->suffix,
+                // Always attach the account owner's contact info for historical reference
+                'patient_email' => $appointment->patient_email ?? $user->email,
+                'patient_phone' => $appointment->patient_phone ?? $user->phone_number,
+            ]);
+        }
 
         if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
             Storage::disk('local')->delete($user->id_photo_path);
@@ -252,7 +257,6 @@ class PatientController extends Controller
         
         $notification->markAsRead();
 
-        // Redirect to the URL attached to the notification
         return redirect($notification->data['url'] ?? route('dashboard'));
     }
 
