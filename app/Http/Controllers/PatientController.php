@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter; 
+use Illuminate\Support\Facades\DB; // <--- ADDED DB FACADE
 use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus; 
@@ -147,31 +148,39 @@ class PatientController extends Controller
             return back()->with('error', 'You cannot delete your account while you have active appointments. Please cancel them first.');
         }
 
-        // --- NEW: The Guest Transition (Safeguarded against Dependent Overwrites) ---
-        $appointments = Appointment::where('user_id', $user->id)->get();
+        // Cache the photo path before user deletion
+        $idPhotoPath = $user->id_photo_path;
 
-        foreach ($appointments as $appointment) {
-            $appointment->update([
-                'user_id' => null,
-                // Retain existing name if it was a dependent booking, otherwise use the account owner's name
-                'patient_first_name' => $appointment->patient_first_name ?? $user->first_name,
-                'patient_middle_name' => $appointment->patient_middle_name ?? $user->middle_name,
-                'patient_last_name' => $appointment->patient_last_name ?? $user->last_name,
-                'patient_suffix' => $appointment->patient_suffix ?? $user->suffix,
-                // Always attach the account owner's contact info for historical reference
-                'patient_email' => $appointment->patient_email ?? $user->email,
-                'patient_phone' => $appointment->patient_phone ?? $user->phone_number,
-            ]);
-        }
+        // --- NEW: Wrapped in a Database Transaction for Data Integrity ---
+        DB::transaction(function () use ($user) {
+            
+            // --- FIX 1: withTrashed() includes soft-deleted records ---
+            $appointments = Appointment::withTrashed()->where('user_id', $user->id)->get();
 
-        if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
-            Storage::disk('local')->delete($user->id_photo_path);
+            foreach ($appointments as $appointment) {
+                $appointment->update([
+                    'user_id' => null,
+                    // --- FIX 2: Elvis Operator (?:) protects against NULL and "" empty strings ---
+                    'patient_first_name' => $appointment->patient_first_name ?: $user->first_name,
+                    'patient_middle_name' => $appointment->patient_middle_name ?: $user->middle_name,
+                    'patient_last_name' => $appointment->patient_last_name ?: $user->last_name,
+                    'patient_suffix' => $appointment->patient_suffix ?: $user->suffix,
+                    'patient_email' => $appointment->patient_email ?: $user->email,
+                    'patient_phone' => $appointment->patient_phone ?: $user->phone_number,
+                ]);
+            }
+
+            // Delete the user record securely within the transaction
+            $user->delete();
+        });
+
+        // Proceed with file deletion and session invalidation ONLY if the DB transaction succeeds
+        if ($idPhotoPath && Storage::disk('local')->exists($idPhotoPath)) {
+            Storage::disk('local')->delete($idPhotoPath);
         }
 
         Auth::logout();
         
-        $user->delete();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -180,7 +189,6 @@ class PatientController extends Controller
 
     public function uploadId(Request $request)
     {
-        // 1. Validate First (So failed uploads don't consume their rate limit strikes)
         $request->validate([
             'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'data_privacy_consent' => 'required|accepted', 
@@ -192,7 +200,6 @@ class PatientController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // --- NEW: Manual Rate Limit Enforcement ---
         $limiterKey = 'id-uploads:' . $user->id;
 
         if (RateLimiter::tooManyAttempts($limiterKey, 5)) {
@@ -219,10 +226,8 @@ class PatientController extends Controller
             'is_verified' => false 
         ]);
 
-        // --- NEW: Hit the Rate Limiter (Adds 1 attempt, clears after 3600 seconds/1 hour) ---
         RateLimiter::hit($limiterKey, 3600);
 
-        // Notify Admins
         $admins = User::where('role', UserRole::Admin)->get();
         Notification::send($admins, new NewIdUploaded($user));
 
@@ -245,8 +250,6 @@ class PatientController extends Controller
 
         return response()->file($path);
     }
-
-    // --- NOTIFICATION METHODS ---
 
     public function markNotificationAsRead($id)
     {
