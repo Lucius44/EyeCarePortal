@@ -48,9 +48,9 @@ Route::get('/email/verify', function () {
     return view('auth.verify-email'); 
 })->middleware('auth')->name('verification.notice');
 
-// NEW: POST route to submit the OTP code
+// NEW: POST route to submit the OTP code (ADDED THROTTLE)
 Route::post('/email/verify', [AuthController::class, 'verifyOtp'])
-    ->middleware('auth')->name('verification.verify');
+    ->middleware(['auth', 'throttle:5,1'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();

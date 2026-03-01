@@ -105,8 +105,11 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // Check if OTP matches and if it has expired
-        if ($user->email_otp !== $request->otp || now()->greaterThan($user->email_otp_expires_at)) {
+        // Check if OTP is null, doesn't match, or has expired
+        if (!$user->email_otp || 
+            $user->email_otp !== $request->otp || 
+            now()->greaterThan($user->email_otp_expires_at)) {
+            
             return back()->withErrors([
                 'otp' => 'The verification code is invalid or has expired.'
             ]);
