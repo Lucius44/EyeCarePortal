@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest;
 use App\Enums\UserRole;
 use Illuminate\Auth\Events\Registered; 
+// Added the Verified event to trigger standard Laravel verification hooks
+use Illuminate\Auth\Events\Verified;
 
 class AuthController extends Controller
 {
@@ -87,5 +89,37 @@ class AuthController extends Controller
         return response()->json([
             'verified' => $request->user()->hasVerifiedEmail()
         ]);
+    }
+
+    // --- NEW METHOD: Verify OTP ---
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => ['required', 'string', 'size:6'],
+        ]);
+
+        $user = $request->user();
+
+        // If user is somehow already verified, redirect them
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('dashboard');
+        }
+
+        // Check if OTP matches and if it has expired
+        if ($user->email_otp !== $request->otp || now()->greaterThan($user->email_otp_expires_at)) {
+            return back()->withErrors([
+                'otp' => 'The verification code is invalid or has expired.'
+            ]);
+        }
+
+        // Mark the user as verified
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        // Clear the OTP fields
+        $user->clearEmailOTP();
+
+        return redirect()->route('dashboard')->with('status', 'Email verified successfully!');
     }
 }

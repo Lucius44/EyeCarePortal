@@ -7,7 +7,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceController; 
-use Illuminate\Foundation\Auth\EmailVerificationRequest; 
+// Removed EmailVerificationRequest since we no longer use signed routes
 use Illuminate\Http\Request; 
 
 // -- Public Routes --
@@ -43,19 +43,19 @@ Route::get('/email/check-status', [AuthController::class, 'checkVerificationStat
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// --- EMAIL VERIFICATION ROUTES ---
+// --- EMAIL VERIFICATION ROUTES (UPDATED FOR OTP) ---
 Route::get('/email/verify', function () {
     return view('auth.verify-email'); 
 })->middleware('auth')->name('verification.notice');
 
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect()->route('dashboard');
-})->middleware(['auth', 'signed'])->name('verification.verify');
+// NEW: POST route to submit the OTP code
+Route::post('/email/verify', [AuthController::class, 'verifyOtp'])
+    ->middleware('auth')->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
-    return back()->with('message', 'Verification link sent!');
+    // Updated flash message to reflect a code instead of a link
+    return back()->with('message', 'A new verification code has been sent to your email!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 
@@ -76,7 +76,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
     Route::post('/settings/profile', [PatientController::class, 'updateProfile'])->name('settings.profile');
     
-    // --- UPDATED: Removed Throttle Middleware. Logic is now in the Controller. ---
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])
         ->name('settings.upload');
         

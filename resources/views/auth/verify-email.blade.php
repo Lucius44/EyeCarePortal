@@ -47,6 +47,12 @@
         font-size: 2rem;
         margin: 0 auto 1.5rem auto;
     }
+
+    /* Custom tracking for the OTP input to spread the numbers out */
+    .otp-input {
+        letter-spacing: 0.75rem;
+        font-size: 1.5rem;
+    }
 </style>
 
 <div class="verify-container">
@@ -57,33 +63,60 @@
             
             {{-- Icon --}}
             <div class="icon-circle">
-                <i class="bi bi-envelope-check-fill"></i>
+                <i class="bi bi-shield-lock-fill"></i>
             </div>
 
             {{-- Title --}}
-            <h2 class="fw-bold mb-3" style="color: #0F172A;">Check your inbox</h2>
+            <h2 class="fw-bold mb-3" style="color: #0F172A;">Enter Verification Code</h2>
 
             <p class="text-muted mb-4">
-                Thanks for signing up! We've sent a verification link to 
+                We've sent a 6-digit verification code to 
                 <span class="fw-bold text-dark">{{ Auth::user()->email }}</span>. 
-                Please click the link to activate your account.
+                Please enter it below to activate your account.
             </p>
 
             {{-- Success Message for Resend --}}
             @if (session('message'))
                 <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small rounded-3 mb-4">
-                    <i class="bi bi-check-circle-fill me-1"></i> A new verification link has been sent to your email address.
+                    <i class="bi bi-check-circle-fill me-1"></i> {{ session('message') }}
                 </div>
             @endif
 
-            {{-- Actions --}}
+            {{-- Verification Form --}}
+            <form method="POST" action="{{ route('verification.verify') }}" class="mb-4">
+                @csrf
+                <div class="mb-3">
+                    <input type="text" name="otp" 
+                           class="form-control form-control-lg text-center fw-bold otp-input @error('otp') is-invalid @enderror" 
+                           placeholder="••••••" 
+                           maxlength="6" 
+                           required 
+                           autofocus 
+                           style="border-radius: 12px;">
+                    
+                    {{-- Error Handling --}}
+                    @error('otp')
+                        <div class="invalid-feedback mt-2 text-center fw-semibold">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="border-radius: 12px;">
+                    Verify Account
+                </button>
+            </form>
+
+            <hr class="text-muted mb-4">
+
+            {{-- Actions Container --}}
             <div class="d-grid gap-2">
                 
                 {{-- Resend Button --}}
                 <form method="POST" action="{{ route('verification.send') }}">
                     @csrf
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="border-radius: 12px;">
-                        Resend Verification Email
+                    <button type="submit" class="btn btn-outline-secondary w-100 py-2 fw-bold" style="border-radius: 12px;">
+                        Resend Code
                     </button>
                 </form>
 
@@ -105,31 +138,4 @@
         </div>
     </div>
 </div>
-
-{{-- SCRIPT TO AUTO-REDIRECT WHEN VERIFIED --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const checkInterval = setInterval(function () {
-            
-            // Call the endpoint to check status
-            fetch("{{ route('verification.check') }}", {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // If verified, redirect to dashboard immediately
-                if (data.verified) {
-                    clearInterval(checkInterval);
-                    window.location.href = "{{ route('dashboard') }}";
-                }
-            })
-            .catch(error => console.error('Error checking verification:', error));
-            
-        }, 2000); // Checks every 2 seconds
-    });
-</script>
-
 @endsection
