@@ -187,10 +187,14 @@ class AdminController extends Controller
                 $q->whereHas('user', function($u) use ($search) {
                     $u->where('first_name', 'like', "%{$search}%")
                       ->orWhere('middle_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%");
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
+                      ->orWhere(DB::raw("REPLACE(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name), '  ', ' ')"), 'like', "%{$search}%");
                 })
                 ->orWhere('patient_first_name', 'like', "%{$search}%")
-                ->orWhere('patient_last_name', 'like', "%{$search}%");
+                ->orWhere('patient_last_name', 'like', "%{$search}%")
+                ->orWhere(DB::raw("CONCAT(patient_first_name, ' ', patient_last_name)"), 'like', "%{$search}%")
+                ->orWhere(DB::raw("REPLACE(CONCAT(patient_first_name, ' ', COALESCE(patient_middle_name, ''), ' ', patient_last_name), '  ', ' ')"), 'like', "%{$search}%");
             });
         }
 
@@ -263,7 +267,9 @@ class AdminController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
+                  ->orWhere(DB::raw("REPLACE(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name), '  ', ' ')"), 'like', "%{$search}%");
             });
         }
 
@@ -329,7 +335,9 @@ class AdminController extends Controller
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('last_name', 'like', "%{$query}%")
                   ->orWhere('email', 'like', "%{$query}%")
-                  ->orWhere('phone_number', 'like', "%{$query}%");
+                  ->orWhere('phone_number', 'like', "%{$query}%")
+                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$query}%")
+                  ->orWhere(DB::raw("REPLACE(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name), '  ', ' ')"), 'like', "%{$query}%");
             })
             ->select(['id', 'first_name', 'middle_name', 'last_name', 'suffix', 'email', 'phone_number'])
             ->limit(10)
