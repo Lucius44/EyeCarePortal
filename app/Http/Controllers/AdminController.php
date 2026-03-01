@@ -189,13 +189,14 @@ class AdminController extends Controller
                     $u->where('first_name', 'like', "%{$search}%")
                       ->orWhere('middle_name', 'like', "%{$search}%")
                       ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
-                      ->orWhere(DB::raw("REPLACE(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name), '  ', ' ')"), 'like', "%{$search}%");
+                      ->orWhere('suffix', 'like', "%{$search}%")
+                      ->orWhere(DB::raw("CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name, NULLIF(suffix, ''))"), 'like', "%{$search}%");
                 })
                 ->orWhere('patient_first_name', 'like', "%{$search}%")
+                ->orWhere('patient_middle_name', 'like', "%{$search}%")
                 ->orWhere('patient_last_name', 'like', "%{$search}%")
-                ->orWhere(DB::raw("CONCAT(patient_first_name, ' ', patient_last_name)"), 'like', "%{$search}%")
-                ->orWhere(DB::raw("REPLACE(CONCAT(patient_first_name, ' ', COALESCE(patient_middle_name, ''), ' ', patient_last_name), '  ', ' ')"), 'like', "%{$search}%");
+                ->orWhere('patient_suffix', 'like', "%{$search}%")
+                ->orWhere(DB::raw("CONCAT_WS(' ', patient_first_name, NULLIF(patient_middle_name, ''), patient_last_name, NULLIF(patient_suffix, ''))"), 'like', "%{$search}%");
             });
         }
 
@@ -267,10 +268,11 @@ class AdminController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('middle_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('suffix', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
-                  ->orWhere(DB::raw("REPLACE(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name), '  ', ' ')"), 'like', "%{$search}%");
+                  ->orWhere(DB::raw("CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name, NULLIF(suffix, ''))"), 'like', "%{$search}%");
             });
         }
 
@@ -334,11 +336,12 @@ class AdminController extends Controller
             ->whereNotNull('email_verified_at') 
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
+                  ->orWhere('middle_name', 'like', "%{$query}%")
                   ->orWhere('last_name', 'like', "%{$query}%")
+                  ->orWhere('suffix', 'like', "%{$query}%")
                   ->orWhere('email', 'like', "%{$query}%")
                   ->orWhere('phone_number', 'like', "%{$query}%")
-                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$query}%")
-                  ->orWhere(DB::raw("REPLACE(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name), '  ', ' ')"), 'like', "%{$query}%");
+                  ->orWhere(DB::raw("CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name, NULLIF(suffix, ''))"), 'like', "%{$query}%");
             })
             ->select(['id', 'first_name', 'middle_name', 'last_name', 'suffix', 'email', 'phone_number'])
             ->limit(10)
