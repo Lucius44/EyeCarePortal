@@ -213,10 +213,11 @@
                                         </select>
                                     </div>
 
-                                    {{-- UPDATED: Removed Optional and added ID for targeting in JS --}}
+                                    {{-- UPDATED: Label Change & letters only regex --}}
                                     <div class="col-12 mt-2">
-                                        <label class="small fw-bold text-muted">Relationship <span class="text-danger">*</span></label>
-                                        <input type="text" name="relationship" id="patientRelationship" class="form-control" placeholder="e.g. Son, Daughter, Mother">
+                                        <label class="small fw-bold text-muted">Patient's Relationship to You <span class="text-danger">*</span></label>
+                                        <input type="text" name="relationship" id="patientRelationship" class="form-control" placeholder="e.g. Son, Daughter, Spouse"
+                                               oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
                                     </div>
                                 </div>
                             </div>
@@ -375,24 +376,24 @@
             const mName = document.getElementById('patientMiddleName'); 
             const lName = document.getElementById('patientLastName');
             const suffix = document.getElementById('patientSuffix'); 
-            const relationship = document.getElementById('patientRelationship'); // <--- ADDED
+            const relationship = document.getElementById('patientRelationship');
 
             if (checkBox.checked) {
                 fieldsDiv.classList.remove('d-none');
                 fName.required = true;
                 lName.required = true;
-                relationship.required = true; // <--- ADDED
+                relationship.required = true;
             } else {
                 fieldsDiv.classList.add('d-none');
                 fName.required = false;
                 lName.required = false;
-                relationship.required = false; // <--- ADDED
+                relationship.required = false;
                 
                 fName.value = '';
                 mName.value = ''; 
                 lName.value = '';
                 suffix.value = ''; 
-                relationship.value = ''; // <--- ADDED
+                relationship.value = '';
             }
         }
     </script>

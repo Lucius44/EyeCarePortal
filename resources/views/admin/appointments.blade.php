@@ -130,18 +130,20 @@
                                     <tr>
                                         {{-- Stacked Name Display --}}
                                         <td class="ps-4">
-                                            <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
+                                            {{-- UPDATED: Relationship correctly assigned to patient --}}
+                                            <div class="fw-bold text-dark">
+                                                {{ $appt->patient_name }}
+                                                @if($appt->patient_first_name && $appt->user && $appt->relationship)
+                                                    <span class="text-primary fs-6">({{ $appt->relationship }})</span>
+                                                @endif
+                                            </div>
                                             @if($appt->patient_first_name && $appt->user)
                                                 <div class="small text-muted">
-                                                    {{-- UPDATED: Added Middle Name + Suffix to 'Booked by' --}}
-                                                    <i class="bi bi-person-badge me-1"></i>Booked by: 
+                                                    <i class="bi bi-person-badge me-1"></i>Account Holder: 
                                                     {{ $appt->user->first_name }} 
                                                     {{ $appt->user->middle_name }} 
                                                     {{ $appt->user->last_name }} 
                                                     {{ $appt->user->suffix }}
-                                                    @if($appt->relationship)
-                                                        <span class="text-primary">({{ $appt->relationship }})</span>
-                                                    @endif
                                                 </div>
                                             @endif
                                         </td>
@@ -247,7 +249,6 @@
                                         <th class="py-3 ps-4 text-secondary small text-uppercase">Patient</th>
                                         <th class="py-3 text-secondary small text-uppercase">Schedule</th>
                                         <th class="py-3 text-secondary small text-uppercase">Service</th>
-                                        {{-- NEW: NOTES COLUMN HEADER --}}
                                         <th class="py-3 text-secondary small text-uppercase">Notes</th>
                                         <th class="py-3 text-end pe-4 text-secondary small text-uppercase">Actions</th>
                                     </tr>
@@ -257,18 +258,20 @@
                                     <tr>
                                         {{-- Stacked Name Display --}}
                                         <td class="ps-4">
-                                            <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
+                                            {{-- UPDATED: Relationship correctly assigned to patient --}}
+                                            <div class="fw-bold text-dark">
+                                                {{ $appt->patient_name }}
+                                                @if($appt->patient_first_name && $appt->user && $appt->relationship)
+                                                    <span class="text-primary fs-6">({{ $appt->relationship }})</span>
+                                                @endif
+                                            </div>
                                             @if($appt->patient_first_name && $appt->user)
                                                 <div class="small text-muted">
-                                                    {{-- UPDATED: Added Middle Name + Suffix to 'Booked by' --}}
-                                                    <i class="bi bi-person-badge me-1"></i>Booked by: 
+                                                    <i class="bi bi-person-badge me-1"></i>Account Holder: 
                                                     {{ $appt->user->first_name }} 
                                                     {{ $appt->user->middle_name }} 
                                                     {{ $appt->user->last_name }} 
                                                     {{ $appt->user->suffix }}
-                                                    @if($appt->relationship)
-                                                        <span class="text-primary">({{ $appt->relationship }})</span>
-                                                    @endif
                                                 </div>
                                             @endif
                                         </td>

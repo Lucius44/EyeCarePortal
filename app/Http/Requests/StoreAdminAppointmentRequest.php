@@ -33,8 +33,8 @@ class StoreAdminAppointmentRequest extends FormRequest
             // --- UPDATED: Required only if Service is 'Others' ---
             'description' => 'required_if:service,Others|nullable|string',
             
-            // --- FIXED: Increased max length from 5 to 50 ---
-            'relationship' => 'nullable|string|max:50'
+            // --- FIXED: Increased max length and added letters-only regex ---
+            'relationship' => ['nullable', 'string', 'max:50', 'regex:/^[a-zA-Z\s]+$/'],
         ];
     }
     
@@ -42,6 +42,7 @@ class StoreAdminAppointmentRequest extends FormRequest
     {
         return [
             'description.required_if' => 'Please provide a reason/note when selecting "Others".',
+            'relationship.regex' => 'The relationship must only contain letters and spaces.', // NEW
         ];
     }
 }

@@ -297,16 +297,17 @@
                         </div>
 
                         <div class="form-check mb-3">
-                            {{-- UPDATED: Disabled by default --}}
                             <input class="form-check-input" type="checkbox" id="is_dependent" disabled>
                             <label class="form-check-label small fw-bold text-dark" for="is_dependent">
                                 Book for Dependent/Family Member <span class="text-muted fw-normal">(Select User First)</span>
                             </label>
                         </div>
 
+                        {{-- UPDATED: Label Change & letters only regex --}}
                         <div class="mb-3 d-none" id="relationshipFieldWrapper">
-                            <label class="form-label small fw-bold text-secondary">Relationship to Account Holder <span class="text-danger">*</span></label>
-                            <input type="text" name="relationship" id="relationshipInput" class="form-control" placeholder="e.g. Son, Daughter, Spouse">
+                            <label class="form-label small fw-bold text-secondary">Patient's Relationship to Account Holder <span class="text-danger">*</span></label>
+                            <input type="text" name="relationship" id="relationshipInput" class="form-control" placeholder="e.g. Son, Daughter, Spouse"
+                                   oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
                         </div>
 
                         <div class="row g-2 mb-3">
@@ -365,7 +366,6 @@
                             </div>
                         </div>
 
-                        {{-- NEW: NOTES FIELD --}}
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-secondary">
                                 Notes / Reason <span id="notesRequired" class="text-danger d-none">*</span>

@@ -117,22 +117,22 @@
                             @forelse($history as $appt)
                             <tr>
                                 <td class="ps-4">
-                                    {{-- CORRECT NAME LOGIC (handled by accessor) --}}
-                                    <div class="fw-bold text-dark">{{ $appt->patient_name }}</div>
+                                    {{-- UPDATED: Relationship correctly assigned to patient --}}
+                                    <div class="fw-bold text-dark">
+                                        {{ $appt->patient_name }}
+                                        @if($appt->patient_first_name && $appt->user && $appt->relationship)
+                                            <span class="text-primary fs-6">({{ $appt->relationship }})</span>
+                                        @endif
+                                    </div>
                                     
-                                    {{-- Show "Booked By" if it's a dependent booking --}}
                                     @if($appt->patient_first_name && $appt->user)
                                         <div class="small text-muted">
-                                            {{-- UPDATED: Added Middle Name + Suffix to 'Booked by' --}}
                                             <i class="bi bi-person-badge me-1"></i>
-                                            Booked by: 
+                                            Account Holder: 
                                             {{ $appt->user->first_name }} 
                                             {{ $appt->user->middle_name }} 
                                             {{ $appt->user->last_name }} 
                                             {{ $appt->user->suffix }}
-                                            @if($appt->relationship)
-                                                <span class="text-primary">({{ $appt->relationship }})</span>
-                                            @endif
                                         </div>
                                     @endif
                                 </td>
