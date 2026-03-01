@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter; 
-use Illuminate\Support\Facades\DB; // <--- ADDED DB FACADE
+use Illuminate\Support\Facades\DB; 
 use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus; 
@@ -148,33 +148,35 @@ class PatientController extends Controller
             return back()->with('error', 'You cannot delete your account while you have active appointments. Please cancel them first.');
         }
 
-        // Cache the photo path before user deletion
         $idPhotoPath = $user->id_photo_path;
 
-        // --- NEW: Wrapped in a Database Transaction for Data Integrity ---
         DB::transaction(function () use ($user) {
             
-            // --- FIX 1: withTrashed() includes soft-deleted records ---
             $appointments = Appointment::withTrashed()->where('user_id', $user->id)->get();
 
             foreach ($appointments as $appointment) {
+                
+                // --- THE FIX: Determine if this row was already manually filled as a dependent booking ---
+                $isDependent = !empty($appointment->patient_first_name);
+
                 $appointment->update([
                     'user_id' => null,
-                    // --- FIX 2: Elvis Operator (?:) protects against NULL and "" empty strings ---
-                    'patient_first_name' => $appointment->patient_first_name ?: $user->first_name,
-                    'patient_middle_name' => $appointment->patient_middle_name ?: $user->middle_name,
-                    'patient_last_name' => $appointment->patient_last_name ?: $user->last_name,
-                    'patient_suffix' => $appointment->patient_suffix ?: $user->suffix,
+                    // If it's a dependent, KEEP their exact name (even if middle name is null).
+                    // If not, apply the account owner's full name.
+                    'patient_first_name' => $isDependent ? $appointment->patient_first_name : $user->first_name,
+                    'patient_middle_name' => $isDependent ? $appointment->patient_middle_name : $user->middle_name,
+                    'patient_last_name' => $isDependent ? $appointment->patient_last_name : $user->last_name,
+                    'patient_suffix' => $isDependent ? $appointment->patient_suffix : $user->suffix,
+                    
+                    // Contact info still safely uses the Elvis operator to ensure the clinic can reach someone
                     'patient_email' => $appointment->patient_email ?: $user->email,
                     'patient_phone' => $appointment->patient_phone ?: $user->phone_number,
                 ]);
             }
 
-            // Delete the user record securely within the transaction
             $user->delete();
         });
 
-        // Proceed with file deletion and session invalidation ONLY if the DB transaction succeeds
         if ($idPhotoPath && Storage::disk('local')->exists($idPhotoPath)) {
             Storage::disk('local')->delete($idPhotoPath);
         }
