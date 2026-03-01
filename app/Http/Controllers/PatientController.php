@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter; // <--- IMPORT THIS
 use App\Models\Appointment;
 use App\Models\User;
 use App\Enums\AppointmentStatus; 
@@ -162,6 +163,7 @@ class PatientController extends Controller
 
     public function uploadId(Request $request)
     {
+        // 1. Validate First (So failed uploads don't consume their rate limit strikes)
         $request->validate([
             'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'data_privacy_consent' => 'required|accepted', 
@@ -173,7 +175,17 @@ class PatientController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // --- NEW: Failsafe block for already verified users ---
+        // --- NEW: Manual Rate Limit Enforcement ---
+        $limiterKey = 'id-uploads:' . $user->id;
+
+        if (RateLimiter::tooManyAttempts($limiterKey, 5)) {
+            $seconds = RateLimiter::availableIn($limiterKey);
+            $minutes = ceil($seconds / 60);
+            $timeString = $minutes > 1 ? "{$minutes} minutes" : "1 minute";
+            
+            return back()->with('error', "Too many upload attempts. Please wait {$timeString} before trying again.");
+        }
+
         if ($user->is_verified) {
             return back()->with('error', 'Your account is already verified. No further uploads are required.');
         }
@@ -190,7 +202,10 @@ class PatientController extends Controller
             'is_verified' => false 
         ]);
 
-        // --- NEW: Notify Admins of ID Upload ---
+        // --- NEW: Hit the Rate Limiter (Adds 1 attempt, clears after 3600 seconds/1 hour) ---
+        RateLimiter::hit($limiterKey, 3600);
+
+        // Notify Admins
         $admins = User::where('role', UserRole::Admin)->get();
         Notification::send($admins, new NewIdUploaded($user));
 

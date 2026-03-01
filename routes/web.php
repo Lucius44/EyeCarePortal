@@ -76,10 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
     Route::post('/settings/profile', [PatientController::class, 'updateProfile'])->name('settings.profile');
     
-    // --- UPDATED: Use the Named Rate Limiter ---
+    // --- UPDATED: Removed Throttle Middleware. Logic is now in the Controller. ---
     Route::post('/settings/upload', [PatientController::class, 'uploadId'])
-        ->name('settings.upload')
-        ->middleware('throttle:id-uploads');
+        ->name('settings.upload');
         
     Route::post('/settings/phone', [PatientController::class, 'updatePhone'])->name('settings.phone');
     Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password');

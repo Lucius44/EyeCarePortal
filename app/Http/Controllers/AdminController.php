@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\RateLimiter; // <--- IMPORT THIS
+use Illuminate\Support\Facades\RateLimiter; 
 use App\Notifications\Appointment\AppointmentStatusChanged;
 use App\Notifications\Account\IdVerificationResult;
 use App\Notifications\Account\AccountUnrestricted;
@@ -377,8 +377,7 @@ class AdminController extends Controller
                 'rejection_reason' => $request->input('reason')
             ]);
 
-            // --- NEW: CLEAR THE RATE LIMITER ---
-            // If the user hit the 5-upload max, we drop the ban so they can upload again immediately.
+            // This clear will now perfectly match the manual hit in PatientController
             RateLimiter::clear('id-uploads:' . $user->id);
 
             // --- NOTIFY REJECTION ---
