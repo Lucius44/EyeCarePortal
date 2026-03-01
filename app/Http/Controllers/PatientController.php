@@ -147,6 +147,18 @@ class PatientController extends Controller
             return back()->with('error', 'You cannot delete your account while you have active appointments. Please cancel them first.');
         }
 
+        // --- NEW: The Guest Transition (Updated with full name accuracy) ---
+        // Convert all historical appointments to guest records before deleting the user
+        Appointment::where('user_id', $user->id)->update([
+            'user_id' => null,
+            'patient_first_name' => $user->first_name,
+            'patient_middle_name' => $user->middle_name,
+            'patient_last_name' => $user->last_name,
+            'patient_suffix' => $user->suffix,
+            'patient_email' => $user->email,
+            'patient_phone' => $user->phone_number,
+        ]);
+
         if ($user->id_photo_path && Storage::disk('local')->exists($user->id_photo_path)) {
             Storage::disk('local')->delete($user->id_photo_path);
         }
