@@ -8,6 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Appointment;
 use App\Enums\AppointmentStatus;
+use Barryvdh\DomPDF\Facade\Pdf; // <--- NEW: Import PDF Facade
 
 class AppointmentStatusChanged extends Notification implements ShouldQueue
 {
@@ -47,6 +48,24 @@ class AppointmentStatusChanged extends Notification implements ShouldQueue
 
         if ($this->appointment->status === AppointmentStatus::Rejected || $this->appointment->status === AppointmentStatus::Cancelled) {
             $message->line("Reason: " . ($this->appointment->cancellation_reason ?? 'No reason provided.'));
+        }
+        
+        // --- NEW: Attach PDF if Completed ---
+        if ($this->appointment->status === AppointmentStatus::Completed) {
+            $message->line("Your medical results and prescription have been generated. You can find the official PDF document attached to this email.");
+            
+            // Generate PDF in memory directly from our Blade template
+            $pdf = Pdf::loadView('pdf.prescription', ['appointment' => $this->appointment]);
+            $pdfContent = $pdf->output();
+            
+            // Format a clean filename using their last name and appointment ID
+            $lastName = preg_replace('/[^A-Za-z0-9\-]/', '', $this->appointment->patient_last_name);
+            $fileName = "clearoptics-rx-{$this->appointment->id}-{$lastName}.pdf";
+
+            // Attach the raw PDF data to the outgoing email
+            $message->attachData($pdfContent, $fileName, [
+                'mime' => 'application/pdf',
+            ]);
         }
 
         // Only add the button if they are a registered user

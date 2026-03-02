@@ -117,7 +117,6 @@
                             @forelse($history as $appt)
                             <tr>
                                 <td class="ps-4">
-                                    {{-- UPDATED: Relationship correctly assigned to patient --}}
                                     <div class="fw-bold text-dark">
                                         {{ $appt->patient_name }}
                                         @if($appt->patient_first_name && $appt->user && $appt->relationship)
@@ -160,9 +159,16 @@
                                 </td>
                                 <td class="small text-muted">
                                     @if($appt->status->value === 'completed')
-                                        <button class="btn btn-link p-0 text-primary fw-bold text-decoration-none small" data-bs-toggle="modal" data-bs-target="#recordModal-{{ $appt->id }}">
-                                            View Results <i class="bi bi-arrow-right"></i>
-                                        </button>
+                                        <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
+                                            <button class="btn btn-link p-0 text-primary fw-bold text-decoration-none small" data-bs-toggle="modal" data-bs-target="#recordModal-{{ $appt->id }}">
+                                                View Results <i class="bi bi-arrow-right"></i>
+                                            </button>
+                                            
+                                            {{-- NEW: Admin PDF Download Button --}}
+                                            <a href="{{ route('admin.appointment.prescription', $appt->id) }}" class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2" title="Download PDF" target="_blank">
+                                                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                                            </a>
+                                        </div>
 
                                         {{-- Medical Record Modal --}}
                                         <div class="modal fade" id="recordModal-{{ $appt->id }}" tabindex="-1">

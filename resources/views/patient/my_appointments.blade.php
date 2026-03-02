@@ -152,7 +152,6 @@
                                     </td>
                                     <td>
                                         {{ $app->service }}
-                                        {{-- FIXED: Explicitly displaying Full Name + Suffix for accuracy --}}
                                         @if($app->patient_first_name)
                                             <div class="mt-1">
                                                 <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill" style="font-size: 0.65rem;">
@@ -173,9 +172,15 @@
                                     </td>
                                     <td class="text-end pe-4 text-muted small">
                                         @if($app->status->value === 'completed')
-                                            <button class="btn btn-link p-0 fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#resultModal-{{ $app->id }}">
-                                                View Results <i class="bi bi-file-medical"></i>
-                                            </button>
+                                            <div class="d-flex flex-column align-items-end gap-2">
+                                                <button class="btn btn-link p-0 fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#resultModal-{{ $app->id }}">
+                                                    View Results <i class="bi bi-file-medical"></i>
+                                                </button>
+                                                {{-- NEW: Patient PDF Download Button --}}
+                                                <a href="{{ route('appointments.prescription', $app->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" target="_blank">
+                                                    <i class="bi bi-download me-1"></i> Download PDF
+                                                </a>
+                                            </div>
 
                                             {{-- PATIENT RESULT MODAL --}}
                                             <div class="modal fade text-start" id="resultModal-{{ $app->id }}" tabindex="-1">
@@ -231,7 +236,6 @@
                     </div>
 
                     <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
-                        {{-- Appends 'tab' => 'history' to links --}}
                         {{ $history->appends(['tab' => 'history'])->links('partials.pagination') }}
                     </div>
                 </div>

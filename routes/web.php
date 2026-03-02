@@ -7,7 +7,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceController; 
-use App\Http\Middleware\CheckAccountStatus; // <-- NEW: Imported Middleware
+use App\Http\Middleware\CheckAccountStatus;
 use Illuminate\Http\Request; 
 
 // -- Public Routes --
@@ -59,7 +59,6 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 
 // -- Protected Patient Routes --
-// NEW: Added CheckAccountStatus::class to the middleware array
 Route::middleware(['auth', 'verified', CheckAccountStatus::class])->group(function () {
     
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
@@ -71,6 +70,9 @@ Route::middleware(['auth', 'verified', CheckAccountStatus::class])->group(functi
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
     Route::post('/appointments/{id}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+    
+    // NEW: PDF Download Route for Patient
+    Route::get('/appointments/{id}/prescription', [AppointmentController::class, 'downloadPrescription'])->name('appointments.prescription');
 
     // Settings & Upload
     Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
@@ -106,6 +108,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/appointments-manage', [AdminController::class, 'appointments'])->name('admin.appointments');
     Route::get('/appointments-history', [AdminController::class, 'history'])->name('admin.history');
     Route::post('/appointment/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.appointment.status');
+    
+    // NEW: PDF Download Route for Admin
+    Route::get('/appointment/{id}/prescription', [AppointmentController::class, 'downloadPrescription'])->name('admin.appointment.prescription');
     
     // User Management
     Route::get('/users/search', [AdminController::class, 'searchUsers'])->name('admin.users.search');

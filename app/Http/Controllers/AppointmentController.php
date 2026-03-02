@@ -13,12 +13,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf; // <--- NEW: Import the PDF Facade
 
 // Notification Classes
 use App\Notifications\Appointment\AppointmentRequested;
 use App\Notifications\Appointment\AppointmentStatusChanged;
-use App\Notifications\Admin\NewAppointmentRequest; // New
-use App\Notifications\Admin\AppointmentCancelled; // New
+use App\Notifications\Admin\NewAppointmentRequest; 
+use App\Notifications\Admin\AppointmentCancelled; 
 
 class AppointmentController extends Controller
 {
@@ -38,10 +39,10 @@ class AppointmentController extends Controller
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
             ->first();
 
-        // 2. Fetch Calendar Data via Service (Restored)
+        // 2. Fetch Calendar Data via Service 
         $calendarData = $this->appointmentService->getCalendarData();
 
-        // 3. Fetch Services (Restored)
+        // 3. Fetch Services
         $services = Service::pluck('name')->sortBy(function ($name) {
             return $name === 'Others' ? 1 : 0; 
         })->values(); 
@@ -82,7 +83,7 @@ class AppointmentController extends Controller
             // 1. Notify Patient
             $user->notify(new AppointmentRequested($result));
 
-            // 2. Notify Admins (NEW)
+            // 2. Notify Admins
             $admins = User::where('role', UserRole::Admin)->get();
             Notification::send($admins, new NewAppointmentRequest($result));
         }
@@ -141,7 +142,7 @@ class AppointmentController extends Controller
             // 1. Notify Patient (Confirmation)
             $user->notify(new AppointmentStatusChanged($appointment));
 
-            // 2. Notify Admins (NEW - Because a slot opened up)
+            // 2. Notify Admins
             $admins = User::where('role', UserRole::Admin)->get();
             Notification::send($admins, new AppointmentCancelled($appointment));
 
@@ -149,5 +150,31 @@ class AppointmentController extends Controller
         }
 
         return back()->with('error', 'This appointment cannot be cancelled.');
+    }
+
+    // --- NEW: Download PDF Method ---
+    public function downloadPrescription($id)
+    {
+        $appointment = Appointment::findOrFail($id);
+        $user = Auth::user();
+
+        // Security Check: Only an Admin or the specific Patient who booked it can download
+        if ($user->role !== UserRole::Admin && $appointment->user_id !== $user->id) {
+            abort(403, 'Unauthorized access to this medical record.');
+        }
+
+        // Must be a completed appointment
+        if ($appointment->status !== AppointmentStatus::Completed) {
+            abort(404, 'Prescription not available because the appointment is not completed.');
+        }
+
+        // Load the view and pass the appointment data
+        $pdf = Pdf::loadView('pdf.prescription', compact('appointment'));
+
+        // Format filename: clearoptics-rx-105-Smith.pdf
+        $lastName = preg_replace('/[^A-Za-z0-9\-]/', '', $appointment->patient_last_name);
+        $fileName = "clearoptics-rx-{$appointment->id}-{$lastName}.pdf";
+
+        return $pdf->download($fileName);
     }
 }
