@@ -36,6 +36,7 @@
         letter-spacing: -2px;
         background: linear-gradient(135deg, #0F172A 0%, #334155 100%);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 1.5rem;
     }
@@ -376,14 +377,6 @@
                     </div>
                     <div class="col-md-6">
                         <div class="qualification-item">
-                            <i class="bi bi-hospital"></i>
-                            <span>Affiliated: Sta. Rosa Hospital</span>
-                        </div>
-                        <div class="qualification-item">
-                            <i class="bi bi-building"></i>
-                            <span>Affiliated: St. James Hospital</span>
-                        </div>
-                        <div class="qualification-item">
                             <i class="bi bi-shop"></i>
                             <span>Owner: Clear Optics Clinics</span>
                         </div>
@@ -457,11 +450,19 @@
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-start">
+                    <div class="d-flex align-items-start mb-4">
                         <div class="me-4 text-warning fs-4"><i class="bi bi-envelope-fill"></i></div>
                         <div>
                             <h5 class="fw-bold mb-1">reyesaileen2370@gmail.com</h5>
                             <p class="text-white-50 mb-0">Send us a message anytime</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start">
+                        <div class="me-4 text-warning fs-4"><i class="bi bi-facebook"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-1">ClearOptics Eye Clinic</h5>
+                            <p class="text-white-50 mb-0">Connect with us on Facebook</p>
                         </div>
                     </div>
 
