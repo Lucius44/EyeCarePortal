@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use App\Notifications\Appointment\AppointmentStatusChanged;
 use App\Notifications\Account\IdVerificationResult;
 use App\Notifications\Account\AccountUnrestricted;
-// --- NEW: Imported our Penalty Notifications ---
 use App\Notifications\Account\AccountRestricted;
 use App\Notifications\Account\AccountBanned;
 
@@ -307,7 +306,6 @@ class AdminController extends Controller
                                ->paginate(10, ['*'], 'restricted_page')
                                ->withQueryString();
 
-        // --- NEW: Fetch Banned Users ---
         $bannedUsers = User::where('role', UserRole::Patient)
                            ->where('account_status', UserStatus::Banned)
                            ->paginate(10, ['*'], 'banned_page')
@@ -323,7 +321,6 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'guests_page'); 
 
-        // Included bannedUsers in compact
         return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'bannedUsers', 'guests'));
     }
 
@@ -391,7 +388,6 @@ class AdminController extends Controller
         return back()->with('error', 'Invalid action.');
     }
 
-    // --- MANUAL RESTRICT USER ---
     public function restrictUser(Request $request, $id)
     {
         $request->validate([
@@ -409,12 +405,25 @@ class AdminController extends Controller
             'restricted_until' => Carbon::now()->addDays(30)
         ]);
 
+        // --- NEW: Cancel any future pending/confirmed appointments upon manual restriction ---
+        $futureAppointments = Appointment::where('user_id', $user->id)
+            ->where('appointment_date', '>=', Carbon::today())
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->get();
+            
+        foreach($futureAppointments as $appt) {
+            $appt->update([
+                'status' => AppointmentStatus::Cancelled,
+                'cancellation_reason' => 'Account manually restricted. Your existing appointment has been cancelled.'
+            ]);
+        }
+        // -----------------------------------------------------------------------------------
+
         $user->notify(new AccountRestricted($request->input('reason'), $user->restricted_until));
 
-        return back()->with('success', 'User has been manually restricted for 30 days and notified.');
+        return back()->with('success', 'User has been manually restricted for 30 days, their active appointment was cancelled, and they were notified.');
     }
 
-    // --- UNRESTRICT USER ---
     public function unrestrictUser($id)
     {
         $user = User::findOrFail($id);
@@ -434,7 +443,6 @@ class AdminController extends Controller
         return back()->with('success', 'Restriction lifted. User is now Active and has been notified.');
     }
 
-    // --- BAN USER ---
     public function banUser(Request $request, $id)
     {
         $request->validate([
@@ -445,11 +453,10 @@ class AdminController extends Controller
 
         $user->update([
             'account_status' => UserStatus::Banned,
-            'restricted_until' => null, // Clear this as ban is permanent
+            'restricted_until' => null, 
             'strikes' => 0 
         ]);
 
-        // Cancel any future pending/confirmed appointments so they don't block the calendar
         $futureAppointments = Appointment::where('user_id', $user->id)
             ->where('appointment_date', '>=', Carbon::today())
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])

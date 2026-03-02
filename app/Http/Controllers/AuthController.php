@@ -8,9 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest;
 use App\Enums\UserRole;
-use App\Enums\UserStatus; // <-- NEW: Imported UserStatus Enum
+use App\Enums\UserStatus;
 use Illuminate\Auth\Events\Registered; 
-// Added the Verified event to trigger standard Laravel verification hooks
 use Illuminate\Auth\Events\Verified;
 
 class AuthController extends Controller
@@ -29,24 +28,19 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // Capture the remember me checkbox value
+        // --- NEW: Fast Ban Lookup BEFORE checking password ---
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user && $user->account_status === UserStatus::Banned) {
+            return back()->withErrors([
+                'email' => 'Your account has been permanently deactivated due to a policy violation. Please contact the clinic for more information.',
+            ])->onlyInput('email');
+        }
+        // -----------------------------------------------------
+
         $remember = $request->boolean('remember');
 
-        // Pass $remember as the second argument to attempt
         if (Auth::attempt($credentials, $remember)) {
-            
-            // --- NEW: THE BANNED USER GUARD ---
-            if (Auth::user()->account_status === UserStatus::Banned) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
-                return back()->withErrors([
-                    'email' => 'Your account has been permanently deactivated due to a policy violation. Please contact the clinic for more information.',
-                ])->onlyInput('email');
-            }
-            // ----------------------------------
-
             $request->session()->regenerate();
             
             if(Auth::user()->role === UserRole::Admin) {
@@ -105,7 +99,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // --- NEW METHOD: Verify OTP ---
     public function verifyOtp(Request $request)
     {
         $request->validate([
@@ -114,12 +107,10 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        // If user is somehow already verified, redirect them
         if ($user->hasVerifiedEmail()) {
             return redirect()->route('dashboard');
         }
 
-        // Check if OTP is null, doesn't match, or has expired
         if (!$user->email_otp || 
             $user->email_otp !== $request->otp || 
             now()->greaterThan($user->email_otp_expires_at)) {
@@ -129,12 +120,10 @@ class AuthController extends Controller
             ]);
         }
 
-        // Mark the user as verified
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
 
-        // Clear the OTP fields
         $user->clearEmailOTP();
 
         return redirect()->route('dashboard')->with('status', 'Email verified successfully!');

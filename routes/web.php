@@ -7,7 +7,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceController; 
-// Removed EmailVerificationRequest since we no longer use signed routes
+use App\Http\Middleware\CheckAccountStatus; // <-- NEW: Imported Middleware
 use Illuminate\Http\Request; 
 
 // -- Public Routes --
@@ -48,19 +48,19 @@ Route::get('/email/verify', function () {
     return view('auth.verify-email'); 
 })->middleware('auth')->name('verification.notice');
 
-// NEW: POST route to submit the OTP code (ADDED THROTTLE)
+// POST route to submit the OTP code
 Route::post('/email/verify', [AuthController::class, 'verifyOtp'])
     ->middleware(['auth', 'throttle:5,1'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
-    // Updated flash message to reflect a code instead of a link
     return back()->with('message', 'A new verification code has been sent to your email!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 
 // -- Protected Patient Routes --
-Route::middleware(['auth', 'verified'])->group(function () {
+// NEW: Added CheckAccountStatus::class to the middleware array
+Route::middleware(['auth', 'verified', CheckAccountStatus::class])->group(function () {
     
     Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
     
@@ -115,7 +115,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/users/{id}/id-photo', [AdminController::class, 'showUserIdPhoto'])->name('admin.users.view_id');
     Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');
     
-    // NEW PENALTY ROUTES
+    // PENALTY ROUTES
     Route::post('/users/{id}/restrict', [AdminController::class, 'restrictUser'])->name('admin.users.restrict');
     Route::post('/users/{id}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
 
