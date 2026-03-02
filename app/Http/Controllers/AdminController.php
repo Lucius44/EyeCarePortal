@@ -334,6 +334,7 @@ class AdminController extends Controller
 
         $users = User::where('role', UserRole::Patient)
             ->whereNotNull('email_verified_at') 
+            ->where('account_status', UserStatus::Active) // <--- NEW: Strict Account Status Filter
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('middle_name', 'like', "%{$query}%")
@@ -405,7 +406,6 @@ class AdminController extends Controller
             'restricted_until' => Carbon::now()->addDays(30)
         ]);
 
-        // --- NEW: Cancel any future pending/confirmed appointments upon manual restriction ---
         $futureAppointments = Appointment::where('user_id', $user->id)
             ->where('appointment_date', '>=', Carbon::today())
             ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
@@ -417,7 +417,6 @@ class AdminController extends Controller
                 'cancellation_reason' => 'Account manually restricted. Your existing appointment has been cancelled.'
             ]);
         }
-        // -----------------------------------------------------------------------------------
 
         $user->notify(new AccountRestricted($request->input('reason'), $user->restricted_until));
 

@@ -546,14 +546,20 @@
                         data.forEach(user => {
                             const item = document.createElement('div');
                             item.classList.add('search-result-item');
+                            
+                            // --- NEW FULL NAME LOGIC ---
+                            const middleName = user.middle_name ? ` ${user.middle_name}` : '';
+                            const suffix = user.suffix ? ` ${user.suffix}` : '';
+                            const fullName = `${user.first_name}${middleName} ${user.last_name}${suffix}`;
+
                             item.innerHTML = `
-                                <div class="fw-bold text-dark">${user.first_name} ${user.last_name}</div>
+                                <div class="fw-bold text-dark">${fullName}</div>
                                 <div class="small text-muted">${user.email} | ${user.phone_number}</div>
                             `;
                             
                             // CLICK RESULT
                             item.addEventListener('click', () => {
-                                selectUser(user);
+                                selectUser(user, fullName);
                             });
                             
                             resultsDiv.appendChild(item);
@@ -806,7 +812,7 @@
         }
 
         // --- HELPER FUNCTIONS FOR SEARCH ---
-        window.selectUser = function(user) {
+        window.selectUser = function(user, fullName = null) {
             selectedUser = user;
             
             // 1. Fill Hidden ID
@@ -823,8 +829,13 @@
             // 3. Lock Fields (Read Only)
             toggleFields(true, ['p_first', 'p_middle', 'p_last', 'p_suffix', 'p_email', 'p_phone']);
 
-            // 4. Update UI
-            document.getElementById('patientSearch').value = `${user.first_name} ${user.last_name}`;
+            // 4. Update UI - Dynamically assign fullName if it wasn't passed
+            if (!fullName) {
+                const mName = user.middle_name ? ` ${user.middle_name}` : '';
+                const sName = user.suffix ? ` ${user.suffix}` : '';
+                fullName = `${user.first_name}${mName} ${user.last_name}${sName}`;
+            }
+            document.getElementById('patientSearch').value = fullName;
             document.getElementById('searchResults').classList.add('d-none');
             document.getElementById('searchStatus').innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Linked to Account</span>';
             
