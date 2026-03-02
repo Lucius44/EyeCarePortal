@@ -390,18 +390,18 @@
 
                                     {{-- RESTRICT MODAL --}}
                                     <div class="modal fade" id="restrictModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
                                             <form action="{{ route('admin.users.restrict', $user->id) }}" method="POST" class="w-100">
                                                 @csrf
-                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-warning">
+                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-warning overflow-hidden">
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i> Restrict Account</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body p-4">
+                                                    <div class="modal-body p-4 p-md-5">
                                                         <p class="text-muted">You are about to manually restrict <strong>{{ $user->first_name }} {{ $user->last_name }}</strong>. This will block them from booking new appointments for 30 days.</p>
                                                         <label class="form-label fw-bold small">Reason for Restriction <span class="text-danger">*</span></label>
-                                                        <textarea name="reason" class="form-control" rows="3" placeholder="Explain the violation..." required></textarea>
+                                                        <textarea name="reason" class="form-control" rows="5" placeholder="Explain the violation..." required></textarea>
                                                         <div class="form-text small text-muted">This reason will be emailed directly to the patient.</div>
                                                     </div>
                                                     <div class="modal-footer border-0 pt-0">
@@ -415,21 +415,21 @@
 
                                     {{-- BAN MODAL --}}
                                     <div class="modal fade" id="banModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
                                             <form action="{{ route('admin.users.ban', $user->id) }}" method="POST" class="w-100">
                                                 @csrf
-                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-danger">
+                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-danger overflow-hidden">
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-danger"><i class="bi bi-slash-circle-fill me-2"></i> Permanent Ban</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body p-4">
+                                                    <div class="modal-body p-4 p-md-5">
                                                         <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger mb-3">
                                                             <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Warning:</strong> This is a permanent action.
                                                         </div>
                                                         <p class="text-muted mb-3">You are about to permanently ban <strong>{{ $user->first_name }} {{ $user->last_name }}</strong>. They will be immediately logged out and blocked from the portal. All their future appointments will be cancelled.</p>
                                                         <label class="form-label fw-bold small">Reason for Ban <span class="text-danger">*</span></label>
-                                                        <textarea name="reason" class="form-control" rows="3" placeholder="Provide a detailed reason for the permanent ban..." required></textarea>
+                                                        <textarea name="reason" class="form-control" rows="5" placeholder="Provide a detailed reason for the permanent ban..." required></textarea>
                                                         <div class="form-text small text-muted">This reason will be emailed directly to the patient.</div>
                                                     </div>
                                                     <div class="modal-footer border-0 pt-0">
