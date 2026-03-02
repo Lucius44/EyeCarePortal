@@ -144,14 +144,15 @@
                         </div>
                     @endif
 
+                    {{-- DYNAMIC ERROR MESSAGE FIX --}}
                     @if ($errors->any())
                         <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small rounded-3 mb-4">
-                            <i class="bi bi-exclamation-circle me-1"></i> Invalid credentials. Please try again.
+                            <i class="bi bi-exclamation-circle me-1"></i> {{ $errors->first() }}
                         </div>
                     @endif
 
                     <div class="form-floating mb-3">
-                        <input type="email" name="email" class="form-control" id="email" placeholder="name@example.com" required>
+                        <input type="email" name="email" class="form-control" id="email" placeholder="name@example.com" value="{{ old('email') }}" required>
                         <label for="email">Email Address</label>
                     </div>
 
