@@ -30,8 +30,9 @@ class AppointmentCancelled extends Notification implements ShouldQueue
         $time = date('h:i A', strtotime($this->appointment->appointment_time));
 
         return [
-            'type' => 'cancellation',
-            'message' => "CONFIRMED appointment on {$date} at {$time} was cancelled by the patient.",
+            'type' => 'appointment_cancelled',
+            'status' => 'cancelled', // Added for UI helper tracking
+            'message' => "Appointment on {$date} at {$time} was CANCELLED by the patient.",
             'url' => route('admin.calendar') // Directs admin to the calendar to see the open slot
         ];
     }

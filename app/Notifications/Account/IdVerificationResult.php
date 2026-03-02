@@ -63,14 +63,14 @@ class IdVerificationResult extends Notification implements ShouldQueue
         if ($this->isApproved) {
             return [
                 'status' => 'approved',
-                'message' => 'Your ID verification was successful. You can now book appointments.',
+                'message' => 'Your ID verification was APPROVED. You can now book appointments.',
                 'url' => route('appointments.index') // Redirects to booking page
             ];
         }
 
         return [
             'status' => 'rejected',
-            'message' => 'Your ID verification failed. Please check your settings to upload a new ID.',
+            'message' => 'Your ID verification was REJECTED. Please check your settings to upload a new ID.',
             'url' => route('settings') // Redirects back to settings so they can re-upload
         ];
     }

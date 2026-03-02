@@ -49,7 +49,7 @@ class AccountUnrestricted extends Notification implements ShouldQueue
     {
         return [
             'status' => 'unrestricted',
-            'message' => 'Your account restriction has been lifted. You can book appointments again.',
+            'message' => 'Your account has been UNRESTRICTED. You can book appointments again.',
             'url' => route('dashboard') // Redirects to their main dashboard
         ];
     }

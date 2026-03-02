@@ -140,7 +140,7 @@
             border: 2px solid white;
         }
         .dropdown-menu-notifications {
-            width: 320px;
+            width: 340px;
             max-height: 400px;
             overflow-y: auto;
             padding: 0;
@@ -184,6 +184,57 @@
 </head>
 <body>
 
+    {{-- HELPER FUNCTION FOR NOTIFICATION FORMATTING --}}
+    @php
+        if (!function_exists('formatNotification')) {
+            function formatNotification($notification) {
+                $data = $notification->data;
+                $msgText = $data['message'] ?? 'New notification';
+                $status = $data['status'] ?? null;
+                $type = $data['type'] ?? null;
+                $icon = 'bi-bell text-secondary';
+                
+                if ($status) {
+                    $statusLower = strtolower($status);
+                    
+                    if (in_array($statusLower, ['completed', 'verified', 'approved', 'unrestricted'])) {
+                        // Success states (Green)
+                        $icon = 'bi-check-circle-fill text-success';
+                        $msgText = str_ireplace($status, '<span class="text-success fw-bold">' . strtoupper($status) . '</span>', $msgText);
+                        
+                    } elseif (in_array($statusLower, ['pending', 'rescheduled'])) {
+                        // Warning states (Yellow)
+                        $icon = 'bi-exclamation-circle-fill text-warning';
+                        $msgText = str_ireplace($status, '<span class="text-warning fw-bold">' . strtoupper($status) . '</span>', $msgText);
+                        
+                    } elseif ($statusLower === 'reminder') {
+                        // Info states (Blue with Clock Icon)
+                        $icon = 'bi-clock-fill text-info';
+                        $msgText = str_ireplace($status, '<span class="text-info fw-bold">' . strtoupper($status) . '</span>', $msgText);
+                        
+                    } elseif (in_array($statusLower, ['cancelled', 'rejected', 'restricted'])) {
+                        // Danger states (Red)
+                        $icon = 'bi-x-circle-fill text-danger';
+                        $msgText = str_ireplace($status, '<span class="text-danger fw-bold">' . strtoupper($status) . '</span>', $msgText);
+                        
+                    } else {
+                        $icon = 'bi-info-circle-fill text-info';
+                    }
+                } elseif ($type === 'appointment_request') {
+                    $icon = 'bi-calendar-plus-fill text-primary';
+                } elseif ($type === 'appointment_cancelled') {
+                    $icon = 'bi-calendar-x-fill text-danger';
+                } elseif ($type === 'id_uploaded') {
+                    $icon = 'bi-person-badge-fill text-warning';
+                } else {
+                    $icon = 'bi-info-circle-fill text-primary';
+                }
+                
+                return (object)['icon' => $icon, 'text' => $msgText];
+            }
+        }
+    @endphp
+
     {{-- CONDITIONAL NAVBAR --}}
     @if(
         !request()->routeIs('login') && 
@@ -225,12 +276,16 @@
                                     @endif
                                 </li>
                                 @forelse($notifications as $notification)
+                                    @php $formatted = formatNotification($notification); @endphp
                                     <li>
                                         <a class="dropdown-item notification-item {{ $notification->read_at ? '' : 'notification-unread' }}" 
                                            href="{{ route('notifications.read', $notification->id) }}">
-                                            <div class="d-flex flex-column">
-                                                <span class="small fw-semibold text-dark">{{ $notification->data['message'] ?? 'New notification' }}</span>
-                                                <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                            <div class="d-flex align-items-start gap-2">
+                                                <i class="bi {{ $formatted->icon }} mt-1 fs-6"></i>
+                                                <div class="d-flex flex-column">
+                                                    <span class="small fw-semibold text-dark">{!! $formatted->text !!}</span>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                                </div>
                                             </div>
                                         </a>
                                     </li>
@@ -294,12 +349,16 @@
                                         @endif
                                     </li>
                                     @forelse($notifications as $notification)
+                                        @php $formatted = formatNotification($notification); @endphp
                                         <li>
                                             <a class="dropdown-item notification-item {{ $notification->read_at ? '' : 'notification-unread' }}" 
                                                href="{{ route('notifications.read', $notification->id) }}">
-                                                <div class="d-flex flex-column">
-                                                    <span class="small fw-semibold text-dark">{{ $notification->data['message'] ?? 'New notification' }}</span>
-                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                                <div class="d-flex align-items-start gap-2">
+                                                    <i class="bi {{ $formatted->icon }} mt-1 fs-6"></i>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="small fw-semibold text-dark">{!! $formatted->text !!}</span>
+                                                        <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                                    </div>
                                                 </div>
                                             </a>
                                         </li>
@@ -432,15 +491,19 @@
             @endif
             <div class="list-group list-group-flush">
                 @forelse($adminNotifs as $notification)
+                    @php $formatted = formatNotification($notification); @endphp
                     <a href="{{ route('admin.notifications.read', $notification->id) }}" 
                        class="list-group-item list-group-item-action p-3 border-bottom {{ $notification->read_at ? '' : 'bg-primary bg-opacity-10' }}">
                         <div class="d-flex w-100 justify-content-between mb-1">
-                            <small class="text-muted fw-semibold" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</small>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi {{ $formatted->icon }}"></i>
+                                <small class="text-muted fw-semibold" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</small>
+                            </div>
                             @if(!$notification->read_at)
                                 <span class="badge bg-primary rounded-circle p-1"><span class="visually-hidden">Unread</span></span>
                             @endif
                         </div>
-                        <p class="mb-0 small text-dark">{{ $notification->data['message'] ?? 'New notification' }}</p>
+                        <p class="mb-0 small text-dark mt-1">{!! $formatted->text !!}</p>
                     </a>
                 @empty
                     <div class="p-5 text-center text-muted d-flex flex-column align-items-center">

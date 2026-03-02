@@ -63,7 +63,7 @@ class AppointmentReminder extends Notification implements ShouldQueue
         return [
             'appointment_id' => $this->appointment->id,
             'status' => 'reminder',
-            'message' => "Reminder: You have an upcoming appointment tomorrow at {$time}.",
+            'message' => "REMINDER: You have an upcoming appointment tomorrow at {$time}.",
             'url' => route('my.appointments') // Redirects to their appointments list
         ];
     }
