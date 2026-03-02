@@ -151,10 +151,10 @@
 
                                     <div class="modal fade" id="rejectModal-{{ $user->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <form action="{{ route('admin.users.verify', $user->id) }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="action" value="reject">
-                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                            <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                <form action="{{ route('admin.users.verify', $user->id) }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="reject">
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-danger">Reject ID Verification</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -167,8 +167,8 @@
                                                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                                                         <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Confirm Reject</button>
                                                     </div>
-                                                </div>
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                     @endforeach
@@ -391,9 +391,9 @@
                                     {{-- RESTRICT MODAL --}}
                                     <div class="modal fade" id="restrictModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-lg modal-dialog-centered">
-                                            <form action="{{ route('admin.users.restrict', $user->id) }}" method="POST" class="w-100">
-                                                @csrf
-                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-warning overflow-hidden">
+                                            <div class="modal-content rounded-4 border-0 shadow-lg border-start border-end border-5 border-warning overflow-hidden">
+                                                <form action="{{ route('admin.users.restrict', $user->id) }}" method="POST">
+                                                    @csrf
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i> Restrict Account</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -408,17 +408,17 @@
                                                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#userModal{{ $user->id }}">Back</button>
                                                         <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Apply Restriction</button>
                                                     </div>
-                                                </div>
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {{-- BAN MODAL --}}
                                     <div class="modal fade" id="banModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-lg modal-dialog-centered">
-                                            <form action="{{ route('admin.users.ban', $user->id) }}" method="POST" class="w-100">
-                                                @csrf
-                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-danger overflow-hidden">
+                                            <div class="modal-content rounded-4 border-0 shadow-lg border-start border-end border-5 border-danger overflow-hidden">
+                                                <form action="{{ route('admin.users.ban', $user->id) }}" method="POST">
+                                                    @csrf
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-danger"><i class="bi bi-slash-circle-fill me-2"></i> Permanent Ban</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -436,8 +436,8 @@
                                                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#userModal{{ $user->id }}">Back</button>
                                                         <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Execute Ban</button>
                                                     </div>
-                                                </div>
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -564,9 +564,9 @@
 
                                     <div class="modal fade" id="unrestrictModal-{{ $user->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
-                                                @csrf
-                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                            <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
+                                                    @csrf
                                                     <div class="modal-header border-0 pb-0">
                                                         <h5 class="modal-title fw-bold text-success">Lift Restriction</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -586,8 +586,8 @@
                                                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                                                         <button type="submit" class="btn btn-success text-white rounded-pill px-4 fw-bold">Yes, Restore Access</button>
                                                     </div>
-                                                </div>
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                     @empty
