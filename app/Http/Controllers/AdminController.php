@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\RateLimiter;
 use App\Notifications\Appointment\AppointmentStatusChanged;
 use App\Notifications\Account\IdVerificationResult;
 use App\Notifications\Account\AccountUnrestricted;
+// --- NEW: Imported our Penalty Notifications ---
+use App\Notifications\Account\AccountRestricted;
+use App\Notifications\Account\AccountBanned;
 
 class AdminController extends Controller
 {
@@ -133,7 +136,6 @@ class AdminController extends Controller
                         'cancellation_reason' => $request->close_reason ?? 'Clinic closed for the day.'
                     ]);
 
-                    // --- NOTIFICATION (Bulk Reject) ---
                     $recipient = $appt->user ?? Notification::route('mail', $appt->patient_email);
                     
                     if ($recipient) {
@@ -244,7 +246,6 @@ class AdminController extends Controller
             $this->appointmentService->penalizeUser($appointment->user);
         }
 
-        // --- NOTIFICATION TRIGGER ---
         $recipient = $appointment->user ?? Notification::route('mail', $appointment->patient_email);
 
         if ($recipient) {
@@ -292,11 +293,10 @@ class AdminController extends Controller
             elseif ($request->filter_status === 'restricted') {
                 $query->where('account_status', UserStatus::Restricted);
             }
-            elseif ($request->filter_status === 'all') {
-                // Do nothing, let query get everyone
+            elseif ($request->filter_status === 'banned') {
+                $query->where('account_status', UserStatus::Banned);
             }
         } else {
-            // Default View: Hide Unverified Emails
             $query->whereNotNull('email_verified_at');
         }
 
@@ -306,6 +306,12 @@ class AdminController extends Controller
                                ->where('account_status', UserStatus::Restricted)
                                ->paginate(10, ['*'], 'restricted_page')
                                ->withQueryString();
+
+        // --- NEW: Fetch Banned Users ---
+        $bannedUsers = User::where('role', UserRole::Patient)
+                           ->where('account_status', UserStatus::Banned)
+                           ->paginate(10, ['*'], 'banned_page')
+                           ->withQueryString();
 
         $guests = Appointment::whereNull('user_id')
             ->whereIn('id', function($q) {
@@ -317,13 +323,10 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'guests_page'); 
 
-        return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'guests'));
+        // Included bannedUsers in compact
+        return view('admin.users', compact('pendingUsers', 'allUsers', 'restrictedUsers', 'bannedUsers', 'guests'));
     }
 
-    /**
-     * AJAX Search for Patients
-     * Used in Admin Calendar Modal to link appointments to existing users.
-     */
     public function searchUsers(Request $request)
     {
         $query = $request->get('query');
@@ -361,7 +364,6 @@ class AdminController extends Controller
                 'rejection_reason' => null
             ]);
             
-            // --- NOTIFY APPROVAL ---
             $user->notify(new IdVerificationResult(true));
 
             return back()->with('success', 'User verified successfully!');
@@ -380,10 +382,7 @@ class AdminController extends Controller
                 'rejection_reason' => $request->input('reason')
             ]);
 
-            // This clear will now perfectly match the manual hit in PatientController
             RateLimiter::clear('id-uploads:' . $user->id);
-
-            // --- NOTIFY REJECTION ---
             $user->notify(new IdVerificationResult(false, $request->input('reason')));
 
             return back()->with('success', 'User verification rejected.');
@@ -392,6 +391,30 @@ class AdminController extends Controller
         return back()->with('error', 'Invalid action.');
     }
 
+    // --- MANUAL RESTRICT USER ---
+    public function restrictUser(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
+
+        $user = User::findOrFail($id);
+
+        if ($user->account_status === UserStatus::Banned) {
+            return back()->with('error', 'Cannot restrict a user who is already banned.');
+        }
+
+        $user->update([
+            'account_status' => UserStatus::Restricted,
+            'restricted_until' => Carbon::now()->addDays(30)
+        ]);
+
+        $user->notify(new AccountRestricted($request->input('reason'), $user->restricted_until));
+
+        return back()->with('success', 'User has been manually restricted for 30 days and notified.');
+    }
+
+    // --- UNRESTRICT USER ---
     public function unrestrictUser($id)
     {
         $user = User::findOrFail($id);
@@ -406,13 +429,43 @@ class AdminController extends Controller
             'restricted_until' => null
         ]);
 
-        // --- NOTIFY PATIENT ---
         $user->notify(new AccountUnrestricted());
 
         return back()->with('success', 'Restriction lifted. User is now Active and has been notified.');
     }
 
-    // --- ADMIN NOTIFICATION METHODS ---
+    // --- BAN USER ---
+    public function banUser(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
+
+        $user = User::findOrFail($id);
+
+        $user->update([
+            'account_status' => UserStatus::Banned,
+            'restricted_until' => null, // Clear this as ban is permanent
+            'strikes' => 0 
+        ]);
+
+        // Cancel any future pending/confirmed appointments so they don't block the calendar
+        $futureAppointments = Appointment::where('user_id', $user->id)
+            ->where('appointment_date', '>=', Carbon::today())
+            ->whereIn('status', [AppointmentStatus::Pending, AppointmentStatus::Confirmed])
+            ->get();
+            
+        foreach($futureAppointments as $appt) {
+            $appt->update([
+                'status' => AppointmentStatus::Cancelled,
+                'cancellation_reason' => 'Account permanently deactivated due to policy violations.'
+            ]);
+        }
+
+        $user->notify(new AccountBanned($request->input('reason')));
+
+        return back()->with('success', 'User has been permanently banned, future appointments cancelled, and the user has been notified.');
+    }
 
     public function markNotificationAsRead($id)
     {

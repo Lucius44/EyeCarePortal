@@ -398,12 +398,13 @@
                     <li><strong>Retention:</strong> Verification documents are retained as part of our security audit trail for the duration of your account's activity, in compliance with standard medical record retention policies.</li>
                 </ul>
 
-                <h6>3. Appointment Policy & "Strikes" System</h6>
-                <p>We value time and efficiency. Our system enforces a strict attendance policy:</p>
+                <h6>3. Appointment Policy & Account Restrictions</h6>
+                <p>We value time and efficiency. Our system enforces a strict attendance policy to ensure fairness for all patients:</p>
                 <ul>
                     <li><strong>Cancellations:</strong> Must be made at least 24 hours before the scheduled time.</li>
-                    <li><strong>No-Show Penalty:</strong> Failure to appear for a confirmed appointment without valid notice will result in a <strong>"Strike"</strong> recorded on your account.</li>
-                    <li><strong>3-Strike Rule:</strong> Accumulating <strong>three (3) strikes</strong> will result in the automatic <strong>Restriction</strong> of your account. Restricted users cannot book new appointments for 30 days.</li>
+                    <li><strong>Automated Restrictions (Strikes):</strong> Accumulating three (3) "No-Show" or "Late Cancellation" records will result in an automatic 30-day restriction of your online booking privileges.</li>
+                    <li><strong>Manual Restrictions:</strong> The clinic administration reserves the right to manually apply a temporary restriction if a user violates our policies or misuses the portal.</li>
+                    <li><strong>During Restriction:</strong> Restricted users can still log in to view their medical records but must contact the clinic directly to book an appointment.</li>
                 </ul>
 
                 <h6>4. Medical Disclaimer</h6>
@@ -413,14 +414,12 @@
                     <li>Content viewed on this portal (past prescriptions, notes) is for informational purposes and does not replace a real-time consultation with a licensed Optometrist.</li>
                 </ul>
 
-                <h6>5. User Responsibilities</h6>
-                <p>You agree to:</p>
+                <h6>5. Account Suspension, Banning, & Data Retention</h6>
+                <p>You agree to provide truthful information and use the portal responsibly.</p>
                 <ul>
-                    <li>Provide truthful and accurate information.</li>
-                    <li>Keep your login credentials (email and password) confidential.</li>
-                    <li>Use the portal only for personal, non-commercial purposes.</li>
+                    <li><strong>Permanent Banning:</strong> ClearOptics reserves the right to permanently deactivate (ban) accounts found to be using fake identities, submitting fraudulent documents, harassing clinic staff, or intentionally disrupting the booking system. Banned users are strictly prohibited from logging in or creating new accounts.</li>
+                    <li><strong>Data Retention:</strong> If your account is restricted or banned, this only revokes your access to the digital platform. In compliance with healthcare laws, your historical medical records and prescriptions will be securely retained by the clinic. Banned patients must make a formal request directly to the clinic to access their physical records.</li>
                 </ul>
-                <p>ClearOptics reserves the right to terminate or suspend accounts found to be using fake identities, submitting fraudulent documents, or abusing the booking system.</p>
 
                 <h6>6. Contact Us</h6>
                 <p>For data privacy concerns or requests for data deletion, please contact our staff at the clinic directly.</p>

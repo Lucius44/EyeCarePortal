@@ -46,6 +46,7 @@
         transition: all 0.3s ease;
     }
     .custom-pills .nav-link:hover { background-color: #e2e8f0; }
+    
     .custom-pills .nav-link.active {
         background-color: var(--primary-color) !important;
         color: white !important;
@@ -53,10 +54,17 @@
         box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
     }
     
-    /* Specific style for Restricted Tab */
+    /* Specific styles for Penalty Tabs */
+    .custom-pills .nav-link.text-warning.active {
+        background-color: #ffc107 !important;
+        border-color: #ffc107;
+        color: #000 !important;
+    }
+
     .custom-pills .nav-link.text-danger.active {
         background-color: #dc3545 !important;
         border-color: #dc3545;
+        color: #fff !important;
     }
 </style>
 
@@ -85,6 +93,11 @@
             @if(session('success'))
                 <div class="alert alert-success border-0 rounded-4 shadow-sm mb-4">
                     <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                 </div>
             @endif
 
@@ -168,7 +181,7 @@
 
             @php
                 $activeTab = request('tab') ?? 'registered';
-                if(!in_array($activeTab, ['registered', 'restricted', 'guests'])) {
+                if(!in_array($activeTab, ['registered', 'guests', 'restricted', 'banned'])) {
                     $activeTab = 'registered';
                 }
             @endphp
@@ -176,29 +189,29 @@
             <ul class="nav nav-pills custom-pills mb-4" id="usersTab" role="tablist">
                 <li class="nav-item">
                     <button class="nav-link {{ $activeTab === 'registered' ? 'active' : '' }} rounded-pill px-4 fw-bold me-2" 
-                            id="registered-tab" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#registered" 
-                            type="button">Registered Patients</button>
+                            id="registered-tab" data-bs-toggle="tab" data-bs-target="#registered" type="button">Registered Patients</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link {{ $activeTab === 'restricted' ? 'active' : '' }} text-danger rounded-pill px-4 fw-bold me-2" 
-                            id="restricted-tab" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#restricted" 
-                            type="button">
-                        <i class="bi bi-slash-circle me-1"></i> Restricted
+                    <button class="nav-link {{ $activeTab === 'guests' ? 'active' : '' }} rounded-pill px-4 fw-bold me-2" 
+                            id="guests-tab" data-bs-toggle="tab" data-bs-target="#guests" type="button">Walk-in Guests</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link {{ $activeTab === 'restricted' ? 'active' : '' }} text-warning rounded-pill px-4 fw-bold me-2" 
+                            id="restricted-tab" data-bs-toggle="tab" data-bs-target="#restricted" type="button" style="border-color: #ffc107;">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Restricted
                         @if(isset($restrictedUsers) && $restrictedUsers->total() > 0)
-                            <span class="badge bg-danger text-white ms-1">{{ $restrictedUsers->total() }}</span>
+                            <span class="badge bg-warning text-dark ms-1">{{ $restrictedUsers->total() }}</span>
                         @endif
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link {{ $activeTab === 'guests' ? 'active' : '' }} rounded-pill px-4 fw-bold" 
-                            id="guests-tab" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#guests" 
-                            type="button">Walk-in Guests</button>
+                    <button class="nav-link {{ $activeTab === 'banned' ? 'active' : '' }} text-danger rounded-pill px-4 fw-bold" 
+                            id="banned-tab" data-bs-toggle="tab" data-bs-target="#banned" type="button" style="border-color: #dc3545;">
+                        <i class="bi bi-slash-circle me-1"></i> Banned
+                        @if(isset($bannedUsers) && $bannedUsers->total() > 0)
+                            <span class="badge bg-danger text-white ms-1">{{ $bannedUsers->total() }}</span>
+                        @endif
+                    </button>
                 </li>
             </ul>
 
@@ -261,11 +274,11 @@
 
                                         <td>
                                             @if($user->account_status === \App\Enums\UserStatus::Restricted)
-                                                <span class="badge bg-danger rounded-pill px-3">Restricted</span>
-                                            @elseif($user->account_status === 'banned')
-                                                <span class="badge bg-dark rounded-pill px-3">Banned</span>
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">Restricted</span>
+                                            @elseif($user->account_status === \App\Enums\UserStatus::Banned)
+                                                <span class="badge bg-danger rounded-pill px-3">Banned</span>
                                             @elseif(!$user->hasVerifiedEmail())
-                                                <span class="badge bg-warning text-dark rounded-pill px-3">Unverified Email</span>
+                                                <span class="badge bg-warning bg-opacity-25 text-dark rounded-pill px-3">Unverified Email</span>
                                             @elseif($user->is_verified)
                                                 <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Verified (Active)</span>
                                             @else
@@ -280,6 +293,7 @@
                                         </td>
                                     </tr>
 
+                                    {{-- USER INFO MODAL --}}
                                     <div class="modal fade" id="userModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -289,7 +303,7 @@
                                                     </h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
-                                                <div class="modal-body px-4 pb-4">
+                                                <div class="modal-body px-4 pb-2">
                                                     
                                                     <div class="p-3 bg-light rounded-3 mb-3">
                                                         <h6 class="text-uppercase small text-muted fw-bold mb-3">Full Name Breakdown</h6>
@@ -317,27 +331,21 @@
                                                         <div class="col-6">
                                                             <div class="border p-2 rounded-3 text-center">
                                                                 <label class="small text-muted d-block">Gender</label>
-                                                                <span class="fw-bold text-dark">
-                                                                    {{ $user->gender }}
-                                                                </span>
+                                                                <span class="fw-bold text-dark">{{ $user->gender }}</span>
                                                             </div>
                                                         </div>
                                                         <div class="col-6">
                                                             <div class="border p-2 rounded-3 text-center">
                                                                 <label class="small text-muted d-block">Birthday</label>
-                                                                <span class="fw-bold text-dark">
-                                                                    {{ \Carbon\Carbon::parse($user->birthday)->format('M d, Y') }}
-                                                                </span>
+                                                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($user->birthday)->format('M d, Y') }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="border-top pt-3">
+                                                    <div class="border-top pt-3 mb-3">
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <span class="small text-muted">Account Created:</span>
-                                                            <span class="fw-bold text-secondary">
-                                                                {{ $user->created_at->format('F d, Y h:i A') }}
-                                                            </span>
+                                                            <span class="fw-bold text-secondary">{{ $user->created_at->format('F d, Y h:i A') }}</span>
                                                         </div>
                                                         <div class="d-flex justify-content-between align-items-center mt-2">
                                                             <span class="small text-muted">Email Status:</span>
@@ -350,7 +358,86 @@
                                                     </div>
 
                                                 </div>
+                                                
+                                                {{-- MODAL FOOTER WITH PENALTY ACTIONS --}}
+                                                <div class="modal-footer border-top px-4 py-3 d-flex justify-content-between bg-light rounded-bottom-4">
+                                                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                                                    
+                                                    @if($user->account_status === \App\Enums\UserStatus::Active && $user->hasVerifiedEmail())
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-danger dropdown-toggle rounded-pill px-3 fw-bold shadow-sm" type="button" data-bs-toggle="dropdown">
+                                                            <i class="bi bi-shield-exclamation me-1"></i> Penalize Account
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                                            <li>
+                                                                <button class="dropdown-item text-warning fw-bold py-2" data-bs-toggle="modal" data-bs-target="#restrictModal{{ $user->id }}">
+                                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Restrict (30 Days)
+                                                                </button>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <button class="dropdown-item text-danger fw-bold py-2" data-bs-toggle="modal" data-bs-target="#banModal{{ $user->id }}">
+                                                                    <i class="bi bi-slash-circle-fill me-2"></i> Permanent Ban
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    @endif
+                                                </div>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- RESTRICT MODAL --}}
+                                    <div class="modal fade" id="restrictModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <form action="{{ route('admin.users.restrict', $user->id) }}" method="POST" class="w-100">
+                                                @csrf
+                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-warning">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i> Restrict Account</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4">
+                                                        <p class="text-muted">You are about to manually restrict <strong>{{ $user->first_name }} {{ $user->last_name }}</strong>. This will block them from booking new appointments for 30 days.</p>
+                                                        <label class="form-label fw-bold small">Reason for Restriction <span class="text-danger">*</span></label>
+                                                        <textarea name="reason" class="form-control" rows="3" placeholder="Explain the violation..." required></textarea>
+                                                        <div class="form-text small text-muted">This reason will be emailed directly to the patient.</div>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#userModal{{ $user->id }}">Back</button>
+                                                        <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Apply Restriction</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    {{-- BAN MODAL --}}
+                                    <div class="modal fade" id="banModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <form action="{{ route('admin.users.ban', $user->id) }}" method="POST" class="w-100">
+                                                @csrf
+                                                <div class="modal-content rounded-4 border-0 shadow-lg border-start border-5 border-danger">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-danger"><i class="bi bi-slash-circle-fill me-2"></i> Permanent Ban</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4">
+                                                        <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger mb-3">
+                                                            <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Warning:</strong> This is a permanent action.
+                                                        </div>
+                                                        <p class="text-muted mb-3">You are about to permanently ban <strong>{{ $user->first_name }} {{ $user->last_name }}</strong>. They will be immediately logged out and blocked from the portal. All their future appointments will be cancelled.</p>
+                                                        <label class="form-label fw-bold small">Reason for Ban <span class="text-danger">*</span></label>
+                                                        <textarea name="reason" class="form-control" rows="3" placeholder="Provide a detailed reason for the permanent ban..." required></textarea>
+                                                        <div class="form-text small text-muted">This reason will be emailed directly to the patient.</div>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#userModal{{ $user->id }}">Back</button>
+                                                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Execute Ban</button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
 
@@ -376,106 +463,7 @@
                     </div>
                 </div>
 
-                {{-- TAB 2: RESTRICTED ACCOUNTS --}}
-                <div class="tab-pane fade {{ $activeTab === 'restricted' ? 'show active' : '' }}" id="restricted">
-                    <div class="table-card shadow-sm border border-danger">
-                        <div class="p-4 bg-danger bg-opacity-10 border-bottom border-danger">
-                            <div class="d-flex align-items-center text-danger small fw-bold">
-                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                                These accounts have been penalized for multiple No-Shows or Late Cancellations.
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-white">
-                                    <tr>
-                                        <th class="py-3 ps-4 text-secondary small text-uppercase">Patient Name</th>
-                                        <th class="py-3 text-secondary small text-uppercase">Strikes</th>
-                                        <th class="py-3 text-secondary small text-uppercase">Violation Reason</th>
-                                        <th class="py-3 text-secondary small text-uppercase">Restriction Date</th>
-                                        <th class="py-3 text-secondary small text-uppercase text-end pe-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($restrictedUsers as $user)
-                                    <tr>
-                                        <td class="ps-4 fw-bold text-dark">
-                                            {{ $user->first_name }} 
-                                            {{ $user->middle_name }} 
-                                            {{ $user->last_name }} 
-                                            {{ $user->suffix }}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-danger rounded-pill">{{ $user->strikes }} / 3</span>
-                                        </td>
-                                        <td>
-                                            <small class="text-danger fw-bold">Multiple Violations</small>
-                                            <br><span class="small text-muted">(Late Cancellations / No Shows)</span>
-                                        </td>
-                                        <td>{{ $user->updated_at->format('M d, Y h:i A') }}</td>
-                                        <td class="text-end pe-4">
-                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#unrestrictModal-{{ $user->id }}">
-                                                <i class="bi bi-unlock-fill me-1"></i> Undo Restriction
-                                            </button>
-                                        </td>
-                                    </tr>
-
-                                    <div class="modal fade" id="unrestrictModal-{{ $user->id }}" tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
-                                                @csrf
-                                                <div class="modal-content rounded-4 border-0 shadow-lg">
-                                                    <div class="modal-header border-0 pb-0">
-                                                        <h5 class="modal-title fw-bold text-success">Lift Restriction</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4 text-center">
-                                                        <div class="mb-3">
-                                                            <i class="bi bi-shield-check text-success display-3"></i>
-                                                        </div>
-                                                        <h5 class="fw-bold text-dark">Restore Account Access?</h5>
-                                                        <p class="text-muted">
-                                                            You are about to lift the restriction for <strong>{{ $user->first_name }}</strong>.
-                                                            <br><br>
-                                                            <span class="text-success small fw-bold">This will RESET their strikes to 0 and allow them to book appointments again.</span>
-                                                        </p>
-                                                    </div>
-                                                    <div class="modal-footer border-0 pt-0 justify-content-center">
-                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-success text-white rounded-pill px-4 fw-bold">Yes, Restore Access</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
-                                            <i class="bi bi-shield-check display-4 text-success d-block mb-2"></i>
-                                            No restricted accounts found.
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="row align-items-center p-3 border-top g-0">
-                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
-                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
-                                @if($restrictedUsers->total() > 0)
-                                    Showing {{ $restrictedUsers->firstItem() }} to {{ $restrictedUsers->lastItem() }} of {{ $restrictedUsers->total() }} results
-                                @else
-                                    No results
-                                @endif
-                            </div>
-                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
-                                {{ $restrictedUsers->appends(['tab' => 'restricted'])->links('partials.pagination') }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- TAB 3: GUESTS --}}
+                {{-- TAB 2: GUESTS --}}
                 <div class="tab-pane fade {{ $activeTab === 'guests' ? 'show active' : '' }}" id="guests">
                     <div class="table-card shadow-sm">
                         <div class="p-4 bg-light border-bottom">
@@ -528,6 +516,168 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- TAB 3: RESTRICTED ACCOUNTS --}}
+                <div class="tab-pane fade {{ $activeTab === 'restricted' ? 'show active' : '' }}" id="restricted">
+                    <div class="table-card shadow-sm border border-warning">
+                        <div class="p-4 bg-warning bg-opacity-10 border-bottom border-warning">
+                            <div class="d-flex align-items-center text-dark small fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                These accounts have been temporarily restricted due to policy violations or multiple missed appointments.
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th class="py-3 ps-4 text-secondary small text-uppercase">Patient Name</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Strikes</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Restriction Expiry</th>
+                                        <th class="py-3 text-secondary small text-uppercase text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($restrictedUsers as $user)
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">
+                                            {{ $user->first_name }} 
+                                            {{ $user->middle_name }} 
+                                            {{ $user->last_name }} 
+                                            {{ $user->suffix }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger rounded-pill">{{ $user->strikes }} / 3</span>
+                                        </td>
+                                        <td>
+                                            @if($user->restricted_until)
+                                                {{ \Carbon\Carbon::parse($user->restricted_until)->format('M d, Y') }}
+                                            @else
+                                                <span class="text-muted small">Manual Restriction</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#unrestrictModal-{{ $user->id }}">
+                                                <i class="bi bi-unlock-fill me-1"></i> Undo Restriction
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <div class="modal fade" id="unrestrictModal-{{ $user->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <form action="{{ route('admin.users.unrestrict', $user->id) }}" method="POST">
+                                                @csrf
+                                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold text-success">Lift Restriction</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4 text-center">
+                                                        <div class="mb-3">
+                                                            <i class="bi bi-shield-check text-success display-3"></i>
+                                                        </div>
+                                                        <h5 class="fw-bold text-dark">Restore Account Access?</h5>
+                                                        <p class="text-muted">
+                                                            You are about to lift the restriction for <strong>{{ $user->first_name }}</strong>.
+                                                            <br><br>
+                                                            <span class="text-success small fw-bold">This will RESET their strikes to 0 and allow them to book appointments again.</span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0 justify-content-center">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-success text-white rounded-pill px-4 fw-bold">Yes, Restore Access</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">
+                                            <i class="bi bi-shield-check display-4 text-success d-block mb-2"></i>
+                                            No restricted accounts found.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
+                                @if($restrictedUsers->total() > 0)
+                                    Showing {{ $restrictedUsers->firstItem() }} to {{ $restrictedUsers->lastItem() }} of {{ $restrictedUsers->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                {{ $restrictedUsers->appends(['tab' => 'restricted'])->links('partials.pagination') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- TAB 4: BANNED ACCOUNTS --}}
+                <div class="tab-pane fade {{ $activeTab === 'banned' ? 'show active' : '' }}" id="banned">
+                    <div class="table-card shadow-sm border border-danger">
+                        <div class="p-4 bg-dark border-bottom border-dark">
+                            <div class="d-flex align-items-center text-white small fw-bold">
+                                <i class="bi bi-slash-circle-fill me-2 text-danger"></i>
+                                These accounts have been permanently deactivated for severe policy violations.
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th class="py-3 ps-4 text-secondary small text-uppercase">Patient Name</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Email</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Phone</th>
+                                        <th class="py-3 text-secondary small text-uppercase">Ban Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($bannedUsers as $user)
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">
+                                            {{ $user->first_name }} 
+                                            {{ $user->middle_name }} 
+                                            {{ $user->last_name }} 
+                                            {{ $user->suffix }}
+                                        </td>
+                                        <td>{{ $user->email }}</td>
+                                        <td>{{ $user->phone_number ?? '-' }}</td>
+                                        <td>{{ $user->updated_at->format('M d, Y h:i A') }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">
+                                            <i class="bi bi-shield-check display-4 text-success d-block mb-2"></i>
+                                            No banned accounts found.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="row align-items-center p-3 border-top g-0">
+                            <div class="col-lg-4 d-none d-lg-block order-lg-1"></div>
+                            <div class="col-12 col-lg-4 text-center text-muted small order-2 order-lg-2 mt-2 mt-lg-0">
+                                @if(isset($bannedUsers) && $bannedUsers->total() > 0)
+                                    Showing {{ $bannedUsers->firstItem() }} to {{ $bannedUsers->lastItem() }} of {{ $bannedUsers->total() }} results
+                                @else
+                                    No results
+                                @endif
+                            </div>
+                            <div class="col-12 col-lg-4 text-end order-1 order-lg-3">
+                                @if(isset($bannedUsers))
+                                    {{ $bannedUsers->appends(['tab' => 'banned'])->links('partials.pagination') }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>

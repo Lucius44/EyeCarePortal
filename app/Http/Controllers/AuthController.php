@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest;
 use App\Enums\UserRole;
+use App\Enums\UserStatus; // <-- NEW: Imported UserStatus Enum
 use Illuminate\Auth\Events\Registered; 
 // Added the Verified event to trigger standard Laravel verification hooks
 use Illuminate\Auth\Events\Verified;
@@ -33,6 +34,19 @@ class AuthController extends Controller
 
         // Pass $remember as the second argument to attempt
         if (Auth::attempt($credentials, $remember)) {
+            
+            // --- NEW: THE BANNED USER GUARD ---
+            if (Auth::user()->account_status === UserStatus::Banned) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Your account has been permanently deactivated due to a policy violation. Please contact the clinic for more information.',
+                ])->onlyInput('email');
+            }
+            // ----------------------------------
+
             $request->session()->regenerate();
             
             if(Auth::user()->role === UserRole::Admin) {

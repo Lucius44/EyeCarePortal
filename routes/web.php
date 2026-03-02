@@ -114,6 +114,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users/{id}/verify', [AdminController::class, 'verifyUser'])->name('admin.users.verify');
     Route::get('/users/{id}/id-photo', [AdminController::class, 'showUserIdPhoto'])->name('admin.users.view_id');
     Route::post('/users/{id}/unrestrict', [AdminController::class, 'unrestrictUser'])->name('admin.users.unrestrict');
+    
+    // NEW PENALTY ROUTES
+    Route::post('/users/{id}/restrict', [AdminController::class, 'restrictUser'])->name('admin.users.restrict');
+    Route::post('/users/{id}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
 
     // Admin Settings Routes
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
