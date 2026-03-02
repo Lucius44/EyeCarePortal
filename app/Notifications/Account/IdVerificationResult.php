@@ -17,7 +17,7 @@ class IdVerificationResult extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(bool $isApproved, string $reason = null)
+    public function __construct(bool $isApproved, ?string $reason = null)
     {
         $this->isApproved = $isApproved;
         $this->reason = $reason;
