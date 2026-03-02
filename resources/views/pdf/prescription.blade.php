@@ -5,45 +5,65 @@
     <title>Medical Prescription - #{{ str_pad($appointment->id, 5, '0', STR_PAD_LEFT) }}</title>
     <style>
         body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 14px; color: #333; line-height: 1.5; margin: 0; padding: 20px; }
-        .header { text-align: center; border-bottom: 2px solid #0F172A; padding-bottom: 20px; margin-bottom: 30px; }
-        .clinic-name { font-size: 28px; font-weight: bold; color: #0F172A; margin: 0; }
-        .clinic-details { font-size: 12px; color: #666; margin-top: 5px; }
+        
+        /* Header Table for perfect alignment in PDF */
+        .header-table { width: 100%; border-bottom: 2px solid #0F172A; padding-bottom: 15px; margin-bottom: 30px; }
+        .logo-td { width: 90px; vertical-align: top; }
+        .logo { max-width: 80px; height: auto; }
+        .info-td { text-align: left; vertical-align: middle; padding-left: 15px; }
+        
+        .clinic-name { font-size: 26px; font-weight: bold; color: #0F172A; margin: 0; text-transform: uppercase; }
+        .clinic-details { font-size: 12px; color: #666; margin-top: 4px; line-height: 1.4; }
+        
+        /* Grid */
         .row { width: 100%; margin-bottom: 20px; clear: both; }
         .col-half { width: 48%; float: left; }
         .col-half:last-child { float: right; }
-        .label { font-weight: bold; color: #555; font-size: 12px; text-transform: uppercase; margin-bottom: 3px; }
-        .value { font-size: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .section-title { font-size: 16px; font-weight: bold; color: #0F172A; text-transform: uppercase; border-bottom: 1px solid #0F172A; padding-bottom: 5px; margin-top: 40px; margin-bottom: 15px; }
-        .content-box { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; min-height: 100px; border-radius: 5px; white-space: pre-wrap; }
-        .footer { position: fixed; bottom: 30px; left: 0px; right: 0px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+        
+        /* Typography */
+        .label { font-weight: bold; color: #555; font-size: 11px; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 1px; }
+        .value { font-size: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; color: #000; }
+        .section-title { font-size: 15px; font-weight: bold; color: #0F172A; text-transform: uppercase; border-bottom: 2px solid #0F172A; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; }
+        
+        /* Content Areas */
+        .content-box { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; min-height: 80px; border-radius: 5px; white-space: pre-wrap; font-size: 14px; }
+        
+        /* Signature & Footer */
         .signature-line { margin-top: 80px; width: 250px; float: right; text-align: center; border-top: 1px solid #333; padding-top: 5px; }
+        .footer { position: fixed; bottom: 30px; left: 0px; right: 0px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+        
         .clearfix::after { content: ""; clear: both; display: table; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 class="clinic-name">ClearOptics Eye Care</h1>
-        <div class="clinic-details">
-            123 Visionary Way, Clear City, 4000<br>
-            Phone: (049) 123-4567 | Email: support@clearoptics.com
-        </div>
-    </div>
+    <table class="header-table">
+        <tr>
+            <td class="logo-td">
+                {{-- Uses public_path so DomPDF can read the raw file directly from the server --}}
+                <img src="{{ public_path('images/clearoptics-logo.png') }}" class="logo" alt="ClearOptics Logo">
+            </td>
+            <td class="info-td">
+                <h1 class="clinic-name">ClearOptics Eye Clinic</h1>
+                <div class="clinic-details">
+                    San Cristobal Highway, Calamba, Laguna, Philippines<br>
+                    Phone: +63 945 826 4969 | Email: reyesaileen2370@gmail.com
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <div class="row clearfix">
         <div class="col-half">
             <div class="label">Patient Name</div>
             <div class="value">{{ $appointment->patient_name }}</div>
             
-            <div class="label">Contact</div>
-            <div class="value">{{ $appointment->patient_phone ?? $appointment->patient_email ?? 'N/A' }}</div>
+            <div class="label">Service Provided</div>
+            <div class="value">{{ $appointment->service }}</div>
         </div>
         <div class="col-half">
             <div class="label">Date of Consultation</div>
             <div class="value">{{ $appointment->appointment_date->format('F d, Y') }}</div>
-            
-            <div class="label">Service Provided</div>
-            <div class="value">{{ $appointment->service }}</div>
         </div>
     </div>
 
@@ -55,13 +75,13 @@
 
     <div class="clearfix">
         <div class="signature-line">
-            <strong>Attending Optometrist / Ophthalmologist</strong><br>
-            License No: ___________
+            <strong>Dra. Aileen Reyes-Mangao</strong><br>
+            <span style="font-size: 12px; color: #666;">Doctor of Optometry</span>
         </div>
     </div>
 
     <div class="footer">
-        This document is officially generated by the EyeCarePortal System.<br>
+        This document is officially generated by the ClearOptics System.<br>
         Date Printed: {{ now()->format('F d, Y h:i A') }}
     </div>
 
