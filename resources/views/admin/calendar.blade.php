@@ -303,7 +303,6 @@
                             </label>
                         </div>
 
-                        {{-- UPDATED: Label Change & letters only regex --}}
                         <div class="mb-3 d-none" id="relationshipFieldWrapper">
                             <label class="form-label small fw-bold text-secondary">Patient's Relationship to Account Holder <span class="text-danger">*</span></label>
                             <input type="text" name="relationship" id="relationshipInput" class="form-control" placeholder="e.g. Son, Daughter, Spouse"
@@ -352,12 +351,7 @@
                                 <select name="appointment_time" id="bookTimeSelect" class="form-select" required>
                                     <option value="" disabled selected>Select Time Slot</option>
                                     @foreach(['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] as $time)
-                                        @php
-                                            $hour = explode(':', $time)[0];
-                                            $ampm = substr($time, -2);
-                                            $displayTime = $time . ' - ' . $hour . ':59 ' . $ampm;
-                                        @endphp
-                                        <option value="{{ $time }}">{{ $displayTime }}</option>
+                                        <option value="{{ $time }}">{{ $time }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -796,11 +790,7 @@
             for(let opt of bookSelect.options) { 
                 opt.disabled = false; 
                 if(opt.value !== "") {
-                    let timeVal = opt.value;
-                    let hour = timeVal.split(':')[0];
-                    let ampm = timeVal.split(' ')[1];
-                    let displayTime = `${timeVal} - ${hour}:59 ${ampm}`;
-                    opt.text = displayTime; 
+                    opt.text = opt.value; 
                 }
             }
 
@@ -811,15 +801,12 @@
                 dayEvents.forEach(evt => {
                     let timeStr = new Date(evt.start).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit', hour12: true});
                     
-                    // Normalize standard time components "09:00 AM" to create the "09:00 AM - 09:59 AM" format
                     let parts = timeStr.match(/(\d+):(\d+)\s?(AM|PM)/i);
-                    let displayTimeList = timeStr;
                     let standardTime = timeStr;
                     
                     if(parts) {
                         let hr = parts[1].padStart(2, '0');
                         standardTime = `${hr}:${parts[2]} ${parts[3].toUpperCase()}`;
-                        displayTimeList = `${standardTime} - ${hr}:59 ${parts[3].toUpperCase()}`;
                     }
 
                     let status = (evt.extendedProps.status?.value || evt.extendedProps.status || 'unknown');
@@ -827,13 +814,13 @@
                     
                     let div = document.createElement('div');
                     div.className = 'p-3 bg-white rounded-3 shadow-sm border mb-1 d-flex justify-content-between align-items-center';
-                    div.innerHTML = `<div><div class="fw-bold">${evt.title}</div><div class="small text-muted"><i class="bi bi-clock me-1"></i>${displayTimeList}</div></div><span class="badge ${badgeColor} rounded-pill text-uppercase" style="font-size:0.7rem">${status}</span>`;
+                    div.innerHTML = `<div><div class="fw-bold">${evt.title}</div><div class="small text-muted"><i class="bi bi-clock me-1"></i>${standardTime}</div></div><span class="badge ${badgeColor} rounded-pill text-uppercase" style="font-size:0.7rem">${status}</span>`;
                     listContainer.appendChild(div);
 
                     for(let opt of bookSelect.options) {
                         if(opt.value === standardTime) { 
                             opt.disabled = true; 
-                            opt.text = `${displayTimeList} (Booked)`; 
+                            opt.text = `${standardTime} (Booked)`; 
                         }
                     }
                 });

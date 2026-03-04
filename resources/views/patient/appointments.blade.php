@@ -213,7 +213,6 @@
                                         </select>
                                     </div>
 
-                                    {{-- UPDATED: Label Change & letters only regex --}}
                                     <div class="col-12 mt-2">
                                         <label class="small fw-bold text-muted">Patient's Relationship to You <span class="text-danger">*</span></label>
                                         <input type="text" name="relationship" id="patientRelationship" class="form-control" placeholder="e.g. Son, Daughter, Spouse"
@@ -232,13 +231,7 @@
                                     $times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
                                 @endphp
                                 @foreach($times as $time)
-                                    @php
-                                        // Calculate display formatting "HH:00 AM - HH:59 AM"
-                                        $hour = explode(':', $time)[0];
-                                        $ampm = substr($time, -2);
-                                        $displayTime = $time . ' - ' . $hour . ':59 ' . $ampm;
-                                    @endphp
-                                    <option value="{{ $time }}">{{ $displayTime }}</option>
+                                    <option value="{{ $time }}">{{ $time }}</option>
                                 @endforeach
                             </select>
                             <div class="form-text text-danger" id="timeSlotWarning" style="display:none;">
@@ -309,13 +302,7 @@
                         <p class="text-muted mb-4">You have a <strong>{{ $activeAppointment->status->value }}</strong> appointment on:<br>
                             <span class="fs-5 fw-bold" style="color: var(--primary-color);">
                                 {{ $activeAppointment->appointment_date->format('F d, Y') }} at 
-                                @php
-                                    $aTime = $activeAppointment->appointment_time;
-                                    $aHour = explode(':', $aTime)[0];
-                                    $aAmpm = substr($aTime, -2);
-                                    $aDisplay = $aTime . ' - ' . $aHour . ':59 ' . $aAmpm;
-                                @endphp
-                                {{ $aDisplay }}
+                                {{ $activeAppointment->appointment_time }}
                             </span>
                         </p>
                         <div class="d-grid gap-2 col-10 mx-auto">
@@ -454,7 +441,7 @@
     .status-dot.full { background-color: #94a3b8; }
     .time-slot {
         padding: 12px 5px; text-align: center; border: 1px solid #e2e8f0; border-radius: 12px;
-        background: white; font-weight: 600; font-size: 0.8rem; color: #334155; /* Shrunk font to fit 59-min text */
+        background: white; font-weight: 600; font-size: 0.8rem; color: #334155;
         cursor: pointer; transition: all 0.2s;
     }
     .time-slot.available:active { background: #eff6ff; border-color: var(--accent-color); }

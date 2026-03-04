@@ -139,13 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
             standardTimes.forEach(time => {
                 let isTaken = taken.includes(time);
                 let col = document.createElement('div');
-                // Expanded column to fit 59-minute format text cleanly
                 col.className = 'col-6 col-sm-6 col-md-4'; 
                 
-                // Format display Time: "09:00 AM - 09:59 AM"
-                let hour = time.split(':')[0];
-                let ampm = time.split(' ')[1];
-                let displayTime = `${time} - ${hour}:59 ${ampm}`;
+                let displayTime = time;
 
                 if (isTaken) {
                     col.innerHTML = `<div class="time-slot disabled">${displayTime}</div>`;
@@ -154,7 +150,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     let btn = document.createElement('div');
                     btn.className = 'time-slot available';
                     btn.innerHTML = `${displayTime}`;
-                    // Note: underlying submitted 'time' value stays original "09:00 AM"
                     btn.onclick = () => openBookingModal(dateStr, dateObj, time, 'mobile');
                     col.appendChild(btn);
                 }
@@ -317,9 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             emptyMsg.style.display = 'none';
             taken.forEach(time => {
-                let hour = time.split(':')[0];
-                let ampm = time.split(' ')[1];
-                let displayTime = `${time} - ${hour}:59 ${ampm}`;
+                let displayTime = time;
 
                 let badge = document.createElement('span');
                 badge.className = 'badge bg-secondary opacity-75 fs-6 fw-normal py-2 px-3 rounded-pill';
@@ -344,9 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mode === 'mobile') {
             timeWrapper.style.display = 'none'; 
             timeInput.value = preSelectedTime;
-            let hour = preSelectedTime.split(':')[0];
-            let ampm = preSelectedTime.split(' ')[1];
-            timeDisplay.innerText = `${preSelectedTime} - ${hour}:59 ${ampm}`;
+            timeDisplay.innerText = preSelectedTime;
             desktopSelect.removeAttribute('required'); 
         } else {
             timeWrapper.style.display = 'block';
@@ -362,9 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (options[i].value === "") continue;
                 
                 let val = options[i].value;
-                let hour = val.split(':')[0];
-                let ampm = val.split(' ')[1];
-                let displayTime = `${val} - ${hour}:59 ${ampm}`;
+                let displayTime = val;
 
                 if (taken.includes(val)) {
                     options[i].disabled = true;
@@ -385,9 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('summaryTime').innerText = "Select in form below";
             return;
         }
-        let hour = val.split(':')[0];
-        let ampm = val.split(' ')[1];
-        document.getElementById('summaryTime').innerText = `${val} - ${hour}:59 ${ampm}`;
+        document.getElementById('summaryTime').innerText = val;
     };
 
     // --- RE-IMPLEMENTED GUEST TOGGLE (In case of external call) ---
