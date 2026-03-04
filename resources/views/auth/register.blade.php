@@ -332,15 +332,15 @@
                                     <div class="g-recaptcha mb-3" id="recaptchabox" data-sitekey="6Ldfi08sAAAAAGc0iqVrllnpeXvNNDM07shQ8MDe"></div>
                                     <div class="invalid-feedback-custom text-center" id="captchaError">Please complete the captcha.</div>
                                     
-                                    <div class="form-check p-3 rounded border bg-light mt-3" style="max-width: 400px; width: 100%;">
-                                        <input class="form-check-input ms-1" type="checkbox" id="terms" required>
-                                        <label class="form-check-label ms-2" for="terms">
-                                            I agree to the 
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="fw-bold text-decoration-none" style="color: var(--accent-color);">
-                                                Terms of Service & Privacy Policy
-                                            </a>.
-                                        </label>
-                                        <div class="invalid-feedback-custom" id="termsError">You must agree to the terms.</div>
+                                    {{-- FIXED: Flexbox Layout for Checkbox & Terms Alignment --}}
+                                    <div class="bg-light border rounded-3 p-3 mt-3 w-100" style="max-width: 400px;">
+                                        <div class="d-flex align-items-center text-start">
+                                            <input class="form-check-input mt-0 me-3" type="checkbox" id="terms" required style="width: 1.25em; height: 1.25em; cursor: pointer; flex-shrink: 0;">
+                                            <label class="form-check-label small mb-0" for="terms" style="cursor: pointer; line-height: 1.5;">
+                                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="fw-bold text-decoration-none" style="color: var(--accent-color);">Terms of Service & Privacy Policy</a>.
+                                            </label>
+                                        </div>
+                                        <div class="invalid-feedback-custom text-center mt-2 w-100" id="termsError">You must agree to the terms.</div>
                                     </div>
                                 </div>
 
