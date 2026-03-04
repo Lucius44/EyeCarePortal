@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter; // NEW: Imported RateLimiter
+use Illuminate\Support\Str; // NEW: Imported Str for generating the throttle key
 use App\Http\Requests\RegisterUserRequest;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
@@ -28,7 +30,20 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // --- NEW: Fast Ban Lookup BEFORE checking password ---
+        // --- RATE LIMITING: Generate a unique key based on email and IP address ---
+        $throttleKey = Str::lower($request->input('email')) . '|' . $request->ip();
+
+        // Check if the user has exceeded the 5 attempts
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            
+            return back()->withErrors([
+                'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            ])->onlyInput('email');
+        }
+        // --------------------------------------------------------------------------
+
+        // --- Fast Ban Lookup BEFORE checking password ---
         $user = User::where('email', $credentials['email'])->first();
 
         if ($user && $user->account_status === UserStatus::Banned) {
@@ -41,6 +56,11 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            
+            // --- RATE LIMITING: Clear the attempts upon a successful login ---
+            RateLimiter::clear($throttleKey);
+            // -----------------------------------------------------------------
+
             $request->session()->regenerate();
             
             if(Auth::user()->role === UserRole::Admin) {
@@ -49,6 +69,10 @@ class AuthController extends Controller
 
             return redirect()->route('dashboard');
         }
+
+        // --- RATE LIMITING: Record a failed attempt and set a 60-second decay (lockout) ---
+        RateLimiter::hit($throttleKey, 60);
+        // ----------------------------------------------------------------------------------
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
