@@ -210,9 +210,9 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-floating">
-                                            <input type="text" name="middle_name" class="form-control" id="mn" placeholder="Middle"
+                                            <input type="text" name="middle_name" class="form-control" id="mn" placeholder="Middle Name"
                                                    pattern="[a-zA-Z\s\.\-]+" title="Letters only.">
-                                            <label for="mn">Middle (Opt)</label>
+                                            <label for="mn">Middle Name</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">

@@ -27,7 +27,7 @@
         <i class="bi bi-clock-history"></i> History
     </a>
     <a href="{{ route('admin.users') }}" class="admin-nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
-        <i class="bi bi-people"></i> Users & Patients
+        <i class="bi bi-people"></i> Users
     </a>
     
     <a href="{{ route('services.index') }}" class="admin-nav-link {{ request()->routeIs('services.index') ? 'active' : '' }}">

@@ -86,7 +86,7 @@
                                     <input type="text" name="first_name" class="form-control" value="{{ Auth::user()->first_name }}" required>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="small text-muted">M.I.</label>
+                                    <label class="small text-muted">Middle Name</label>
                                     <input type="text" name="middle_name" class="form-control" value="{{ Auth::user()->middle_name }}">
                                 </div>
                                 <div class="col-md-3">
