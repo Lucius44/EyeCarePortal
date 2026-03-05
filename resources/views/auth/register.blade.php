@@ -329,10 +329,11 @@
                                 <h4 class="form-section-title">Final Verification</h4>
 
                                 <div class="mb-5 d-flex flex-column align-items-center">
-                                    <div class="g-recaptcha mb-3" id="recaptchabox" data-sitekey="6Ldfi08sAAAAAGc0iqVrllnpeXvNNDM07shQ8MDe"></div>
+                                    {{-- DYNAMIC RECAPTCHA KEY INSTEAD OF HARDCODED ONE --}}
+                                    <div class="g-recaptcha mb-3" id="recaptchabox" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                    
                                     <div class="invalid-feedback-custom text-center" id="captchaError">Please complete the captcha.</div>
                                     
-                                    {{-- FIXED: Flexbox Layout for Checkbox & Terms Alignment --}}
                                     <div class="bg-light border rounded-3 p-3 mt-3 w-100" style="max-width: 400px;">
                                         <div class="d-flex align-items-center text-start">
                                             <input class="form-check-input mt-0 me-3" type="checkbox" id="terms" required style="width: 1.25em; height: 1.25em; cursor: pointer; flex-shrink: 0;">
