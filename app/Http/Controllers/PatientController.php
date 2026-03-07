@@ -59,13 +59,13 @@ class PatientController extends Controller
             'middle_name' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
             'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\-]+$/'],
             'suffix' => ['nullable', 'string', 'max:10'], 
-            'birthday' => ['required', 'date', 'before:-16 years'],
+            'birthday' => ['required', 'date', 'before:-16 years'], // Retained age limit update
             'gender' => 'required|string|in:Male,Female,Other',
         ], [
             'first_name.regex' => 'First name cannot contain numbers or special characters.',
             'last_name.regex' => 'Last name cannot contain numbers or special characters.',
             'middle_name.regex' => 'Middle name cannot contain numbers or special characters.',
-            'birthday.before' => 'You must be at least 16 years old to update your profile.',
+            'birthday.before' => 'You must be at least 16 years old to update your profile.', // Retained
         ]);
 
         $user->update($validated);
@@ -192,9 +192,11 @@ class PatientController extends Controller
     public function uploadId(Request $request)
     {
         $request->validate([
-            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            // INCREASED LIMIT TO 5MB (5120 KB)
+            'id_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'data_privacy_consent' => 'required|accepted', 
         ], [
+            'id_photo.max' => 'The ID photo must not be greater than 5MB.',
             'data_privacy_consent.required' => 'You must consent to the privacy policy to upload your ID.',
             'data_privacy_consent.accepted' => 'You must consent to the privacy policy to upload your ID.',
         ]);

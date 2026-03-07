@@ -218,8 +218,9 @@
                         <form action="{{ route('settings.upload') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
-                                <label for="id_photo" class="form-label fw-bold small">Upload ID (JPG/PNG)</label>
-                                <input class="form-control" type="file" id="id_photo" name="id_photo" required>
+                                {{-- UPDATED LABEL TO INDICATE MAX 5MB --}}
+                                <label for="id_photo" class="form-label fw-bold small">Upload ID (JPG/PNG, Max 5MB)</label>
+                                <input class="form-control" type="file" id="id_photo" name="id_photo" accept=".jpg,.jpeg,.png" required>
                             </div>
 
                             {{-- CONSENT CHECKBOX --}}
