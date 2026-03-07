@@ -57,9 +57,6 @@
         <div class="col-half">
             <div class="label">Patient Name</div>
             <div class="value">{{ $appointment->patient_name }}</div>
-            
-            <div class="label">Service Provided</div>
-            <div class="value">{{ $appointment->service }}</div>
         </div>
         <div class="col-half">
             <div class="label">Date of Consultation</div>
@@ -75,8 +72,7 @@
 
     <div class="clearfix">
         <div class="signature-line">
-            <strong>Dra. Aileen Reyes-Mangao</strong><br>
-            <span style="font-size: 12px; color: #666;">Doctor of Optometry</span>
+            <strong>Dra. Aileen Reyes-Mangao</strong>
         </div>
     </div>
 
