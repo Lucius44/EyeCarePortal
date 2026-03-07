@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'middle_name'    => null,
             'last_name'      => 'Admin',
             'suffix'         => null,
-            'email'          => 'admin@eyecareportal.com',
+            'email'          => 'admineyecare@eyecareportal.com',
             'password'       => 'Password123', // Automatically hashed by User model casts
             'phone_number'   => '09123456789',
             'birthday'       => '1990-01-01',
