@@ -252,7 +252,7 @@
                                             <input type="date" name="birthday" id="dobField" class="form-control" required>
                                             <label>Date of Birth</label>
                                         </div>
-                                        <div class="form-text text-muted small text-center"><i class="bi bi-info-circle"></i> Must be 18 or older.</div>
+                                        <div class="form-text text-muted small text-center"><i class="bi bi-info-circle"></i> Must be 16 or older.</div>
                                     </div>
                                     <div class="col-md-5">
                                         <div class="form-floating">
@@ -437,7 +437,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const maxDate = new Date();
-        maxDate.setFullYear(maxDate.getFullYear() - 18);
+        maxDate.setFullYear(maxDate.getFullYear() - 16); // UPDATED TO 16
         document.getElementById('dobField').max = maxDate.toISOString().split('T')[0];
 
         function setupToggle(toggleId, inputId) {

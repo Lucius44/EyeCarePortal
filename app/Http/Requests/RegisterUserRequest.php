@@ -19,7 +19,7 @@ class RegisterUserRequest extends FormRequest
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'suffix' => 'nullable|string|max:10',
-            'birthday' => 'required|date',
+            'birthday' => 'required|date|before:-16 years',
             'gender' => 'required|string',
             
             'phone_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
@@ -38,6 +38,7 @@ class RegisterUserRequest extends FormRequest
     {
         return [
             'phone_number.regex' => 'Please enter a valid Philippine mobile number (e.g., 09123456789).',
+            'birthday.before' => 'You must be at least 16 years old to register.',
         ];
     }
 }

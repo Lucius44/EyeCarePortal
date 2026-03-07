@@ -112,9 +112,9 @@
                                            name="birthday" 
                                            class="form-control" 
                                            value="{{ Auth::user()->birthday ? Auth::user()->birthday->format('Y-m-d') : '' }}" 
-                                           max="{{ date('Y-m-d', strtotime('-18 years')) }}"
+                                           max="{{ date('Y-m-d', strtotime('-16 years')) }}"
                                            required>
-                                    <div class="form-text small">Must be 18+ years old.</div>
+                                    <div class="form-text small">Must be 16+ years old.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Gender</label>
