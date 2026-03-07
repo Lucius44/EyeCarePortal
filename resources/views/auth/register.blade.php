@@ -394,7 +394,7 @@
                 <h6>2. Identity Verification & Document Storage</h6>
                 <p>To ensure the safety of our patients and staff:</p>
                 <ul>
-                    <li>You are required to upload a valid Government ID to book an appointment.</li>
+                    <li>You are required to upload a Valid ID/ Government ID to book an appointment.</li>
                     <li><strong>Storage:</strong> Your ID is stored in a <strong>Secure, Private Server Location</strong> (Private Storage) accessible only by authorized Admin staff. It is NOT accessible to the public.</li>
                     <li><strong>Retention:</strong> Verification documents are retained as part of our security audit trail for the duration of your account's activity, in compliance with standard medical record retention policies.</li>
                 </ul>

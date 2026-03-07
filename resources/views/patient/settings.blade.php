@@ -144,7 +144,7 @@
                 </div>
                 <div class="card-body p-4">
                     <p class="text-muted small mb-4">
-                        To book appointments, we need to verify your identity. Please upload a clear photo of a valid Government ID.
+                        To book appointments, we need to verify your identity. Please upload a clear photo of a Valid ID/ Government ID.
                     </p>
 
                     @if(Auth::user()->is_verified)
@@ -227,7 +227,7 @@
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" name="data_privacy_consent" id="privacyConsent" required>
                                 <label class="form-check-label small text-muted" for="privacyConsent">
-                                    I consent to the collection of my Government ID for identity verification and security purposes.
+                                    I consent to the collection of my Valid ID/ Government ID for identity verification and security purposes.
                                 </label>
                             </div>
 
