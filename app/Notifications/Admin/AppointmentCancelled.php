@@ -21,7 +21,22 @@ class AppointmentCancelled extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        // Added 'mail' channel
+        return ['database', 'mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $date = $this->appointment->appointment_date->format('F d, Y');
+        $time = date('h:i A', strtotime($this->appointment->appointment_time));
+        $patientName = $this->appointment->patient_name;
+
+        return (new MailMessage)
+                    ->subject('Appointment Cancelled - ClearOptics Admin')
+                    ->greeting('Hello Admin,')
+                    ->line("An appointment on **{$date}** at **{$time}** was CANCELLED by the patient (**{$patientName}**).")
+                    ->line('The slot is now open on the calendar.')
+                    ->action('View Calendar', route('admin.calendar'));
     }
 
     public function toArray(object $notifiable): array

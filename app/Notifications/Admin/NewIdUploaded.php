@@ -21,7 +21,20 @@ class NewIdUploaded extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        // Added 'mail' channel
+        return ['database', 'mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $userName = "{$this->user->first_name} {$this->user->last_name}";
+
+        return (new MailMessage)
+                    ->subject('New ID Verification Required - ClearOptics Admin')
+                    ->greeting('Hello Admin,')
+                    ->line("**{$userName}** has uploaded a new ID for verification.")
+                    ->line('Please review the uploaded document to approve or reject their booking privileges.')
+                    ->action('Review Pending IDs', route('admin.users', ['filter_status' => 'pending_id']));
     }
 
     public function toArray(object $notifiable): array
