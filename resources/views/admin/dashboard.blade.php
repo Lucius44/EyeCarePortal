@@ -12,9 +12,9 @@
         color: #94a3b8; 
         flex-shrink: 0; 
         transition: all 0.3s;
-        display: flex; /* Flex to push support line down */
+        display: flex; 
         flex-direction: column;
-        display: none; /* Default hidden on mobile */
+        display: none; 
     }
     
     /* Content Area */
@@ -27,7 +27,7 @@
 
     /* Desktop View Media Query */
     @media (min-width: 992px) {
-        .admin-sidebar { display: flex; } /* Flex for sidebar layout */
+        .admin-sidebar { display: flex; } 
         .admin-content { padding: 2rem; }
     }
     
@@ -60,6 +60,45 @@
         background: linear-gradient(135deg, #0F172A 0%, #1e293b 100%);
         border: none;
         color: white;
+    }
+
+    /* Custom Chart Legend Buttons */
+    .custom-legend-btn {
+        background: white;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        border-radius: 50rem;
+        padding: 6px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .custom-legend-btn:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .custom-legend-btn.hidden-dataset {
+        opacity: 0.5;
+        text-decoration: line-through;
+        background: #f1f5f9;
+    }
+    
+    /* Mobile Scroll Hint (Optional visual touch) */
+    .scroll-hint {
+        display: none;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-align: right;
+        margin-bottom: 0.5rem;
+    }
+    @media (max-width: 991px) {
+        .scroll-hint { display: block; }
     }
 </style>
 
@@ -182,16 +221,42 @@
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm rounded-4 h-100">
-                        <div class="card-header bg-white border-0 pt-4 px-4">
-                            <h5 class="fw-bold mb-0">Clinic Traffic</h5>
-                            <small class="text-muted">Appointments over the last 7 days</small>
-                        </div>
-                        <div class="card-body px-4 pb-4">
-                            <div style="position: relative; height: 100%; width: 100%; min-height: 250px;">
-                                <canvas id="appointmentsChart" 
-                                        data-labels="{{ json_encode($labels) }}" 
-                                        data-counts="{{ json_encode($data) }}"></canvas>
+                        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h5 class="fw-bold mb-0">Clinic Traffic</h5>
+                                <small class="text-muted">Appointment status breakdown</small>
                             </div>
+                            
+                            {{-- Time Range Toggles --}}
+                            <div class="btn-group border rounded-pill overflow-hidden shadow-sm" role="group">
+                                <a href="{{ route('admin.dashboard', ['range' => '7_days']) }}" class="btn btn-sm {{ $currentRange === '7_days' ? 'btn-primary' : 'btn-light' }}">7 Days</a>
+                                <a href="{{ route('admin.dashboard', ['range' => '30_days']) }}" class="btn btn-sm {{ $currentRange === '30_days' ? 'btn-primary' : 'btn-light' }}">30 Days</a>
+                                <a href="{{ route('admin.dashboard', ['range' => '12_months']) }}" class="btn btn-sm {{ $currentRange === '12_months' ? 'btn-primary' : 'btn-light' }}">12 Months</a>
+                            </div>
+                        </div>
+                        <div class="card-body px-4 pb-4 mt-2">
+                            
+                            {{-- Custom HTML Legend Container --}}
+                            <div id="custom-legend-container" class="d-flex justify-content-center flex-wrap gap-3 mb-4">
+                                {{-- Buttons will be injected here by JavaScript --}}
+                            </div>
+
+                            {{-- Mobile Scroll Hint --}}
+                            <div class="scroll-hint"><i class="bi bi-arrow-left-right"></i> Swipe to see more</div>
+
+                            {{-- SWIPEABLE CONTAINER FOR MOBILE --}}
+                            <div style="overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 10px;">
+                                {{-- FIXED HEIGHT & MINIMUM WIDTH --}}
+                                <div style="position: relative; height: 350px; min-width: 800px; width: 100%;">
+                                    <canvas id="appointmentsChart" 
+                                            data-labels="{{ json_encode($labels) }}" 
+                                            data-completed="{{ json_encode($completedData) }}"
+                                            data-upcoming="{{ json_encode($upcomingData) }}"
+                                            data-missed="{{ json_encode($missedData) }}">
+                                    </canvas>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -261,56 +326,95 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('appointmentsChart');
-    if(ctx) {
-        const labels = JSON.parse(ctx.getAttribute('data-labels'));
-        const data = JSON.parse(ctx.getAttribute('data-counts'));
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('appointmentsChart');
+        if(ctx) {
+            const labels = JSON.parse(ctx.getAttribute('data-labels'));
+            const completedData = JSON.parse(ctx.getAttribute('data-completed'));
+            const upcomingData = JSON.parse(ctx.getAttribute('data-upcoming'));
+            const missedData = JSON.parse(ctx.getAttribute('data-missed'));
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Appointments',
-                    data: data,
-                    borderColor: '#3B82F6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#3B82F6',
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Allows chart to resize in container
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1e293b',
-                        titleColor: '#fff',
-                        bodyColor: '#cbd5e1',
-                        padding: 12,
-                        cornerRadius: 8,
-                        displayColors: false,
-                    }
+            const myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Completed',
+                            data: completedData,
+                            backgroundColor: '#10B981', // Emerald Green
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Upcoming (Pending/Confirmed)',
+                            data: upcomingData,
+                            backgroundColor: '#3B82F6', // Blue
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Missed / Cancelled',
+                            data: missedData,
+                            backgroundColor: '#EF4444', // Red
+                            borderRadius: 4
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { borderDash: [5, 5], color: '#e2e8f0' },
-                        ticks: { stepSize: 1, color: '#64748b' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            padding: 12,
+                            cornerRadius: 8,
+                            mode: 'index',
+                            intersect: false,
+                        }
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#64748b' }
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { color: '#64748b' }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { borderDash: [5, 5], color: '#e2e8f0' },
+                            ticks: { stepSize: 1, color: '#64748b' }
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+
+            // Generate Custom HTML Legend Buttons
+            const legendContainer = document.getElementById('custom-legend-container');
+            
+            myChart.data.datasets.forEach((dataset, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'custom-legend-btn';
+                
+                const colorBox = `<span style="display:inline-block; width:12px; height:12px; background-color:${dataset.backgroundColor}; border-radius:3px;"></span>`;
+                btn.innerHTML = `${colorBox} ${dataset.label}`;
+                
+                btn.onclick = function() {
+                    const isVisible = myChart.isDatasetVisible(index);
+                    
+                    if (isVisible) {
+                        myChart.hide(index);
+                        btn.classList.add('hidden-dataset');
+                    } else {
+                        myChart.show(index);
+                        btn.classList.remove('hidden-dataset');
+                    }
+                };
+                
+                legendContainer.appendChild(btn);
+            });
+        }
+    });
 </script>
 @endsection

@@ -40,10 +40,12 @@ class AdminController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $stats = $this->dashboardService->getAdminStats();
-        return view('admin.dashboard', $stats);
+        $range = $request->query('range', '7_days'); // Default to 7 days
+        $stats = $this->dashboardService->getAdminStats($range);
+        
+        return view('admin.dashboard', array_merge($stats, ['currentRange' => $range]));
     }
 
     public function settings()
@@ -334,7 +336,7 @@ class AdminController extends Controller
 
         $users = User::where('role', UserRole::Patient)
             ->whereNotNull('email_verified_at') 
-            ->where('account_status', UserStatus::Active) // <--- NEW: Strict Account Status Filter
+            ->where('account_status', UserStatus::Active)
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('middle_name', 'like', "%{$query}%")
