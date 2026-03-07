@@ -326,7 +326,7 @@
                         <div class="bg-white text-danger p-2 rounded-3 me-3">
                             <i class="bi bi-exclamation-triangle-fill fs-5"></i>
                         </div>
-                        <h5 class="fw-bold mb-0 text-danger">Danger Zone</h5>
+                        <h5 class="fw-bold mb-0 text-danger">Account Deletion</h5>
                     </div>
                 </div>
                 <div class="card-body p-4">

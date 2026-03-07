@@ -103,6 +103,18 @@
     }
     .stat-row:last-child { border-bottom: none; }
 
+    /* NEW: UX improvement for verification alert */
+    .verify-alert-card {
+        transition: all 0.3s ease;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .verify-alert-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+    }
+
 </style>
 
 <div class="container py-4">
@@ -139,14 +151,15 @@
                         </div>
                     @endif
 
+                    {{-- UPDATED: Entire alert is now a clickable link --}}
                     @if(!Auth::user()->is_verified)
-                        <div class="d-inline-flex align-items-center bg-warning border border-warning text-dark px-4 py-3 rounded-4 backdrop-blur shadow-sm mb-3">
+                        <a href="{{ route('settings') }}" class="verify-alert-card d-inline-flex align-items-center bg-warning border border-warning text-dark px-4 py-3 rounded-4 backdrop-blur shadow-sm mb-3">
                             <i class="bi bi-shield-exclamation fs-4 me-3"></i>
                             <div>
-                                <h6 class="fw-bold mb-0">Action Required: Verify Account</h6>
-                                <a href="{{ route('settings') }}" class="small text-dark text-decoration-underline fw-bold">Upload ID Now &rarr;</a>
+                                <h6 class="fw-bold mb-0 text-dark">Action Required: Verify Account</h6>
+                                <span class="small text-dark text-decoration-underline fw-bold">Upload ID Now &rarr;</span>
                             </div>
-                        </div>
+                        </a>
                     @endif
                 </div>
             </div>
