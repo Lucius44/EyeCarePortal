@@ -9,6 +9,34 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceController; 
 use App\Http\Middleware\CheckAccountStatus;
 use Illuminate\Http\Request; 
+use Illuminate\Support\Facades\Artisan; // <-- Added for the cron execution
+
+// --- EXTERNAL CRON JOB ROUTE ---
+// cron-job.org will ping this URL to process queues and schedules
+Route::get('/system/run-crons', function (Request $request) {
+    // 1. Security Check: Prevent random people from executing your queues
+    $secretToken = env('CRON_SECRET_TOKEN');
+    if (!$secretToken || $request->query('token') !== $secretToken) {
+        abort(403, 'Unauthorized access to cron trigger.');
+    }
+
+    // 2. Run the Scheduler (for your 24-hour reminders)
+    Artisan::call('schedule:run');
+
+    // 3. Process the Queue (for email notifications)
+    // --stop-when-empty ensures the HTTP request finishes and doesn't time out
+    // --max-time=55 ensures Hostinger doesn't kill the script if it takes too long
+    Artisan::call('queue:work', [
+        '--stop-when-empty' => true,
+        '--max-time' => 55, 
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Queues and Schedules executed successfully.',
+        'output' => Artisan::output()
+    ]);
+});
 
 // -- Public Routes --
 Route::get('/', function () {
